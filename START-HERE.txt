@@ -1,0 +1,18 @@
+HARDWARE LEARNING PLATFORM — START HERE
+
+1. Unzip this folder.
+2. Open the folder in Visual Studio Code.
+3. Open Terminal inside Visual Studio Code.
+4. Run:
+      npm install
+      npm run dev
+5. Open http://localhost:3000 in your browser.
+
+The website opens in demo mode before Supabase is connected.
+
+For real login, confirmation email, password reset and cloud progress:
+open README.md and follow Section 5.
+
+To learn how the code works rather than only running it:
+open LEARNING-GUIDE.md after the website starts.
+
