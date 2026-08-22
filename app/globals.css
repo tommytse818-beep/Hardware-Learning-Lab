@@ -32,3 +32,540 @@ textarea {
   background: #a7f3d0;
   color: #052e16;
 }
+
+/* Hardware Learning Lab About page v2. */
+.about-v2 {
+  --about-v2-x: 0px;
+  --about-v2-y: 0px;
+  --about-v2-x-slow: 0px;
+  --about-v2-y-slow: 0px;
+  --about-v2-scroll: 0px;
+  --about-v2-scroll-slow: 0px;
+}
+
+.about-v2-grid,
+.about-avatar-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 52px 52px;
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent 90%);
+  mask-image: linear-gradient(to bottom, black, transparent 90%);
+}
+
+.about-avatar-grid {
+  background-size: 28px 28px;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.about-v2-hero-image {
+  transform: translate3d(
+      var(--about-v2-x),
+      calc(var(--about-v2-y) + var(--about-v2-scroll)),
+      0
+    )
+    scale(1.08);
+  transition: transform 180ms ease-out;
+  will-change: transform;
+}
+
+.about-v2-glow {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(10px);
+  opacity: 0.7;
+  animation: about-v2-drift 10s ease-in-out infinite alternate;
+}
+
+.about-v2-glow-one {
+  right: 8%;
+  top: 12%;
+  width: 12rem;
+  height: 12rem;
+  background: radial-gradient(circle at 35% 35%, #67e8f9, #0f766e 58%, transparent 72%);
+}
+
+.about-v2-glow-two {
+  bottom: 10%;
+  left: 46%;
+  width: 9rem;
+  height: 9rem;
+  background: radial-gradient(circle at 35% 35%, #c4b5fd, #4f46e5 58%, transparent 72%);
+  animation-delay: -4s;
+}
+
+.about-v2-float {
+  transform: translate3d(
+    var(--about-v2-x-slow),
+    calc(var(--about-v2-y-slow) + var(--about-v2-scroll-slow)),
+    0
+  );
+  transition: transform 220ms ease-out;
+  will-change: transform;
+}
+
+.about-v2-reveal {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0) scale(0.988);
+  transition:
+    opacity 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.about-v2-reveal.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.about-v2-sector-image {
+  transform: scale(1.01);
+  transition: transform 850ms cubic-bezier(0.22, 1, 0.36, 1), filter 850ms ease;
+  will-change: transform;
+}
+
+.about-v2-sector-card:hover .about-v2-sector-image {
+  transform: scale(1.065);
+  filter: saturate(1.08) contrast(1.03);
+}
+
+@keyframes about-v2-drift {
+  from {
+    transform: translate3d(-10px, -8px, 0) scale(0.95);
+  }
+
+  to {
+    transform: translate3d(18px, 14px, 0) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-v2-hero-image,
+  .about-v2-float,
+  .about-v2-glow,
+  .about-v2-reveal,
+  .about-v2-sector-image,
+  .about-v2-sector-card:hover .about-v2-sector-image {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .about-v2-reveal {
+    opacity: 1;
+  }
+}
+
+/* Hardware Learning Lab Projects + OpenGuard Mini experience. */
+.projects-v1,
+.project-detail-v1 {
+  --projects-v1-x: 0px;
+  --projects-v1-y: 0px;
+  --projects-v1-x-slow: 0px;
+  --projects-v1-y-slow: 0px;
+  --project-detail-x: 0px;
+  --project-detail-y: 0px;
+  --project-detail-x-slow: 0px;
+  --project-detail-y-slow: 0px;
+}
+
+.projects-v1-grid,
+.project-detail-v1-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+  background-size: 54px 54px;
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent 92%);
+  mask-image: linear-gradient(to bottom, black, transparent 92%);
+}
+
+.projects-v1-glow,
+.project-detail-v1-orb {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(16px);
+  opacity: 0.55;
+  animation: projects-v1-drift 10s ease-in-out infinite alternate;
+}
+
+.projects-v1-glow-one {
+  right: 2%;
+  top: 12%;
+  width: 19rem;
+  height: 19rem;
+  background: radial-gradient(circle at 35% 35%, #6ee7b7, #0f766e 58%, transparent 73%);
+}
+
+.projects-v1-glow-two {
+  bottom: 2%;
+  left: 35%;
+  width: 14rem;
+  height: 14rem;
+  background: radial-gradient(circle at 35% 35%, #a5b4fc, #4338ca 58%, transparent 73%);
+  animation-delay: -3s;
+}
+
+.project-detail-v1-orb-one {
+  right: 7%;
+  top: 10%;
+  width: 20rem;
+  height: 20rem;
+  background: radial-gradient(circle at 35% 35%, #67e8f9, #0f766e 54%, transparent 73%);
+}
+
+.project-detail-v1-orb-two {
+  bottom: 4%;
+  left: 34%;
+  width: 13rem;
+  height: 13rem;
+  background: radial-gradient(circle at 35% 35%, #c4b5fd, #6d28d9 54%, transparent 73%);
+  animation-delay: -4s;
+}
+
+.projects-v1-parallax {
+  transform: translate3d(var(--projects-v1-x), var(--projects-v1-y), 0);
+  transition: transform 180ms ease-out;
+  will-change: transform;
+}
+
+.projects-v1-parallax-slow {
+  transform: translate3d(var(--projects-v1-x-slow), var(--projects-v1-y-slow), 0);
+  transition: transform 230ms ease-out;
+  will-change: transform;
+}
+
+.project-detail-v1-parallax {
+  transform: translate3d(var(--project-detail-x), var(--project-detail-y), 0);
+  transition: transform 190ms ease-out;
+  will-change: transform;
+}
+
+.projects-v1-reveal,
+.project-detail-v1-reveal {
+  opacity: 0;
+  transform: translate3d(0, 34px, 0) scale(0.988);
+  transition:
+    opacity 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.projects-v1-reveal.is-visible,
+.project-detail-v1-reveal.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.projects-v1-hero-card {
+  transform: translate3d(var(--projects-v1-x-slow), var(--projects-v1-y-slow), 0);
+  transition: transform 220ms ease-out;
+}
+
+.projects-v1-tilt {
+  --project-tilt-x: 0deg;
+  --project-tilt-y: 0deg;
+  --project-light-x: 50%;
+  --project-light-y: 50%;
+  position: relative;
+  transform: perspective(1200px) rotateX(var(--project-tilt-x)) rotateY(var(--project-tilt-y));
+  transform-style: preserve-3d;
+  transition: transform 180ms ease-out;
+  will-change: transform;
+}
+
+.projects-v1-tilt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    290px circle at var(--project-light-x) var(--project-light-y),
+    rgba(255, 255, 255, 0.12),
+    transparent 65%
+  );
+  opacity: 0.9;
+  mix-blend-mode: screen;
+}
+
+.projects-v1-panel-enter {
+  animation: projects-v1-panel-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.project-detail-v1-magnify {
+  transform: translateZ(0) scale(1);
+  transition:
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 420ms ease,
+    box-shadow 420ms ease;
+}
+
+.project-detail-v1-magnify:hover {
+  transform: translate3d(0, -3px, 0) scale(1.018);
+  border-color: rgba(110, 231, 183, 0.32);
+  box-shadow: 0 24px 70px rgba(15, 118, 110, 0.14);
+}
+
+.course-v1-hero {
+  position: relative;
+  isolation: isolate;
+}
+
+.course-v1-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 12% 15%, rgba(52, 211, 153, 0.22), transparent 34%),
+    radial-gradient(circle at 82% 82%, rgba(139, 92, 246, 0.2), transparent 36%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.2), rgba(15, 23, 42, 0.94));
+}
+
+.lesson-v1-diagram-stage {
+  overflow: hidden;
+  max-width: 100%;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  background:
+    linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+    #f8fafc;
+  background-size: 28px 28px;
+  cursor: zoom-in;
+}
+
+.lesson-v1-diagram-image {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 68rem;
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.lesson-v1-diagram-stage:not(.is-zoomed):hover .lesson-v1-diagram-image {
+  transform: scale(1.025);
+}
+
+.lesson-v1-diagram-stage.is-zoomed {
+  cursor: zoom-out;
+}
+
+.lesson-v1-diagram-stage.is-zoomed .lesson-v1-diagram-image {
+  transform: scale(1.32);
+}
+
+.lesson-v1-checkpoint {
+  position: relative;
+  isolation: isolate;
+}
+
+.lesson-v1-checkpoint::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.08), transparent 38%);
+}
+
+@keyframes projects-v1-drift {
+  from {
+    transform: translate3d(-10px, -8px, 0) scale(0.96);
+  }
+  to {
+    transform: translate3d(16px, 13px, 0) scale(1.06);
+  }
+}
+
+@keyframes projects-v1-panel-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .projects-v1-tilt,
+  .project-detail-v1-magnify {
+    transform: none;
+  }
+
+  .lesson-v1-diagram-stage.is-zoomed .lesson-v1-diagram-image {
+    transform: scale(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projects-v1-glow,
+  .project-detail-v1-orb,
+  .projects-v1-parallax,
+  .projects-v1-parallax-slow,
+  .project-detail-v1-parallax,
+  .projects-v1-reveal,
+  .project-detail-v1-reveal,
+  .projects-v1-hero-card,
+  .projects-v1-tilt,
+  .projects-v1-panel-enter,
+  .project-detail-v1-magnify,
+  .lesson-v1-diagram-image {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .projects-v1-reveal,
+  .project-detail-v1-reveal {
+    opacity: 1;
+  }
+}
+
+/* Hardware Learning Lab - For schools page v2. */
+.schools-v2 {
+  --schools-v2-x: 0px;
+  --schools-v2-y: 0px;
+  --schools-v2-x-slow: 0px;
+  --schools-v2-y-slow: 0px;
+  --schools-v2-scroll: 0px;
+  --schools-v2-scroll-slow: 0px;
+}
+
+.schools-v2-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 52px 52px;
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent 90%);
+  mask-image: linear-gradient(to bottom, black, transparent 90%);
+}
+
+.schools-v2-hero-image {
+  transform: translate3d(
+      var(--schools-v2-x),
+      calc(var(--schools-v2-y) + var(--schools-v2-scroll)),
+      0
+    )
+    scale(1.08);
+  transition: transform 180ms ease-out;
+  will-change: transform;
+}
+
+.schools-v2-glow {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(10px);
+  opacity: 0.7;
+  animation: schools-v2-drift 10s ease-in-out infinite alternate;
+}
+
+.schools-v2-glow-one {
+  right: 9%;
+  top: 14%;
+  width: 12rem;
+  height: 12rem;
+  background: radial-gradient(circle at 35% 35%, #93c5fd, #1d4ed8 58%, transparent 72%);
+}
+
+.schools-v2-glow-two {
+  bottom: 12%;
+  left: 44%;
+  width: 9rem;
+  height: 9rem;
+  background: radial-gradient(circle at 35% 35%, #fed7aa, #c2410c 58%, transparent 72%);
+  animation-delay: -4s;
+}
+
+.schools-v2-float {
+  transform: translate3d(
+    var(--schools-v2-x-slow),
+    calc(var(--schools-v2-y-slow) + var(--schools-v2-scroll-slow)),
+    0
+  );
+  transition: transform 220ms ease-out;
+  will-change: transform;
+}
+
+.schools-v2-reveal {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0) scale(0.988);
+  transition:
+    opacity 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.schools-v2-reveal.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.schools-v2-photo {
+  transform: scale(1.01);
+  transition: transform 850ms cubic-bezier(0.22, 1, 0.36, 1), filter 850ms ease;
+  will-change: transform;
+}
+
+.schools-v2-photo-frame:hover .schools-v2-photo {
+  transform: scale(1.055);
+  filter: saturate(1.06) contrast(1.02);
+}
+
+.schools-v2-plan {
+  transition:
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 420ms ease;
+  will-change: transform;
+}
+
+.schools-v2-plan:hover {
+  transform: translateY(-6px);
+}
+
+@media (min-width: 1024px) {
+  .schools-v2-plan-featured {
+    transform: translateY(-14px);
+  }
+
+  .schools-v2-plan-featured:hover {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes schools-v2-drift {
+  from {
+    transform: translate3d(-10px, -8px, 0) scale(0.95);
+  }
+
+  to {
+    transform: translate3d(18px, 14px, 0) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .schools-v2-hero-image,
+  .schools-v2-float,
+  .schools-v2-glow,
+  .schools-v2-reveal,
+  .schools-v2-photo,
+  .schools-v2-photo-frame:hover .schools-v2-photo,
+  .schools-v2-plan,
+  .schools-v2-plan:hover,
+  .schools-v2-plan-featured,
+  .schools-v2-plan-featured:hover {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .schools-v2-reveal {
+    opacity: 1;
+  }
+}

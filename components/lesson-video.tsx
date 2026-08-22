@@ -1,40 +1,71 @@
+import type { LessonVideo as LessonVideoData } from "@/lib/courses";
+
 type LessonVideoProps = {
   title: string;
-  embedUrl?: string;
+  video: LessonVideoData;
 };
 
-export function LessonVideo({ title, embedUrl }: LessonVideoProps) {
-  if (embedUrl) {
+export function LessonVideo({ title, video }: LessonVideoProps) {
+  const hasLocalVideo = Boolean(video.videoSrc || video.webmSrc);
+
+  if (hasLocalVideo) {
     return (
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-black shadow-sm">
-        <div className="aspect-video">
-          <iframe
-            className="h-full w-full"
-            src={embedUrl}
-            title={`${title} video`}
-            loading="lazy"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
-      </div>
+      <figure className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 shadow-sm">
+        <video
+          className="aspect-video h-auto w-full object-contain"
+          controls
+          playsInline
+          preload="metadata"
+          poster={video.posterSrc}
+          aria-label={`${title} lesson video`}
+        >
+          {video.webmSrc && <source src={video.webmSrc} type="video/webm" />}
+          {video.videoSrc && <source src={video.videoSrc} type="video/mp4" />}
+          Your browser does not support the lesson video.
+        </video>
+        <figcaption className="border-t border-white/10 px-5 py-4 text-sm leading-6 text-slate-300">
+          {video.caption}
+        </figcaption>
+      </figure>
     );
   }
 
   return (
-    <div className="grid aspect-video place-items-center rounded-2xl border border-dashed border-slate-300 bg-slate-100 p-8 text-center">
-      <div>
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-white text-xl shadow-sm">
-          ▶
-        </span>
-        <p className="mt-4 font-semibold text-slate-900">
-          Lesson video placeholder
-        </p>
-        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
-          Add your own short project video later. The lesson text, quiz and
-          navigation already work without a video provider.
-        </p>
+    <figure className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="relative grid aspect-video place-items-center overflow-hidden bg-slate-950 p-7 text-center sm:p-10">
+        {video.posterSrc && (
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-25 blur-[1px]"
+            style={{ backgroundImage: `url(${video.posterSrc})` }}
+            aria-hidden="true"
+          />
+        )}
+        <div className="relative max-w-xl">
+          <span className="mx-auto grid h-16 w-16 place-items-center rounded-full border border-white/15 bg-white/10 text-2xl text-white shadow-2xl backdrop-blur">
+            ▶
+          </span>
+          <p className="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">
+            Recording slot reserved
+          </p>
+          <p className="mt-2 text-xl font-semibold text-white">
+            {title}
+          </p>
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-300">
+            {video.caption}
+          </p>
+          {video.plannedPath && (
+            <div className="mt-5 rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-left font-mono text-xs leading-5 text-slate-300">
+              Replace this placeholder later by adding your recording at:
+              <span className="mt-1 block break-all text-emerald-200">
+                public{video.plannedPath}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+      <figcaption className="border-t border-slate-200 px-5 py-4 text-sm leading-6 text-slate-600">
+        The lesson text, question and navigation work now. No broken video request is made until a real source file is configured.
+      </figcaption>
+    </figure>
   );
 }

@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { ZoomableDiagram } from "@/components/course/zoomable-diagram";
 import { LessonQuiz } from "@/components/lesson-quiz";
 import { LessonVideo } from "@/components/lesson-video";
 import { VerifiedTutor } from "@/components/verified-tutor";
+import { getCourseAccess } from "@/lib/course-access";
 import {
   getAdjacentLessons,
   getCourse,
@@ -12,6 +14,7 @@ import {
 } from "@/lib/courses";
 import { getCourseProgress } from "@/lib/progress";
 import { getViewer } from "@/lib/viewer";
+import { isSupabaseConfigured } from "@/lib/env";
 
 type LessonPageProps = {
   params: Promise<{
@@ -48,52 +51,81 @@ export default async function LessonPage({ params }: LessonPageProps) {
     );
   }
 
+  const access = await getCourseAccess(viewer, course.slug);
+
+  if (!access.allowed) {
+    redirect(`/courses/${course.slug}`);
+  }
+
   const progress = await getCourseProgress(viewer.id, course.slug);
-  const currentProgress = progress.records.find(
-    (record) => record.lesson_slug === lesson.slug,
+  const progressByLesson = new Map(
+    progress.records.map((record) => [record.lesson_slug, record]),
+  );
+  const currentProgress = progressByLesson.get(lesson.slug);
+  const currentIndex = course.lessons.findIndex(
+    (item) => item.slug === lesson.slug,
   );
   const { previous, next } = getAdjacentLessons(course, lesson.slug);
 
+  const quizView =
+    lesson.quiz.kind === "choice"
+      ? {
+          kind: "choice" as const,
+          question: lesson.quiz.question,
+          options: lesson.quiz.options,
+        }
+      : {
+          kind: "numeric" as const,
+          question: lesson.quiz.question,
+          unit: lesson.quiz.unit,
+          placeholder: lesson.quiz.placeholder,
+        };
+
+  const nextHref = next
+    ? `/courses/${course.slug}/lessons/${next.slug}`
+    : `/courses/${course.slug}`;
+  const nextLabel = next
+    ? `Continue to ${next.section}`
+    : "Return to course overview";
+
   return (
-    <div className="mx-auto w-full max-w-[1500px] px-4 py-8 sm:px-6 lg:px-8">
+    <div className="lesson-v1 mx-auto w-full max-w-[1500px] px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <Link
           href={`/courses/${course.slug}`}
           className="text-sm font-semibold text-slate-600 hover:text-slate-950"
         >
-          ← {course.title}
+          ← {course.shortTitle}
         </Link>
         <p className="text-sm text-slate-500">
-          Lesson {lesson.number} of {course.lessons.length}
+          Checkpoint {currentIndex + 1} of {course.lessons.length}
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[230px_minmax(0,1fr)_320px] lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)_320px] lg:items-start">
         <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-28">
           <p className="px-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-            Lessons
+            Section 0 + Week 1
           </p>
           <nav className="mt-3 space-y-1" aria-label="Course lessons">
             {course.lessons.map((item) => {
               const active = item.slug === lesson.slug;
               const complete =
-                progress.records.find(
-                  (record) => record.lesson_slug === item.slug,
-                )?.completed ?? false;
+                progressByLesson.get(item.slug)?.completed ?? false;
+              const itemUnlocked = access.allowed;
 
-              return (
-                <Link
-                  key={item.slug}
-                  href={`/courses/${course.slug}/lessons/${item.slug}`}
-                  aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${
-                    active
-                      ? "bg-slate-950 font-semibold text-white"
-                      : "text-slate-700 hover:bg-slate-100"
-                  }`}
-                >
+              const classes = `flex items-start gap-3 rounded-xl px-3 py-3 text-sm transition ${
+                active
+                  ? "bg-slate-950 font-semibold text-white"
+                  : itemUnlocked
+                    ? "text-slate-700 hover:bg-slate-100"
+                    : "cursor-not-allowed text-slate-400"
+              }`;
+
+              const content = (
+                <>
                   <span
-                    className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-bold ${
+                    className={`grid h-8 min-w-8 shrink-0 place-items-center rounded-lg text-[0.68rem] font-bold ${
                       active
                         ? "bg-white/15 text-white"
                         : complete
@@ -101,155 +133,175 @@ export default async function LessonPage({ params }: LessonPageProps) {
                           : "bg-slate-100 text-slate-600"
                     }`}
                   >
-                    {complete ? "✓" : item.number}
+                    {complete ? "✓" : item.section}
                   </span>
-                  <span>{item.title}</span>
+                  <span className="min-w-0 leading-5">{item.title}</span>
+                </>
+              );
+
+              if (!itemUnlocked) {
+                return (
+                  <span key={item.slug} aria-disabled="true" className={classes}>
+                    {content}
+                  </span>
+                );
+              }
+
+              return (
+                <Link
+                  key={item.slug}
+                  href={`/courses/${course.slug}/lessons/${item.slug}`}
+                  aria-current={active ? "page" : undefined}
+                  className={classes}
+                >
+                  {content}
                 </Link>
               );
             })}
           </nav>
         </aside>
 
-        <article className="min-w-0">
-          <header className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
-              <span className="rounded-full bg-indigo-50 px-3 py-1 text-indigo-700">
-                Lesson {lesson.number}
-              </span>
-              <span>{lesson.duration}</span>
-            </div>
-            <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
-              {lesson.title}
-            </h1>
-            <p className="mt-4 text-lg leading-8 text-slate-600">
-              {lesson.summary}
-            </p>
+        <article className="min-w-0 space-y-6">
+          <header className="lesson-v1-header overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="p-6 sm:p-8">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
+                <span className="rounded-full bg-indigo-50 px-3 py-1 text-indigo-700">
+                  Section {lesson.section}
+                </span>
+                <span className="rounded-full bg-slate-100 px-3 py-1">
+                  {lesson.delivery}
+                </span>
+                <span>{lesson.duration}</span>
+                {lesson.humanReviewRequired && (
+                  <span className="rounded-full bg-violet-100 px-3 py-1 text-violet-700">
+                    Human review required
+                  </span>
+                )}
+              </div>
+              <h1 className="mt-4 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl">
+                {lesson.title}
+              </h1>
+              <p className="mt-4 text-lg leading-8 text-slate-600">
+                {lesson.summary}
+              </p>
 
-            <div className="mt-6 rounded-2xl bg-slate-50 p-5">
-              <h2 className="font-semibold text-slate-950">
-                By the end, you should be able to:
-              </h2>
-              <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
-                {lesson.objectives.map((objective) => (
-                  <li key={objective} className="flex gap-3">
-                    <span className="font-bold text-emerald-700">✓</span>
-                    <span>{objective}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="mt-6 rounded-2xl bg-slate-50 p-5">
+                <h2 className="font-semibold text-slate-950">
+                  By the end, you should be able to:
+                </h2>
+                <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+                  {lesson.objectives.map((objective) => (
+                    <li key={objective} className="flex gap-3">
+                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                      <span>{objective}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </header>
 
-          <div className="mt-6">
-            <LessonVideo
-              title={lesson.title}
-              embedUrl={lesson.videoEmbedUrl}
-            />
-          </div>
+          <LessonVideo title={lesson.title} video={lesson.video} />
 
-          <div className="mt-6 space-y-6">
-            {lesson.sections.map((section) => (
-              <section
-                key={section.heading}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-              >
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
-                  {section.heading}
-                </h2>
-                <div className="mt-4 space-y-4 text-base leading-7 text-slate-700">
-                  {section.paragraphs.map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
-                  ))}
-                </div>
-                {section.bullets && (
-                  <ul className="mt-5 space-y-3 rounded-2xl bg-slate-50 p-5 text-sm leading-6 text-slate-700">
-                    {section.bullets.map((bullet) => (
-                      <li key={bullet} className="flex gap-3">
-                        <span className="font-bold text-indigo-700">→</span>
-                        <span>{bullet}</span>
-                      </li>
+          {lesson.diagram && <ZoomableDiagram diagram={lesson.diagram} />}
+
+          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">
+              Lesson explanation
+            </p>
+            <div className="mt-6 space-y-8">
+              {lesson.sections.map((section) => (
+                <section key={section.heading}>
+                  <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+                    {section.heading}
+                  </h2>
+                  <div className="mt-3 space-y-3 text-base leading-8 text-slate-700">
+                    {section.paragraphs.map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
                     ))}
-                  </ul>
-                )}
-              </section>
-            ))}
+                  </div>
+                  {section.bullets && (
+                    <ul className="mt-4 space-y-2 rounded-2xl bg-slate-50 p-5 text-sm leading-6 text-slate-700">
+                      {section.bullets.map((bullet) => (
+                        <li key={bullet} className="flex gap-3">
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
+                          <span>{bullet}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              ))}
+            </div>
+          </section>
 
-            <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 sm:p-8">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-800">
-                Practical task
-              </p>
-              <h2 className="mt-3 text-2xl font-semibold text-emerald-950">
-                Apply the idea
-              </h2>
-              <p className="mt-3 leading-7 text-emerald-950">
-                {lesson.practicalTask}
-              </p>
-            </section>
+          <section className="rounded-3xl border border-cyan-200 bg-cyan-50 p-6 shadow-sm sm:p-8">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-800">
+              Learner action / evidence
+            </p>
+            <p className="mt-3 text-base leading-8 text-cyan-950">
+              {lesson.practicalTask}
+            </p>
+          </section>
 
-            <LessonQuiz
-              courseSlug={course.slug}
-              lessonSlug={lesson.slug}
-              question={lesson.quiz.question}
-              options={lesson.quiz.options}
-              initialCompleted={currentProgress?.completed ?? false}
-              initialScore={currentProgress?.quiz_score ?? null}
-              cloudConnected={progress.databaseReady}
-            />
-          </div>
+          <LessonQuiz
+            courseSlug={course.slug}
+            lessonSlug={lesson.slug}
+            quiz={quizView}
+            initialCompleted={currentProgress?.completed ?? false}
+            initialScore={currentProgress?.quiz_score ?? null}
+            initialMethod={
+              currentProgress?.completed ? lesson.quiz.method : undefined
+            }
+            initialExplanation={
+              currentProgress?.completed ? lesson.quiz.explanation : undefined
+            }
+            cloudConnected={progress.databaseReady}
+            demoMode={!isSupabaseConfigured()}
+            nextHref={nextHref}
+            nextLabel={nextLabel}
+            humanReviewRequired={lesson.humanReviewRequired}
+          />
 
-          <nav
-            aria-label="Lesson navigation"
-            className="mt-8 grid gap-3 sm:grid-cols-2"
-          >
+          <nav className="grid gap-3 sm:grid-cols-2" aria-label="Lesson navigation">
             {previous ? (
               <Link
                 href={`/courses/${course.slug}/lessons/${previous.slug}`}
-                className="rounded-2xl border border-slate-300 bg-white p-4 transition hover:border-slate-950"
+                className="rounded-2xl border border-slate-200 bg-white p-4 text-slate-800 shadow-sm transition hover:border-slate-400"
               >
                 <span className="block text-xs font-bold uppercase tracking-wide text-slate-500">
                   Previous
                 </span>
-                <span className="mt-1 block font-semibold text-slate-950">
-                  ← {previous.title}
+                <span className="mt-1 block font-semibold">
+                  ← {previous.section} {previous.title}
                 </span>
               </Link>
             ) : (
               <div />
             )}
 
-            {next ? (
+            {currentProgress?.completed ? (
               <Link
-                href={`/courses/${course.slug}/lessons/${next.slug}`}
+                href={nextHref}
                 className="rounded-2xl bg-slate-950 p-4 text-white transition hover:bg-slate-800 sm:text-right"
               >
                 <span className="block text-xs font-bold uppercase tracking-wide text-slate-400">
-                  Next
+                  {next ? "Next" : "Finish"}
                 </span>
                 <span className="mt-1 block font-semibold">
-                  {next.title} →
+                  {nextLabel} →
                 </span>
               </Link>
             ) : (
-              <Link
-                href={`/courses/${course.slug}`}
-                className="rounded-2xl bg-emerald-600 p-4 text-white transition hover:bg-emerald-700 sm:text-right"
-              >
-                <span className="block text-xs font-bold uppercase tracking-wide text-emerald-100">
-                  Finish
-                </span>
-                <span className="mt-1 block font-semibold">
-                  Return to course overview →
-                </span>
-              </Link>
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm leading-6 text-slate-500 sm:text-right">
+                Answer the checkpoint correctly to reveal the method and unlock the next lesson.
+              </div>
             )}
           </nav>
         </article>
 
         <aside className="lg:sticky lg:top-28">
-          <VerifiedTutor
-            lessonTitle={lesson.title}
-            guidance={lesson.tutor}
-          />
+          <VerifiedTutor lessonTitle={lesson.title} guidance={lesson.tutor} />
         </aside>
       </div>
     </div>

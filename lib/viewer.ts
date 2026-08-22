@@ -6,6 +6,7 @@ export type Viewer = {
   email: string;
   displayName: string;
   demo: boolean;
+  verified: boolean;
 };
 
 export async function getViewer(): Promise<Viewer | null> {
@@ -15,6 +16,7 @@ export async function getViewer(): Promise<Viewer | null> {
       email: "demo.student@example.com",
       displayName: "Demo Student",
       demo: true,
+      verified: true,
     };
   }
 
@@ -38,5 +40,6 @@ export async function getViewer(): Promise<Viewer | null> {
     email: user.email ?? "student",
     displayName,
     demo: false,
+    verified: Boolean(user.email_confirmed_at),
   };
 }

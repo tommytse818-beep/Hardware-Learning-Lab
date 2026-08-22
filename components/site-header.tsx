@@ -14,20 +14,16 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex min-h-16 w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-20 w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
         <Link
           href="/"
           className="flex items-center gap-3 font-semibold tracking-tight text-slate-950"
         >
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-slate-950 text-sm font-black text-white">
-            HL
-          </span>
-          <span>
-            Hardware Learning Lab
-            <span className="block text-[0.68rem] font-medium uppercase tracking-[0.18em] text-slate-500">
-              Prototype
-            </span>
-          </span>
+          <img
+            src="/logo.png"
+            alt="Hardware Learning Lab logo"
+            className="h-16 w-auto object-contain max-sm:h-14"
+          />
         </Link>
 
         <nav
