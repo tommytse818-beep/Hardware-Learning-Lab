@@ -1,5 +1,6 @@
 import { isSupabaseConfigured } from "@/lib/env";
 import type { Viewer } from "@/lib/viewer";
+import { createClient } from "@/lib/supabase/server";
 
 export type CourseAccessState =
   | "demo"
@@ -44,19 +45,35 @@ export async function getCourseAccess(
     );
   }
 
-  return accessResult(
-    true,
-    "entitled",
-    "Verified account access confirmed.",
-  );
+  return getCourseAccessForUser(viewer.id, courseSlug);
 }
 
 export async function getCourseAccessForUser(
   userId: string,
   courseSlug: string,
 ): Promise<CourseAccessResult> {
-  void userId;
-  void courseSlug;
+  if (!isSupabaseConfigured()) {
+    return accessResult(true, "demo", "Local demo mode is enabled.");
+  }
+
+  const supabase = await createClient();
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("course_entitlements")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("course_slug", courseSlug)
+    .eq("active", true)
+    .lte("starts_at", now)
+    .or(`ends_at.is.null,ends_at.gt.${now}`)
+    .maybeSingle();
+
+  if (error) {
+    return accessResult(false, "setup-required", "Course access could not be verified. Please try again later.");
+  }
+  if (!data) {
+    return accessResult(false, "not-entitled", "This account does not have an active seat for this course.");
+  }
 
   return accessResult(
     true,

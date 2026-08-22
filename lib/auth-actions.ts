@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import {
   getConfiguredSiteUrl,
+  isPublicSignupEnabled,
   isSupabaseConfigured,
 } from "@/lib/env";
 import { safeInternalPath } from "@/lib/navigation";
@@ -99,6 +100,10 @@ export async function signup(formData: FormData) {
       "error",
       "Connect Supabase first. Account creation is disabled in demo mode.",
     );
+  }
+
+  if (!isPublicSignupEnabled()) {
+    redirectWithMessage("/signup", "error", "Public registration is currently closed. Ask your school administrator for an invitation.");
   }
 
   const displayName = readText(formData, "displayName");

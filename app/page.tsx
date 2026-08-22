@@ -32,7 +32,7 @@ const pathway = [
 
 export default function HomePage() {
   return (
-    <>
+    <div>
       <section className="overflow-hidden border-b border-slate-200 bg-white">
         <div className="mx-auto grid w-full max-w-7xl gap-12 px-4 py-16 sm:px-6 md:py-24 lg:grid-cols-[1.08fr_0.92fr] lg:px-8">
           <div>
@@ -175,6 +175,6 @@ export default function HomePage() {
           ))}
         </div>
       </section>
-    </>
+    </div>
   );
 }

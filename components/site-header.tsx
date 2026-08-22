@@ -1,7 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { signOut } from "@/lib/auth-actions";
 import { getViewer } from "@/lib/viewer";
+import { MobileNav } from "@/components/site-mobile-nav";
 
 const publicLinks = [
   { href: "/projects", label: "Projects" },
@@ -13,22 +15,28 @@ export async function SiteHeader() {
   const viewer = await getViewer();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur">
+    <>
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur">
       <div className="mx-auto flex min-h-20 w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
         <Link
           href="/"
           className="flex items-center gap-3 font-semibold tracking-tight text-slate-950"
         >
-          <img
+          <Image
             src="/logo.png"
             alt="Hardware Learning Lab logo"
+            width={240}
+            height={96}
             className="h-16 w-auto object-contain max-sm:h-14"
           />
         </Link>
 
         <nav
           aria-label="Main navigation"
-          className="order-3 flex w-full items-center gap-1 overflow-x-auto sm:order-2 sm:w-auto"
+          className="order-3 hidden items-center gap-1 sm:order-2 sm:flex sm:w-auto"
         >
           {publicLinks.map((link) => (
             <Link
@@ -40,6 +48,8 @@ export async function SiteHeader() {
             </Link>
           ))}
         </nav>
+
+        <MobileNav />
 
         <div className="order-2 flex items-center gap-2 sm:order-3">
           {viewer ? (
@@ -71,6 +81,7 @@ export async function SiteHeader() {
           )}
         </div>
       </div>
-    </header>
+      </header>
+    </>
   );
 }

@@ -28,7 +28,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-slate-50 text-slate-950 antialiased">
         <SiteHeader />
         {demoMode && <DemoModeBanner />}
-        <main>{children}</main>
+        <main id="main-content">{children}</main>
         <SiteFooter />
       </body>
     </html>

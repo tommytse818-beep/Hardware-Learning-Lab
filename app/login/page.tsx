@@ -7,6 +7,7 @@ import { isSupabaseConfigured } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Log in",
+  robots: { index: false, follow: false },
 };
 
 type LoginPageProps = {
@@ -37,7 +38,7 @@ export default async function LoginPage({
           account. School accounts will later use teacher-controlled invites.
         </p>
         <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-5">
-          <p className="text-sm font-semibold">First time opening the code?</p>
+          <p className="text-sm font-semibold">School-issued access</p>
           <p className="mt-2 text-sm leading-6 text-slate-300">
             The rest of the website works in demo mode. Connect Supabase using
             README.md before testing real registration and reset emails.

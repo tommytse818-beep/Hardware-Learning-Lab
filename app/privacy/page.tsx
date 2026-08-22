@@ -1,0 +1,3 @@
+import type { Metadata } from "next";
+export const metadata: Metadata = { title: "Privacy" };
+export default function PrivacyPage() { return <article className="mx-auto max-w-3xl px-4 py-16 sm:px-6"><h1 className="text-4xl font-bold">Privacy</h1><p className="mt-6 leading-8 text-slate-600">This Stage 1 platform collects account, progress and school enquiry information only to provide the learning service. We do not sell learner data. School administrators remain responsible for appropriate consent and safeguarding procedures.</p></article>; }

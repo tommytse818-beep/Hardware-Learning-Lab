@@ -10,7 +10,9 @@ import {
   mergeDemoProgress,
 } from "@/lib/demo-progress";
 import { isSupabaseConfigured } from "@/lib/env";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { parseEngineeringNumber } from "@/lib/engineering";
 
 type QuizRequestBody = {
   courseSlug?: unknown;
@@ -19,55 +21,7 @@ type QuizRequestBody = {
   numericValue?: unknown;
 };
 
-function parseEngineeringNumber(value: unknown): number | null {
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : null;
-  }
-
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const normalized = value
-    .trim()
-    .toLowerCase()
-    .replaceAll(",", "")
-    .replaceAll("ω", "ohm")
-    .replaceAll("Ω", "ohm");
-
-  const match = normalized.match(
-    /^([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?)\s*([a-zµ]*)/i,
-  );
-
-  if (!match) {
-    return null;
-  }
-
-  const base = Number(match[1]);
-  const suffix = match[2] ?? "";
-
-  if (!Number.isFinite(base)) {
-    return null;
-  }
-
-  if (suffix.startsWith("k")) {
-    return base * 1_000;
-  }
-
-  if (suffix.startsWith("meg")) {
-    return base * 1_000_000;
-  }
-
-  if (suffix === "m" || suffix.startsWith("milli")) {
-    return base / 1_000;
-  }
-
-  if (suffix === "u" || suffix === "µ" || suffix.startsWith("micro")) {
-    return base / 1_000_000;
-  }
-
-  return base;
-}
+export { parseEngineeringNumber } from "@/lib/engineering";
 
 export async function POST(request: Request) {
   let body: QuizRequestBody;
@@ -164,31 +118,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: existing } = await supabase
-      .from("lesson_progress")
-      .select("completed, quiz_score")
-      .eq("user_id", user.id)
-      .eq("course_slug", course.slug)
-      .eq("lesson_slug", lesson.slug)
-      .maybeSingle();
-
-    const bestScore = Math.max(existing?.quiz_score ?? 0, score);
-    const completed = Boolean(existing?.completed) || correct;
-
-    const { error: saveError } = await supabase
+    const { error: saveError } = await createAdminClient()
       .from("lesson_progress")
       .upsert(
         {
           user_id: user.id,
           course_slug: course.slug,
           lesson_slug: lesson.slug,
-          completed,
-          quiz_score: bestScore,
+          completed: correct,
+          quiz_score: score,
           updated_at: new Date().toISOString(),
         },
-        {
-          onConflict: "user_id,course_slug,lesson_slug",
-        },
+        { onConflict: "user_id,course_slug,lesson_slug" },
       );
 
     if (saveError) {

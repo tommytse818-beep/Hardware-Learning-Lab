@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import { OpenGuardSystemAnimation } from "@/components/projects/open-guard-system-animation";
+import { sectorCatalog } from "@/lib/sectors";
 
 type Status = "Working" | "Upcoming" | "Planned";
 
@@ -37,12 +38,11 @@ const themes: Theme[] = [
   {
     id: "smart-living",
     number: "01",
-    title: "Smart living",
+    title: sectorCatalog[0].title,
     status: "Working",
-    image: "/images/projects/sectors/smart-living.webp",
-    imageAlt: "Smart-home technology and connected devices",
-    summary:
-      "Use sensors, logic and practical hardware to make everyday spaces more useful and understandable.",
+    image: sectorCatalog[0].image,
+    imageAlt: sectorCatalog[0].alt,
+    summary: sectorCatalog[0].summary,
     project: {
       title: "OpenGuard Mini",
       eyebrow: "First school workshop",
@@ -62,12 +62,11 @@ const themes: Theme[] = [
   {
     id: "sustainability-climate",
     number: "02",
-    title: "Sustainability & climate",
+    title: sectorCatalog[1].title,
     status: "Planned",
-    image: "/images/projects/sectors/sustainability-climate.webp",
-    imageAlt: "Environmental sensor used for weather and climate monitoring",
-    summary:
-      "Measure energy and environmental conditions, then turn data into an evidence-led design decision.",
+    image: sectorCatalog[1].image,
+    imageAlt: sectorCatalog[1].alt,
+    summary: sectorCatalog[1].summary,
     project: {
       title: "Climate Sense Station",
       eyebrow: "Concept direction",
@@ -86,12 +85,11 @@ const themes: Theme[] = [
   {
     id: "health-movement",
     number: "03",
-    title: "Health & movement",
+    title: sectorCatalog[2].title,
     status: "Upcoming",
-    image: "/images/projects/sectors/health-movement.webp",
-    imageAlt: "Wearable movement sensor used during physical activity",
-    summary:
-      "Connect electronics with the human body through safe, carefully scoped movement and wearable-sensor projects.",
+    image: sectorCatalog[2].image,
+    imageAlt: sectorCatalog[2].alt,
+    summary: sectorCatalog[2].summary,
     project: {
       title: "Movement & Grip Lab",
       eyebrow: "Future development",
@@ -110,12 +108,11 @@ const themes: Theme[] = [
   {
     id: "space-communications",
     number: "04",
-    title: "Space & communications",
+    title: sectorCatalog[3].title,
     status: "Planned",
-    image: "/images/projects/sectors/space-communications.webp",
-    imageAlt: "Radio telescope used for communication and space observation",
-    summary:
-      "Reveal how signals travel across distance through radio, telemetry, addressing and error-aware communication.",
+    image: sectorCatalog[3].image,
+    imageAlt: sectorCatalog[3].alt,
+    summary: sectorCatalog[3].summary,
     project: {
       title: "Signal & Telemetry Explorer",
       eyebrow: "Longer-term direction",
@@ -184,7 +181,7 @@ function TiltSurface({
 
 export function ProjectsExperience() {
   const [activeId, setActiveId] = useState(themes[0].id);
-  const rootRef = useRef<HTMLElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const activeTheme = themes.find((theme) => theme.id === activeId) ?? themes[0];
   const ActiveIcon = activeTheme.icon;
 
@@ -233,7 +230,7 @@ export function ProjectsExperience() {
   }, []);
 
   return (
-    <main ref={rootRef} className="projects-v1 overflow-hidden bg-slate-950 text-white">
+    <div ref={rootRef} className="projects-v1 overflow-hidden bg-slate-950 text-white">
       <section className="relative isolate min-h-[78vh] overflow-hidden border-b border-white/10">
         <div className="projects-v1-grid absolute inset-0 opacity-80" />
         <div className="projects-v1-glow projects-v1-glow-one" />
@@ -460,7 +457,7 @@ export function ProjectsExperience() {
           </Link>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
 

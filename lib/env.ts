@@ -1,6 +1,7 @@
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabasePublishableKey =
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
 function isPlaceholder(value: string) {
   return (
@@ -27,6 +28,13 @@ export function getSupabaseConfig() {
   };
 }
 
+export function getSupabaseAdminConfig() {
+  if (!isSupabaseConfigured() || !supabaseServiceRoleKey) {
+    throw new Error("Supabase admin access is not configured.");
+  }
+  return { url: supabaseUrl, serviceRoleKey: supabaseServiceRoleKey };
+}
+
 export function getConfiguredSiteUrl() {
   const value = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
@@ -35,4 +43,8 @@ export function getConfiguredSiteUrl() {
   }
 
   return value.replace(/\/+$/, "");
+}
+
+export function isPublicSignupEnabled() {
+  return process.env.ENABLE_PUBLIC_SIGNUP === "true";
 }

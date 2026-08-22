@@ -58,7 +58,7 @@ export function OpenGuardProjectExperience({
   courseSlug,
   lessons,
 }: OpenGuardProjectExperienceProps) {
-  const rootRef = useRef<HTMLElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const sectionOneLessons = lessons.filter((lesson) => lesson.section !== "0");
 
   useEffect(() => {
@@ -105,7 +105,7 @@ export function OpenGuardProjectExperience({
   const loginHref = `/login?next=${encodeURIComponent(courseHref)}`;
 
   return (
-    <main ref={rootRef} className="project-detail-v1 overflow-hidden bg-slate-950 text-white">
+    <div ref={rootRef} className="project-detail-v1 overflow-hidden bg-slate-950 text-white">
       <section className="relative isolate min-h-[86vh] overflow-hidden border-b border-white/10">
         <div className="project-detail-v1-grid absolute inset-0" />
         <div className="project-detail-v1-orb project-detail-v1-orb-one" />
@@ -191,7 +191,7 @@ export function OpenGuardProjectExperience({
                   </p>
                 </div>
                 <span className="rounded-full border border-amber-300/40 bg-amber-300/10 px-3 py-1.5 text-xs font-semibold text-amber-100">
-                  Replace with filmed product later
+                  Concept animation
                 </span>
               </div>
             </div>
@@ -379,7 +379,7 @@ export function OpenGuardProjectExperience({
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
 

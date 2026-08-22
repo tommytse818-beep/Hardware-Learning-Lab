@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
+import { sectorCatalog } from "@/lib/sectors";
+
 const learningSteps = [
   {
     number: "01",
@@ -27,44 +29,26 @@ const learningSteps = [
   },
 ];
 
-const sectors = [
-  {
-    number: "01",
-    title: "Smart living",
-    image: "/images/about/sector-smart-living.webp",
-    alt: "Connected smart-home sensors and devices",
-    text: "Sensors, automation and connected devices that make everyday spaces more useful, accessible and efficient.",
-    icon: HomeCircuitIcon,
-    accent: "from-fuchsia-500/80 via-indigo-500/35 to-transparent",
-  },
-  {
-    number: "02",
-    title: "Sustainability & climate",
-    image: "/images/about/sector-sustainability-climate.webp",
-    alt: "Environmental weather sensor used for climate monitoring",
-    text: "Energy, environmental sensing and data-led projects that help students measure and respond to a changing planet.",
-    icon: ClimateLeafIcon,
-    accent: "from-emerald-500/80 via-lime-400/30 to-transparent",
-  },
-  {
-    number: "03",
-    title: "Health & movement",
-    image: "/images/about/sector-health-movement.webp",
-    alt: "Wearable sensor tracking movement during cycling",
-    text: "Wearables, biosignals and assistive technologies that connect electronics with how people move and live.",
-    icon: HealthPulseIcon,
-    accent: "from-rose-500/80 via-orange-400/30 to-transparent",
-  },
-  {
-    number: "04",
-    title: "Space & communications",
-    image: "/images/about/sector-space-communications.webp",
-    alt: "Large radio telescope used for space communications",
-    text: "Radio, signals, telemetry and remote sensing that reveal how information travels across distance and into space.",
-    icon: SatelliteIcon,
-    accent: "from-sky-500/80 via-violet-500/35 to-transparent",
-  },
-];
+const sectorIcons = {
+  "smart-living": HomeCircuitIcon,
+  "sustainability-climate": ClimateLeafIcon,
+  "health-movement": HealthPulseIcon,
+  "space-communications": SatelliteIcon,
+} as const;
+
+const sectors = sectorCatalog.map((sector) => ({
+  ...sector,
+  text: sector.summary,
+  icon: sectorIcons[sector.id],
+  accent:
+    sector.id === "smart-living"
+      ? "from-fuchsia-500/80 via-indigo-500/35 to-transparent"
+      : sector.id === "sustainability-climate"
+        ? "from-emerald-500/80 via-lime-400/30 to-transparent"
+        : sector.id === "health-movement"
+          ? "from-rose-500/80 via-orange-400/30 to-transparent"
+          : "from-sky-500/80 via-violet-500/35 to-transparent",
+}));
 
 const team = [
   {

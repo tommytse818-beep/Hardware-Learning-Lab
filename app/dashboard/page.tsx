@@ -11,6 +11,7 @@ import { getViewer } from "@/lib/viewer";
 
 export const metadata: Metadata = {
   title: "Dashboard",
+  robots: { index: false, follow: false },
 };
 
 type DashboardPageProps = {
@@ -158,7 +159,7 @@ export default async function DashboardPage({
 
         <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-700">
-            Project platform status
+            Learning access status
           </p>
           <dl className="mt-5 space-y-4">
             {[

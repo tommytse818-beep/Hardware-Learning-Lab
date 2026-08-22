@@ -7,6 +7,7 @@ import { isSupabaseConfigured } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Forgot password",
+  robots: { index: false, follow: false },
 };
 
 type ForgotPasswordPageProps = {

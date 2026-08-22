@@ -26,6 +26,10 @@ export function LessonVideo({ title, video }: LessonVideoProps) {
         <figcaption className="border-t border-white/10 px-5 py-4 text-sm leading-6 text-slate-300">
           {video.caption}
         </figcaption>
+        <details className="border-t border-white/10 px-5 py-3 text-sm text-slate-300">
+          <summary className="cursor-pointer font-semibold text-white">Read transcript</summary>
+          <p className="mt-3 leading-6">{video.caption}</p>
+        </details>
       </figure>
     );
   }
@@ -66,6 +70,10 @@ export function LessonVideo({ title, video }: LessonVideoProps) {
       <figcaption className="border-t border-slate-200 px-5 py-4 text-sm leading-6 text-slate-600">
         The lesson text, question and navigation work now. No broken video request is made until a real source file is configured.
       </figcaption>
+      <details className="border-t border-slate-200 px-5 py-3 text-sm text-slate-600">
+        <summary className="cursor-pointer font-semibold text-slate-900">Read transcript</summary>
+        <p className="mt-3 leading-6">{video.caption}</p>
+      </details>
     </figure>
   );
 }

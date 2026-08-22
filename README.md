@@ -154,6 +154,9 @@ Open `.env.local` in VS Code and replace the placeholders:
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_ALLOW_PUBLIC_SIGNUP=false
+# Server-only, never expose this value to the browser.
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
 ```
 
 Save the file.

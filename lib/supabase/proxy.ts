@@ -2,24 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getSupabaseConfig, isSupabaseConfigured } from "@/lib/env";
-
-const publicExactRoutes = new Set([
-  "/",
-  "/about",
-  "/projects",
-  "/schools",
-  "/login",
-  "/signup",
-  "/forgot-password",
-]);
-
-function isPublicRoute(pathname: string) {
-  return (
-    publicExactRoutes.has(pathname) ||
-    pathname.startsWith("/auth/") ||
-    pathname === "/auth"
-  );
-}
+import { isPublicRoute } from "@/lib/supabase/public-routes";
 
 export async function updateSession(request: NextRequest) {
   // Demo mode: allow the visual prototype to open before Supabase is connected.

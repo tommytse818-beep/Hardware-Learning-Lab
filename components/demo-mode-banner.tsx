@@ -9,8 +9,8 @@ export function DemoModeBanner() {
           real accounts and cloud progress are not active until Supabase is
           connected.
         </p>
-        <Link href="/about#setup" className="font-semibold underline">
-          View setup location
+        <Link href="/about" className="font-semibold underline">
+          Read about the platform
         </Link>
       </div>
     </div>

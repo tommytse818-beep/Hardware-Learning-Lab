@@ -31,6 +31,7 @@ export async function generateMetadata({
 
   return {
     title: lesson?.title ?? "Lesson",
+    robots: { index: false, follow: false },
   };
 }
 

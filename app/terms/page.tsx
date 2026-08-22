@@ -1,0 +1,3 @@
+import type { Metadata } from "next";
+export const metadata: Metadata = { title: "Terms" };
+export default function TermsPage() { return <article className="mx-auto max-w-3xl px-4 py-16 sm:px-6"><h1 className="text-4xl font-bold">Terms</h1><p className="mt-6 leading-8 text-slate-600">Course content is educational material, not professional electrical or security advice. Practical work must follow the school&apos;s supervision and safety procedures. Public previews and demo progress are not evidence of purchase, certification or completion.</p></article>; }

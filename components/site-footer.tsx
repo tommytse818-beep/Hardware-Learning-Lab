@@ -9,8 +9,8 @@ export function SiteFooter() {
             Hardware Learning Lab
           </p>
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
-            A Stage 1 prototype for a Hong Kong-oriented secondary-school
-            electronics pathway. Learn it. Build it. Prove it.
+            Practical electronics learning that moves from understanding to
+            building, testing and explaining.
           </p>
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600">
@@ -23,6 +23,8 @@ export function SiteFooter() {
           <Link href="/about" className="hover:text-slate-950">
             About
           </Link>
+          <Link href="/privacy" className="hover:text-slate-950">Privacy</Link>
+          <Link href="/terms" className="hover:text-slate-950">Terms</Link>
         </div>
       </div>
     </footer>

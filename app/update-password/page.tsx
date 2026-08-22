@@ -5,6 +5,7 @@ import { updatePassword } from "@/lib/auth-actions";
 
 export const metadata: Metadata = {
   title: "Choose new password",
+  robots: { index: false, follow: false },
 };
 
 type UpdatePasswordPageProps = {

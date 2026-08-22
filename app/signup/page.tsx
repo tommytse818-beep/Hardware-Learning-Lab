@@ -3,10 +3,11 @@ import Link from "next/link";
 
 import { StatusBanner } from "@/components/status-banner";
 import { signup } from "@/lib/auth-actions";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isPublicSignupEnabled, isSupabaseConfigured } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Create account",
+  robots: { index: false, follow: false },
 };
 
 type SignupPageProps = {
@@ -21,12 +22,13 @@ export default async function SignupPage({
 }: SignupPageProps) {
   const { error, message } = await searchParams;
   const configured = isSupabaseConfigured();
+  const signupEnabled = isPublicSignupEnabled();
 
   return (
     <div className="mx-auto w-full max-w-xl px-4 py-14 sm:px-6">
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">
-          Development account
+          School-issued account
         </p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
           Create a student account
@@ -48,6 +50,12 @@ export default async function SignupPage({
           </div>
         )}
 
+        {!signupEnabled && configured && (
+          <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+            Public registration is currently closed. Ask your school administrator for an invitation.
+          </div>
+        )}
+
         <form action={signup} className="mt-6 space-y-5">
           <div>
             <label
@@ -63,7 +71,7 @@ export default async function SignupPage({
               autoComplete="name"
               required
               minLength={2}
-              disabled={!configured}
+              disabled={!configured || !signupEnabled}
               placeholder="Tommy"
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
             />
@@ -82,7 +90,7 @@ export default async function SignupPage({
               type="email"
               autoComplete="email"
               required
-              disabled={!configured}
+              disabled={!configured || !signupEnabled}
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
             />
           </div>
@@ -101,7 +109,7 @@ export default async function SignupPage({
               autoComplete="new-password"
               required
               minLength={8}
-              disabled={!configured}
+              disabled={!configured || !signupEnabled}
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
             />
             <p className="mt-1 text-xs text-slate-500">
@@ -123,14 +131,14 @@ export default async function SignupPage({
               autoComplete="new-password"
               required
               minLength={8}
-              disabled={!configured}
+              disabled={!configured || !signupEnabled}
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
             />
           </div>
 
           <button
             type="submit"
-            disabled={!configured}
+            disabled={!configured || !signupEnabled}
             className="w-full rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             Create account

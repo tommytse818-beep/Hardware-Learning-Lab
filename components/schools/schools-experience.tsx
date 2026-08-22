@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /* ------------------------------------------------------------------ */
 /* Content                                                             */
@@ -438,6 +438,8 @@ function CoinsIcon({ className = "h-6 w-6" }: { className?: string }) {
 /* ------------------------------------------------------------------ */
 
 export function SchoolsExperience() {
+  const [enquiryStatus, setEnquiryStatus] = useState("");
+  const [submittingEnquiry, setSubmittingEnquiry] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1112,6 +1114,27 @@ export function SchoolsExperience() {
                   First cohorts are targeted for September 2027. Earlier conversations help us match
                   dates and instructor availability.
                 </p>
+                <form className="mt-6 space-y-3 border-t border-white/10 pt-5" onSubmit={async (event) => {
+                  event.preventDefault(); setSubmittingEnquiry(true); setEnquiryStatus("");
+                  const form = new FormData(event.currentTarget);
+                  try {
+                    const response = await fetch("/api/school-enquiry", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(form)) });
+                    const data = await response.json();
+                    setEnquiryStatus(response.ok ? "Thanks. We will reply with the next steps." : data.error ?? "We could not send your enquiry.");
+                  } catch {
+                    setEnquiryStatus("We could not send your enquiry. Please try again later.");
+                  } finally {
+                    setSubmittingEnquiry(false);
+                  }
+                }}>
+                  <input name="schoolName" required placeholder="School name" aria-label="School name" className="w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-400" />
+                  <input name="contactName" required placeholder="Your name" aria-label="Your name" className="w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-400" />
+                  <input name="email" type="email" required placeholder="Work email" aria-label="Work email" className="w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-400" />
+                  <textarea name="message" required minLength={10} placeholder="Year group, cohort size and preferred term" aria-label="Enquiry details" className="min-h-24 w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-400" />
+                  <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
+                  <button disabled={submittingEnquiry} className="w-full rounded-xl bg-emerald-400 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-60">{submittingEnquiry ? "Sending..." : "Send enquiry"}</button>
+                  {enquiryStatus && <p role="status" className="text-sm text-emerald-200">{enquiryStatus}</p>}
+                </form>
               </div>
             </div>
           </div>
