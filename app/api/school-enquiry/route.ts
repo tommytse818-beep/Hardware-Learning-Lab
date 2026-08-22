@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { sendEnquiryNotification } from "@/lib/email";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -39,8 +40,32 @@ export async function POST(request: Request) {
   }
   if (!isSupabaseConfigured()) return NextResponse.json({ error: "Enquiries are unavailable until Supabase is configured." }, { status: 503 });
   try {
-    const { error } = await createAdminClient().from("school_enquiries").insert({ school_name: schoolName, contact_name: contactName, email, message });
+    const { error } = await createAdminClient().from("school_enquiries").insert({
+      school_name: schoolName,
+      contact_name: contactName,
+      email,
+      message,
+    });
+
     if (error) throw error;
-    return NextResponse.json({ ok: true });
-  } catch { return NextResponse.json({ error: "We could not send your enquiry. Please try again later." }, { status: 503 }); }
+
+    const emailResult = await sendEnquiryNotification({
+      schoolName,
+      contactName,
+      email,
+      message,
+    });
+
+    if (!emailResult.ok) {
+      return NextResponse.json({
+        ok: true,
+        emailStatus: emailResult.reason,
+        notice: "The enquiry was saved, but the private notification could not be sent right now.",
+      });
+    }
+
+    return NextResponse.json({ ok: true, emailStatus: "sent" });
+  } catch {
+    return NextResponse.json({ error: "We could not send your enquiry. Please try again later." }, { status: 503 });
+  }
 }

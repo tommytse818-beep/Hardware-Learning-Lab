@@ -1,0 +1,101 @@
+{
+  "required_missing": [
+    ".env.example",
+    "app/login/page.tsx",
+    "app/signup/page.tsx",
+    "app/first-login/page.tsx",
+    "app/settings/page.tsx",
+    "app/admin/page.tsx",
+    "app/teacher/page.tsx",
+    "app/dashboard/page.tsx",
+    "app/courses/[courseSlug]/preview/page.tsx",
+    "app/api/admin/schools/route.ts",
+    "app/api/admin/cohorts/route.ts",
+    "app/api/admin/users/route.ts",
+    "app/api/teacher/reminders/route.ts",
+    "app/api/teacher/cohort-target/route.ts",
+    "app/api/quiz/route.ts",
+    "app/api/school-enquiry/route.ts",
+    "components/avatar-badge.tsx",
+    "components/admin/admin-provisioning-console.tsx",
+    "components/teacher/teacher-dashboard.tsx",
+    "components/dashboard/student-dashboard.tsx",
+    "lib/authorization.ts",
+    "lib/course-access.ts",
+    "lib/course-preview.ts",
+    "lib/email.ts",
+    "lib/portal-data.ts",
+    "lib/settings-actions.ts",
+    "supabase/access-cohorts-v1.sql",
+    "globals-css-additions.css"
+  ],
+  "checks": [
+    {
+      "name": "All required patch files exist",
+      "passed": false,
+      "detail": ".env.example, app/login/page.tsx, app/signup/page.tsx, app/first-login/page.tsx, app/settings/page.tsx, app/admin/page.tsx, app/teacher/page.tsx, app/dashboard/page.tsx, app/courses/[courseSlug]/preview/page.tsx, app/api/admin/schools/route.ts, app/api/admin/cohorts/route.ts, app/api/admin/users/route.ts, app/api/teacher/reminders/route.ts, app/api/teacher/cohort-target/route.ts, app/api/quiz/route.ts, app/api/school-enquiry/route.ts, components/avatar-badge.tsx, components/admin/admin-provisioning-console.tsx, components/teacher/teacher-dashboard.tsx, components/dashboard/student-dashboard.tsx, lib/authorization.ts, lib/course-access.ts, lib/course-preview.ts, lib/email.ts, lib/portal-data.ts, lib/settings-actions.ts, supabase/access-cohorts-v1.sql, globals-css-additions.css"
+    },
+    {
+      "name": "Private Gmail address is not hard-coded in tracked application code",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Login UI contains no free-registration call to action",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Signup route contains no signup form",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "Server signup action is disabled",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "Attempt-weighted points are present",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "Core cohort/access tables are present",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "Student seat limit is database-enforced",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "RLS is enabled in the access schema",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "Secrets remain server-only in example env",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "Public signup is disabled in example env",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Applied validation copy: npm run check",
+      "passed": false,
+      "detail": "exit status 254"
+    },
+    {
+      "name": "Applied validation copy: npm test",
+      "passed": false,
+      "detail": "exit status 254"
+    }
+  ],
+  "npm_check_exit": "254",
+  "npm_test_exit": "254"
+}

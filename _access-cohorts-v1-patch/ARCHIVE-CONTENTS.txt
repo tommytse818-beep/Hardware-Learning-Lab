@@ -1,0 +1,13 @@
+ARCHITECTURE.md
+BEGINNER-CHECKLIST.md
+EMAIL-SETUP.md
+PATCH-MANIFEST.md
+README-FIRST.md
+SECURITY-NOTES.md
+SUPABASE-SETUP.md
+VALIDATION.md
+VSCODE-AGENT-PROMPT.md
+code/app/forgot-password/page.tsx
+code/app/update-password/page.tsx
+code/supabase/FIRST-ADMIN-SETUP.sql
+validation-report.json

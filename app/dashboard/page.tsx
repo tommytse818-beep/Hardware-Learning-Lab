@@ -31,6 +31,18 @@ export default async function DashboardPage({
     redirect("/login");
   }
 
+  if (viewer.mustChangePassword) {
+    redirect("/first-login");
+  }
+
+  if (viewer.role === "admin") {
+    redirect("/admin");
+  }
+
+  if (viewer.role === "teacher") {
+    redirect("/teacher");
+  }
+
   const course = getCourse("open-guard-mini");
 
   if (!course) {

@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 
 import {
   getConfiguredSiteUrl,
-  isPublicSignupEnabled,
   isSupabaseConfigured,
 } from "@/lib/env";
 import { safeInternalPath } from "@/lib/navigation";
@@ -90,88 +89,36 @@ export async function login(formData: FormData) {
     redirectWithMessage("/login", "error", message, { next });
   }
 
-  redirect(next);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const role = typeof user?.user_metadata?.role === "string" ? user.user_metadata.role : "student";
+  const mustChangePassword =
+    user?.user_metadata?.must_change_password === true ||
+    user?.user_metadata?.force_reset === true;
+
+  if (mustChangePassword) {
+    redirect("/first-login");
+  }
+
+  const targetPath =
+    role === "admin"
+      ? "/admin"
+      : role === "teacher"
+        ? "/teacher"
+        : next || "/dashboard";
+
+  redirect(targetPath);
 }
 
 export async function signup(formData: FormData) {
-  if (!isSupabaseConfigured()) {
-    redirectWithMessage(
-      "/signup",
-      "error",
-      "Connect Supabase first. Account creation is disabled in demo mode.",
-    );
-  }
-
-  if (!isPublicSignupEnabled()) {
-    redirectWithMessage("/signup", "error", "Public registration is currently closed. Ask your school administrator for an invitation.");
-  }
-
-  const displayName = readText(formData, "displayName");
-  const email = readText(formData, "email").toLowerCase();
-  const password = readText(formData, "password");
-  const confirmPassword = readText(formData, "confirmPassword");
-
-  if (displayName.length < 2) {
-    redirectWithMessage(
-      "/signup",
-      "error",
-      "Enter the student's display name.",
-    );
-  }
-
-  if (!isValidEmail(email)) {
-    redirectWithMessage(
-      "/signup",
-      "error",
-      "Enter a valid email address.",
-    );
-  }
-
-  if (password.length < 8) {
-    redirectWithMessage(
-      "/signup",
-      "error",
-      "Use a password with at least 8 characters.",
-    );
-  }
-
-  if (password !== confirmPassword) {
-    redirectWithMessage(
-      "/signup",
-      "error",
-      "The two passwords do not match.",
-    );
-  }
-
-  const origin = await getRequestOrigin();
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        display_name: displayName,
-      },
-      emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
-    },
-  });
-
-  if (error) {
-    redirectWithMessage(
-      "/signup",
-      "error",
-      "The account could not be created. Check the details and try again.",
-    );
-  }
-
-  if (data.session) {
-    redirect("/dashboard");
-  }
+  void formData;
 
   redirectWithMessage(
-    "/login",
-    "message",
-    "Check your email and select the confirmation link. Then sign in.",
+    "/signup",
+    "error",
+    "Public registration is closed. All accounts are school-issued and provisioned by an administrator.",
   );
 }
 

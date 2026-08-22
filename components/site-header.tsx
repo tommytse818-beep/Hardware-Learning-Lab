@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import { signOut } from "@/lib/auth-actions";
+import { UserMenu } from "@/components/user-menu";
 import { getViewer } from "@/lib/viewer";
 import { MobileNav } from "@/components/site-mobile-nav";
 
@@ -13,6 +13,8 @@ const publicLinks = [
 
 export async function SiteHeader() {
   const viewer = await getViewer();
+  const dashboardHref = viewer?.role === "admin" ? "/admin" : viewer?.role === "teacher" ? "/teacher" : "/dashboard";
+  const dashboardLabel = viewer?.role === "admin" ? "Admin" : viewer?.role === "teacher" ? "Teacher" : viewer?.demo ? "Open demo" : "Dashboard";
 
   return (
     <>
@@ -55,21 +57,12 @@ export async function SiteHeader() {
           {viewer ? (
             <>
               <Link
-                href="/dashboard"
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 transition hover:border-slate-950"
+                href={dashboardHref}
+                className="hidden rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 transition hover:border-slate-950 sm:inline-flex"
               >
-                {viewer.demo ? "Open demo" : "Dashboard"}
+                {dashboardLabel}
               </Link>
-              {!viewer.demo && (
-                <form action={signOut}>
-                  <button
-                    type="submit"
-                    className="rounded-lg bg-slate-950 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-                  >
-                    Sign out
-                  </button>
-                </form>
-              )}
+              <UserMenu viewer={viewer} />
             </>
           ) : (
             <Link

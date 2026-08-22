@@ -121,13 +121,8 @@ export default async function LoginPage({
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-600">
-          Testing as a private student?{" "}
-          <Link
-            href="/signup"
-            className="font-semibold text-emerald-700 hover:text-emerald-800"
-          >
-            Create an account
-          </Link>
+          School-issued access only. Ask your school administrator for the
+          correct account details.
         </p>
       </section>
     </div>
