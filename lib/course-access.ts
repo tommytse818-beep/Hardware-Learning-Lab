@@ -45,6 +45,14 @@ export async function getCourseAccess(
     );
   }
 
+  if (viewer.role === "admin") {
+    return accessResult(
+      true,
+      "entitled",
+      "Administrator course access confirmed.",
+    );
+  }
+
   return getCourseAccessForUser(viewer.id, courseSlug);
 }
 

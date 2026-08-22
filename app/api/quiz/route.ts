@@ -17,6 +17,7 @@ import { parseEngineeringNumber } from "@/lib/engineering";
 type QuizRequestBody = {
   courseSlug?: unknown;
   lessonSlug?: unknown;
+  questionId?: unknown;
   selectedIndex?: unknown;
   numericValue?: unknown;
 };
@@ -54,9 +55,21 @@ export async function POST(request: Request) {
     );
   }
 
+  const quizDefinition =
+    typeof body.questionId === "string"
+      ? (lesson.microChecks ?? []).find((item) => item.id === body.questionId)
+      : lesson.quiz;
+
+  if (!quizDefinition) {
+    return NextResponse.json(
+      { error: "The requested question was not found in this lesson." },
+      { status: 404 },
+    );
+  }
+
   let correct = false;
 
-  if (lesson.quiz.kind === "choice") {
+  if (quizDefinition.kind === "choice") {
     if (!Number.isInteger(body.selectedIndex)) {
       return NextResponse.json(
         { error: "Choose one of the available answers first." },
@@ -66,14 +79,14 @@ export async function POST(request: Request) {
 
     const answerIndex = body.selectedIndex as number;
 
-    if (answerIndex < 0 || answerIndex >= lesson.quiz.options.length) {
+    if (answerIndex < 0 || answerIndex >= quizDefinition.options.length) {
       return NextResponse.json(
         { error: "The selected answer is outside the available options." },
         { status: 400 },
       );
     }
 
-    correct = answerIndex === lesson.quiz.correctIndex;
+    correct = answerIndex === quizDefinition.correctIndex;
   } else {
     const numericAnswer = parseEngineeringNumber(body.numericValue);
 
@@ -88,7 +101,7 @@ export async function POST(request: Request) {
     }
 
     correct =
-      Math.abs(numericAnswer - lesson.quiz.answer) <= lesson.quiz.tolerance;
+      Math.abs(numericAnswer - quizDefinition.answer) <= quizDefinition.tolerance;
   }
 
   const score = correct ? 100 : 0;
@@ -160,11 +173,11 @@ export async function POST(request: Request) {
     score,
     feedback: correct
       ? "Your answer matches the engineering reasoning for this checkpoint."
-      : lesson.quiz.incorrectFeedback ??
+      : quizDefinition.incorrectFeedback ??
         "The answer does not yet match the requirement. Use the hint, revise one step and try again.",
-    hint: correct ? undefined : lesson.quiz.hint,
-    method: correct ? lesson.quiz.method : undefined,
-    explanation: correct ? lesson.quiz.explanation : undefined,
+    hint: correct ? undefined : quizDefinition.hint,
+    method: correct ? quizDefinition.method : undefined,
+    explanation: correct ? quizDefinition.explanation : undefined,
     saved,
     saveMessage,
   });

@@ -41,15 +41,35 @@ export async function getViewer(): Promise<Viewer | null> {
     return null;
   }
 
-  const metadataName = user.user_metadata?.display_name;
-  const displayName =
-    typeof metadataName === "string" && metadataName.trim().length > 0
-      ? metadataName.trim()
-      : user.email?.split("@")[0] ?? "Student";
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select(
+      "role, display_name, avatar_key, leaderboard_opt_in, must_change_password",
+    )
+    .eq("id", user.id)
+    .maybeSingle();
 
-  const roleValue = user.user_metadata?.role;
+  // Prefer the application's profile name.
+  // Keep Auth metadata/email as a fallback.
+  const metadataName = user.user_metadata?.display_name;
+
+  const displayName =
+    typeof profile?.display_name === "string" &&
+    profile.display_name.trim().length > 0
+      ? profile.display_name.trim()
+      : typeof metadataName === "string" && metadataName.trim().length > 0
+        ? metadataName.trim()
+        : user.email?.split("@")[0] ?? "Student";
+
+  // IMPORTANT:
+  // Admin / teacher / student authority comes from public.profiles,
+  // not editable Auth user metadata.
+  const roleValue = profile?.role;
+
   const role: ViewerRole =
-    roleValue === "admin" || roleValue === "teacher" || roleValue === "student"
+    roleValue === "admin" ||
+    roleValue === "teacher" ||
+    roleValue === "student"
       ? roleValue
       : "student";
 
@@ -60,16 +80,34 @@ export async function getViewer(): Promise<Viewer | null> {
     role,
     demo: false,
     verified: Boolean(user.email_confirmed_at),
+
     mustChangePassword:
-      user.user_metadata?.must_change_password === true ||
-      user.user_metadata?.force_reset === true,
-    avatar: typeof user.user_metadata?.avatar === "string" ? user.user_metadata.avatar : "sun",
+      profile?.must_change_password ??
+      (user.user_metadata?.must_change_password === true ||
+        user.user_metadata?.force_reset === true),
+
+    // Use the database avatar first, while preserving your old
+    // Auth-metadata behaviour as a fallback.
+    avatar:
+      typeof profile?.avatar_key === "string" &&
+      profile.avatar_key.trim().length > 0
+        ? profile.avatar_key
+        : typeof user.user_metadata?.avatar === "string"
+          ? user.user_metadata.avatar
+          : "sun",
+
+    // Keep your existing bio logic unchanged because your
+    // current profiles table does not contain a bio column.
     bio:
       typeof user.user_metadata?.bio === "string"
         ? user.user_metadata.bio
         : "School learner building practical electronics skills.",
+
+    // Database value is authoritative, but preserve the old
+    // metadata fallback if a profile is ever missing.
     leaderboardOptIn:
-      user.user_metadata?.leaderboard_opt_in === true ||
-      user.user_metadata?.leaderboardOptIn === true,
+      profile?.leaderboard_opt_in ??
+      (user.user_metadata?.leaderboard_opt_in === true ||
+        user.user_metadata?.leaderboardOptIn === true),
   };
 }

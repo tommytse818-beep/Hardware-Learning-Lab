@@ -24,8 +24,11 @@ export default function RootLayout({
   const demoMode = !isSupabaseConfigured();
 
   return (
-    <html lang="en">
-      <body className="min-h-screen bg-slate-50 text-slate-950 antialiased">
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className="min-h-screen bg-slate-50 text-slate-950 antialiased"
+        suppressHydrationWarning
+      >
         <SiteHeader />
         {demoMode && <DemoModeBanner />}
         <main id="main-content">{children}</main>

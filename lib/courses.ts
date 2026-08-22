@@ -67,6 +67,7 @@ export type Lesson = {
   video: LessonVideo;
   diagram?: LessonDiagram;
   quiz: LessonQuiz;
+  microChecks?: ChoiceLessonQuiz[];
   tutor: TutorGuidance;
   humanReviewRequired?: boolean;
 };
@@ -178,80 +179,151 @@ const openGuardMiniCourse: Course = {
       humanReviewRequired: true,
     },
     {
-      slug: "input-process-output",
+      slug: "user-need-engineering-requirement",
       section: "1.1",
-      title: "Electronics is input, process and output",
-      duration: "6 min video + 5 min check",
+      title: "From a user need to an engineering requirement",
+      duration: "6 min video + 8 min activity",
       delivery: "Pre-recorded",
       summary:
-        "Use a repeatable method to investigate an everyday electronic product rather than treating it as a mysterious box.",
+        "Turn a vague user idea into behaviour and constraints that can be checked by a pass/fail test.",
       objectives: [
-        "Define input, process and output in plain engineering language.",
-        "Separate information input from the power that supplies the system.",
-        "Classify a new electronic product without copying the OpenGuard answer.",
+        "Distinguish a user need, engineering requirement, feature and non-goal.",
+        "Replace vague words with a state, condition, timing, dimension or observable result.",
+        "Write testable OpenGuard Mini requirements without choosing component values too early.",
+        "State honest product boundaries without claiming locking, theft prevention or security certification.",
       ],
       sections: [
         {
-          heading: "A system receives, decides and responds",
+          heading: "Why vague ideas fail",
           paragraphs: [
-            "An input is a physical or electrical condition entering the system. Processing is the rule, comparison or circuit action that handles it. An output is the result that a user can see, hear, feel or receive.",
-            "A battery supplies energy, but it is not normally the information input. For a thermometer, temperature is the input and the displayed number is the output.",
+            "Engineers cannot design from a sentence such as 'make it smart'. A useful requirement states when the product acts, what it must do and how the result can be checked.",
+            "A user need explains why the product should exist. It is written in human language before component names are introduced.",
+          ],
+        },
+        {
+          heading: "Four statement types",
+          paragraphs: [
+            "Need: the human problem. Requirement: testable behaviour or constraint. Feature: added value that is not always part of the minimum purpose. Non-goal: a deliberate boundary or unsupported claim that the product does not make.",
+          ],
+        },
+        {
+          heading: "Worked transfer example",
+          paragraphs: [
+            "For a bicycle light, the need is to find the bicycle in a dark garage. A requirement is that the light turns on when a button is pressed. A feature is that it stays on for 20 seconds. A non-goal is GPS tracking.",
+            "Exact resistor and capacitor values are later design choices, not user requirements.",
           ],
         },
         {
           heading: "Transfer to OpenGuard Mini",
           paragraphs: [
-            "Door state and the arm control are inputs. Timing and logic form the process. The LED and buzzer are outputs. Later lessons explain the physical circuit behind each block.",
+            "The user wants to know when a personal door, locker or drawer has opened. Requirements include portable battery power, an arm control, visible and audible indication and predictable operation.",
+            "OpenGuard Mini is an opening alert and reminder. It does not physically lock a door, prevent theft or claim security certification.",
           ],
         },
       ],
       practicalTask:
-        "Choose one product at home and draw three boxes labelled Input, Process and Output. Give each box one clear job.",
+        "Rewrite 'make a cool door gadget' as three testable requirements and one honest non-goal. Each requirement must contain a state, condition, dimension, timing or observable pass/fail result.",
       video: {
         plannedPath:
-          "/media/courses/open-guard-mini/week-1/lesson-1-1-input-process-output.mp4",
+          "/media/courses/open-guard-mini/week-1/lesson-1-1-user-need-engineering-requirement.mp4",
         posterSrc:
-          "/images/projects/open-guard-mini/lessons/lesson-1-1-input-process-output.webp",
+          "/images/projects/open-guard-mini/lessons/lesson-1-1-user-need-requirement.webp",
         caption:
-          "Record one product example only. Keep the diagram on screen while defining the three blocks.",
+          "Record this as one concise concept video. The reasoning is revealed inside the same lesson after correct micro-check answers; do not create a separate solution video.",
       },
       diagram: {
         src: "/images/projects/open-guard-mini/lessons/lesson-1-1-input-process-output.webp",
-        alt: "Input, process and output block diagram for an electronic system",
-        width: 1995,
-        height: 656,
+        alt: "Transformation from the vague phrase make it smart to a testable engineering requirement",
+        width: 1000,
+        height: 560,
         caption:
-          "The image keeps its original aspect ratio. It is never stretched into a square or cropped.",
+          "Ask when the product acts, what it must do and how the result will be tested. Keep the statement observable, testable and honest about the product boundary.",
       },
       quiz: {
         kind: "choice",
-        id: "open-guard-1-1-system",
-        question:
-          "A hand dryer starts when hands are placed below it. Which option correctly identifies input, process and output?",
+        id: "open-guard-1-1-requirement",
+        question: "Which statement is an engineering requirement?",
         options: [
-          "Input: electricity; Process: the cable; Output: the wall socket",
-          "Input: detected hand presence; Process: decide that presence crosses the threshold; Output: moving warm air",
-          "Input: warm air; Process: the user's hands; Output: the sensor",
-          "Input: the motor; Process: electricity; Output: the button",
+          "Use a blue PCB.",
+          "The output shall stay off while the unit is disarmed.",
+          "The enclosure should look modern.",
+          "Choose a specific resistor before comparing alternatives.",
         ],
         correctIndex: 1,
-        hint:
-          "Ask what physical condition changes, what rule is applied and what the user finally observes.",
+        hint: "Ask which statement can be checked with a pass/fail test.",
         method: [
-          "Identify the sensed physical event: hands arrive below the dryer.",
-          "State the decision: the sensor signal crosses a presence threshold.",
-          "State the observable response: the motor and heater produce moving warm air.",
+          "Look for observable behaviour rather than appearance or an early component choice.",
+          "Set the unit to disarmed, create the opening condition and observe whether the output stays off.",
         ],
         explanation:
-          "Power supports every block, but the information input is detected hand presence. The system processes that information and produces moving warm air as the user-facing output.",
+          "The disarmed-output statement is functional and testable. PCB colour and appearance are preferences, while the component value is a later design choice.",
       },
+      microChecks: [
+        {
+          kind: "choice",
+          id: "open-guard-1-1-requirement",
+          question: "Which statement is an engineering requirement?",
+          options: [
+            "Use a blue PCB.",
+            "The output shall stay off while the unit is disarmed.",
+            "The enclosure should look modern.",
+            "Choose a specific resistor before comparing alternatives.",
+          ],
+          correctIndex: 1,
+          hint: "Ask which statement can be checked with a pass/fail test.",
+          method: [
+            "Look for observable behaviour rather than appearance or an early component choice.",
+            "Set the unit to disarmed, create the opening condition and observe whether the output stays off.",
+          ],
+          explanation:
+            "The disarmed-output statement is functional and testable. PCB colour and appearance are preferences, while the component value is a later design choice.",
+        },
+        {
+          kind: "choice",
+          id: "open-guard-1-1-claim-boundary",
+          question: "Why should 'prevents theft' not be a Course 1 requirement?",
+          options: [
+            "Because students are not allowed to use buzzers.",
+            "Because the device does not physically secure property and is not certified as a security product.",
+            "Because theft prevention always requires Wi-Fi.",
+            "Because requirements cannot describe real-life use.",
+          ],
+          correctIndex: 1,
+          hint: "Ask whether an alert can physically stop a person opening a door and whether the product has been security-certified.",
+          method: [
+            "Separate an alert from a physical lock or access-control system.",
+            "Make only claims that the prototype and course evidence can demonstrate responsibly.",
+          ],
+          explanation:
+            "OpenGuard Mini can alert or remind a user, but it does not stop entry, secure property or meet a security certification standard.",
+        },
+        {
+          kind: "choice",
+          id: "open-guard-1-1-installation",
+          question: "Which statement is a measurable installation requirement?",
+          options: [
+            "The product shall be easy to install.",
+            "The enclosure shall look tidy.",
+            "The magnet shall operate within the validated maximum gap stated in millimetres in the installation guide.",
+            "The product shall work anywhere.",
+          ],
+          correctIndex: 2,
+          hint: "Look for a gap, dimension, power condition, attachment method or another observable pass/fail category.",
+          method: [
+            "Replace subjective words such as easy, tidy or anywhere with a measurable condition.",
+            "Use the validated gap value and a stated unit so installation can be checked.",
+          ],
+          explanation:
+            "A maximum operating gap stated in millimetres creates a measurable installation test. The exact number should come from prototype validation rather than being invented before testing.",
+        },
+      ],
       tutor: {
         hint:
-          "Use the questions: What changes? What rule is applied? What can the user observe?",
+          "Ask whether the statement can be tested pass/fail, whether the product can physically support the claim, and whether a number, state or observable result can be added.",
         simpleExplanation:
-          "Input is what the system notices, process is what it decides, and output is what it does.",
+          "A need explains why. A requirement says what must happen and how we can check it. A feature adds value. A non-goal says what the product does not promise.",
         measurementPrompt:
-          "No meter is required yet. Submit a labelled system diagram as evidence.",
+          "No electrical measurement is required yet. Use prototype evidence later to set any timing or installation number rather than inventing it now.",
       },
     },
     {
@@ -845,7 +917,8 @@ const courseAliases: Record<string, string> = {
 const lessonAliases: Record<string, string> = {
   "safe-circuits": "safety-complete-circuit",
   "door-alarm-logic": "boolean-requirement",
-  "esp32-inputs": "input-process-output",
+  "input-process-output": "user-need-engineering-requirement",
+  "esp32-inputs": "user-need-engineering-requirement",
   "pcb-capstone": "week-one-design-checkpoint",
 };
 

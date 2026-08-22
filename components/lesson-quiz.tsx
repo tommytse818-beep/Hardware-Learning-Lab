@@ -23,6 +23,7 @@ type LessonQuizProps = {
   courseSlug: string;
   lessonSlug: string;
   quiz: QuizView;
+  questionId?: string;
   initialCompleted: boolean;
   initialScore: number | null;
   initialMethod?: string[];
@@ -32,6 +33,16 @@ type LessonQuizProps = {
   nextHref: string;
   nextLabel: string;
   humanReviewRequired?: boolean;
+};
+
+type MicroCheckDefinition = {
+  id: string;
+  question: string;
+  options: string[];
+  hint: string;
+  incorrectFeedback?: string;
+  method: string[];
+  explanation: string;
 };
 
 type QuizResult = {
@@ -45,10 +56,275 @@ type QuizResult = {
   saveMessage?: string;
 };
 
+export function LessonMicroCheckGroup({
+  courseSlug,
+  lessonSlug,
+  checks,
+  nextHref,
+  nextLabel,
+  cloudConnected,
+  demoMode,
+}: {
+  courseSlug: string;
+  lessonSlug: string;
+  checks: MicroCheckDefinition[];
+  nextHref: string;
+  nextLabel: string;
+  cloudConnected: boolean;
+  demoMode: boolean;
+}) {
+  const [selectedIndexById, setSelectedIndexById] = useState<Record<string, number | null>>({});
+  const [resultById, setResultById] = useState<Record<string, QuizResult | null>>({});
+  const [requestErrorById, setRequestErrorById] = useState<Record<string, string>>({});
+  const [submittingById, setSubmittingById] = useState<Record<string, boolean>>({});
+
+  const allCorrect =
+    checks.length > 0 &&
+    checks.every((check) => resultById[check.id]?.correct === true);
+
+  async function submitCheck(check: MicroCheckDefinition) {
+    const selectedIndex = selectedIndexById[check.id];
+
+    if (selectedIndex === null || selectedIndex === undefined) {
+      return;
+    }
+
+    setSubmittingById((previous) => ({ ...previous, [check.id]: true }));
+    setRequestErrorById((previous) => ({ ...previous, [check.id]: "" }));
+
+    try {
+      const response = await fetch("/api/quiz", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          courseSlug,
+          lessonSlug,
+          questionId: check.id,
+          selectedIndex,
+        }),
+      });
+
+      const data = (await response.json()) as QuizResult & {
+        error?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "The answer could not be checked.");
+      }
+
+      setResultById((previous) => ({ ...previous, [check.id]: data }));
+    } catch (error) {
+      setRequestErrorById((previous) => ({
+        ...previous,
+        [check.id]:
+          error instanceof Error
+            ? error.message
+            : "The answer could not be checked.",
+      }));
+    } finally {
+      setSubmittingById((previous) => ({ ...previous, [check.id]: false }));
+    }
+  }
+
+  return (
+    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-700">
+            Micro-checks
+          </p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            Complete all three correctly to unlock the next lesson.
+          </p>
+        </div>
+        <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
+          {checks.length} required questions
+        </span>
+      </div>
+
+      <div className="mt-6 space-y-5">
+        {checks.map((check, index) => {
+          const selectedIndex = selectedIndexById[check.id] ?? null;
+          const result = resultById[check.id] ?? null;
+          const requestError = requestErrorById[check.id] ?? "";
+          const isSubmitting = submittingById[check.id] ?? false;
+          const letterBase = String.fromCharCode(65);
+
+          return (
+            <div
+              key={check.id}
+              className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5"
+            >
+              <p className="text-sm font-semibold text-slate-700">
+                Question {index + 1}
+              </p>
+              <h3 className="mt-3 text-xl font-semibold tracking-tight text-slate-950">
+                {check.question}
+              </h3>
+
+              <fieldset className="mt-5 grid gap-3 sm:grid-cols-2">
+                <legend className="sr-only">Choose one answer</legend>
+                {check.options.map((option, optionIndex) => {
+                  const selected = selectedIndex === optionIndex;
+                  const letter = String.fromCharCode(letterBase.charCodeAt(0) + optionIndex);
+
+                  return (
+                    <label
+                      key={`${check.id}-${option}`}
+                      className={`group flex cursor-pointer items-start gap-3 rounded-2xl border p-4 text-sm transition ${
+                        selected
+                          ? "border-indigo-600 bg-indigo-50 shadow-sm"
+                          : "border-slate-200 hover:-translate-y-0.5 hover:border-slate-400 hover:shadow-sm"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name={`lesson-answer-${check.id}`}
+                        value={optionIndex}
+                        checked={selected}
+                        onChange={() => {
+                          setSelectedIndexById((previous) => ({
+                            ...previous,
+                            [check.id]: optionIndex,
+                          }));
+                          setRequestErrorById((previous) => ({ ...previous, [check.id]: "" }));
+                          setResultById((previous) => ({ ...previous, [check.id]: null }));
+                        }}
+                        className="sr-only"
+                      />
+                      <span
+                        className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-xs font-bold transition ${
+                          selected
+                            ? "bg-indigo-600 text-white"
+                            : "bg-slate-100 text-slate-600 group-hover:bg-slate-200"
+                        }`}
+                      >
+                        {letter}
+                      </span>
+                      <span className="pt-1 leading-6 text-slate-800">{option}</span>
+                    </label>
+                  );
+                })}
+              </fieldset>
+
+              <button
+                type="button"
+                onClick={() => submitCheck(check)}
+                disabled={selectedIndex === null || isSubmitting}
+                className="mt-5 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+              >
+                {isSubmitting ? "Checking…" : "Check answer"}
+              </button>
+
+              {requestError && (
+                <p
+                  role="alert"
+                  className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800"
+                >
+                  {requestError}
+                </p>
+              )}
+
+              {result && (
+                <div
+                  aria-live="polite"
+                  className={`mt-5 overflow-hidden rounded-2xl border ${
+                    result.correct
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-950"
+                      : "border-amber-200 bg-amber-50 text-amber-950"
+                  }`}
+                >
+                  <div className="p-5">
+                    <p className="font-semibold">
+                      {result.correct
+                        ? `Correct — ${result.score}%`
+                        : "Not yet — use the hint and try again."}
+                    </p>
+                    <p className="mt-2 text-sm leading-6">{result.feedback}</p>
+
+                    {!result.correct && result.hint && (
+                      <div className="mt-4 rounded-xl border border-amber-300/70 bg-white/65 p-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.14em] text-amber-800">
+                          Smallest useful hint
+                        </p>
+                        <p className="mt-2 text-sm leading-6">{result.hint}</p>
+                      </div>
+                    )}
+
+                    {result.correct && result.method && result.method.length > 0 && (
+                      <div className="mt-5 rounded-xl border border-emerald-200 bg-white/75 p-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-800">
+                          Method revealed
+                        </p>
+                        <ol className="mt-3 space-y-3 text-sm leading-6">
+                          {result.method.map((step: string, methodIndex: number) => (
+                            <li key={`${check.id}-${step}`} className="flex gap-3">
+                              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-600 text-xs font-bold text-white">
+                                {methodIndex + 1}
+                              </span>
+                              <span>{step}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
+
+                    {result.correct && result.explanation && (
+                      <div className="mt-4 text-sm leading-6">
+                        <strong>Why this is correct:</strong> {result.explanation}
+                      </div>
+                    )}
+
+                    {!result.saved && (
+                      <p className="mt-3 text-xs font-medium">
+                        {result.saveMessage ??
+                          "Prototype mode: this result is stored only in this browser until Supabase is connected."}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {allCorrect && (
+        <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
+          <p className="text-sm font-semibold text-emerald-950">
+            All three micro-checks are correct. You can continue.
+          </p>
+          <Link
+            href={nextHref}
+            className="mt-3 inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 sm:mt-0"
+          >
+            {nextLabel} →
+          </Link>
+        </div>
+      )}
+
+      {!allCorrect && !demoMode && cloudConnected && (
+        <p className="mt-4 text-xs leading-5 text-slate-500">
+          Progress is saved only after each check is answered correctly.
+        </p>
+      )}
+
+      {demoMode && !allCorrect && (
+        <p className="mt-4 text-xs leading-5 text-slate-500">
+          Demo mode: the micro-checks are available for practice and remain browser-local.
+        </p>
+      )}
+    </section>
+  );
+}
+
 export function LessonQuiz({
   courseSlug,
   lessonSlug,
   quiz,
+  questionId,
   initialCompleted,
   initialScore,
   initialMethod,
@@ -110,6 +386,7 @@ export function LessonQuiz({
         body: JSON.stringify({
           courseSlug,
           lessonSlug,
+          questionId,
           ...(quiz.kind === "choice"
             ? { selectedIndex }
             : { numericValue }),

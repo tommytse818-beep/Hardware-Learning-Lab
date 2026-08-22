@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { ZoomableDiagram } from "@/components/course/zoomable-diagram";
-import { LessonQuiz } from "@/components/lesson-quiz";
+import {
+  LessonMicroCheckGroup,
+  LessonQuiz,
+} from "@/components/lesson-quiz";
 import { LessonVideo } from "@/components/lesson-video";
 import { VerifiedTutor } from "@/components/verified-tutor";
 import { getCourseAccess } from "@/lib/course-access";
@@ -14,7 +17,6 @@ import {
 } from "@/lib/courses";
 import { getCourseProgress } from "@/lib/progress";
 import { getViewer } from "@/lib/viewer";
-import { isSupabaseConfigured } from "@/lib/env";
 
 type LessonPageProps = {
   params: Promise<{
@@ -81,6 +83,8 @@ export default async function LessonPage({ params }: LessonPageProps) {
           unit: lesson.quiz.unit,
           placeholder: lesson.quiz.placeholder,
         };
+
+  const microChecks = lesson.microChecks ?? [];
 
   const nextHref = next
     ? `/courses/${course.slug}/lessons/${next.slug}`
@@ -204,7 +208,36 @@ export default async function LessonPage({ params }: LessonPageProps) {
 
           <LessonVideo title={lesson.title} video={lesson.video} />
 
-          {lesson.diagram && <ZoomableDiagram diagram={lesson.diagram} />}
+          {lesson.diagram && (
+            <figure className="lesson-v1-diagram overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 sm:px-5">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-700">
+                    Lesson diagram
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Original aspect ratio {lesson.diagram.width}:{lesson.diagram.height}; no stretching or motion.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 sm:p-5">
+                <Image
+                  src={lesson.diagram.src}
+                  alt={lesson.diagram.alt}
+                  width={lesson.diagram.width}
+                  height={lesson.diagram.height}
+                  sizes="(min-width: 1024px) 760px, 100vw"
+                  className="h-auto max-w-full rounded-2xl border border-slate-200 bg-white object-contain"
+                  priority={false}
+                />
+              </div>
+
+              <figcaption className="border-t border-slate-200 px-4 py-4 text-sm leading-6 text-slate-600 sm:px-5">
+                {lesson.diagram.caption}
+              </figcaption>
+            </figure>
+          )}
 
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">
@@ -245,24 +278,44 @@ export default async function LessonPage({ params }: LessonPageProps) {
             </p>
           </section>
 
-          <LessonQuiz
-            courseSlug={course.slug}
-            lessonSlug={lesson.slug}
-            quiz={quizView}
-            initialCompleted={currentProgress?.completed ?? false}
-            initialScore={currentProgress?.quiz_score ?? null}
-            initialMethod={
-              currentProgress?.completed ? lesson.quiz.method : undefined
-            }
-            initialExplanation={
-              currentProgress?.completed ? lesson.quiz.explanation : undefined
-            }
-            cloudConnected={progress.databaseReady}
-            demoMode={!isSupabaseConfigured()}
-            nextHref={nextHref}
-            nextLabel={nextLabel}
-            humanReviewRequired={lesson.humanReviewRequired}
-          />
+          {microChecks.length > 0 ? (
+            <LessonMicroCheckGroup
+              courseSlug={course.slug}
+              lessonSlug={lesson.slug}
+              checks={microChecks.map((microCheck) => ({
+                id: microCheck.id,
+                question: microCheck.question,
+                options: microCheck.options,
+                hint: microCheck.hint,
+                incorrectFeedback: microCheck.incorrectFeedback,
+                method: microCheck.method,
+                explanation: microCheck.explanation,
+              }))}
+              nextHref={nextHref}
+              nextLabel={nextLabel}
+              cloudConnected={progress.databaseReady}
+              demoMode={viewer.demo}
+            />
+          ) : (
+            <LessonQuiz
+              courseSlug={course.slug}
+              lessonSlug={lesson.slug}
+              quiz={quizView}
+              initialCompleted={currentProgress?.completed ?? false}
+              initialScore={currentProgress?.quiz_score ?? null}
+              initialMethod={
+                currentProgress?.completed ? lesson.quiz.method : undefined
+              }
+              initialExplanation={
+                currentProgress?.completed ? lesson.quiz.explanation : undefined
+              }
+              cloudConnected={progress.databaseReady}
+              demoMode={viewer.demo}
+              nextHref={nextHref}
+              nextLabel={nextLabel}
+              humanReviewRequired={lesson.humanReviewRequired}
+            />
+          )}
 
           <nav className="grid gap-3 sm:grid-cols-2" aria-label="Lesson navigation">
             {previous ? (
