@@ -20,42 +20,27 @@ export default async function TeacherPage() {
           Cohort overview for {viewer.displayName}
         </h1>
         <p className="mt-3 max-w-2xl text-slate-600">
-          Review learner progress, points, aliases and behind/on-track status for only the cohorts assigned to your teaching group.
+          This workspace will show cohort and learner data once the school programme has been provisioned and linked to your assigned teaching groups.
         </p>
       </div>
 
       <div className="mt-8 grid gap-5 md:grid-cols-3">
         {[
-          ["Assigned learners", "18"],
-          ["Behind target", "4"],
-          ["Average points", "612"],
+          ["Assigned cohorts", "Waiting for live data"],
+          ["Learners in scope", "Waiting for live data"],
+          ["Action required", "No live tasks yet"],
         ].map(([label, value]) => (
           <div key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">{label}</p>
-            <p className="mt-4 text-3xl font-bold text-slate-950">{value}</p>
+            <p className="mt-4 text-xl font-bold text-slate-950">{value}</p>
           </div>
         ))}
       </div>
 
       <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-slate-950">Learner status</h2>
-        <div className="mt-5 space-y-3">
-          {[
-            ["Ava", "On track", "1,180 points"],
-            ["Milo", "Behind target", "640 points"],
-            ["Nina", "On track", "1,040 points"],
-          ].map(([name, status, points]) => (
-            <div key={name} className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-              <div>
-                <p className="font-semibold text-slate-900">{name}</p>
-                <p className="text-slate-500">Alias privacy protected</p>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-slate-900">{points}</p>
-                <p className={status === "Behind target" ? "text-amber-700" : "text-emerald-700"}>{status}</p>
-              </div>
-            </div>
-          ))}
+        <h2 className="text-xl font-semibold text-slate-950">Teacher status</h2>
+        <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm leading-6 text-slate-600">
+          No assignments or cohort data are connected yet. Once your school admin provisions the programme, this page will show the cohorts assigned to you and the learner progress relevant to those groups.
         </div>
       </div>
     </div>

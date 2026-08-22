@@ -7,6 +7,7 @@ export type Viewer = {
   id: string | null;
   email: string;
   displayName: string;
+  leaderboardAlias: string;
   role: ViewerRole;
   demo: boolean;
   verified: boolean;
@@ -18,10 +19,15 @@ export type Viewer = {
 
 export async function getViewer(): Promise<Viewer | null> {
   if (!isSupabaseConfigured()) {
+    if (process.env.NODE_ENV === "production") {
+      return null;
+    }
+
     return {
       id: null,
       email: "demo.student@example.com",
       displayName: "Demo Student",
+      leaderboardAlias: "Demo",
       role: "student",
       demo: true,
       verified: true,
@@ -44,28 +50,34 @@ export async function getViewer(): Promise<Viewer | null> {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "role, display_name, avatar_key, leaderboard_opt_in, must_change_password",
+      "role, display_name, leaderboard_alias, avatar_key, bio, leaderboard_opt_in, must_change_password",
     )
     .eq("id", user.id)
     .maybeSingle();
 
-  // Prefer the application's profile name.
-  // Keep Auth metadata/email as a fallback.
-  const metadataName = user.user_metadata?.display_name;
+  const safeProfile = profile ?? {
+    role: user.user_metadata?.role,
+    display_name: user.user_metadata?.display_name,
+    leaderboard_alias: user.user_metadata?.leaderboard_alias,
+    avatar_key: user.user_metadata?.avatar,
+    bio: user.user_metadata?.bio,
+    leaderboard_opt_in:
+      user.user_metadata?.leaderboard_opt_in === true ||
+      user.user_metadata?.leaderboardOptIn === true,
+    must_change_password:
+      user.user_metadata?.must_change_password === true ||
+      user.user_metadata?.force_reset === true,
+  };
 
+  const metadataName = user.user_metadata?.display_name;
   const displayName =
-    typeof profile?.display_name === "string" &&
-    profile.display_name.trim().length > 0
-      ? profile.display_name.trim()
+    typeof safeProfile.display_name === "string" && safeProfile.display_name.trim().length > 0
+      ? safeProfile.display_name.trim()
       : typeof metadataName === "string" && metadataName.trim().length > 0
         ? metadataName.trim()
         : user.email?.split("@")[0] ?? "Student";
 
-  // IMPORTANT:
-  // Admin / teacher / student authority comes from public.profiles,
-  // not editable Auth user metadata.
-  const roleValue = profile?.role;
-
+  const roleValue = safeProfile.role;
   const role: ViewerRole =
     roleValue === "admin" ||
     roleValue === "teacher" ||
@@ -77,36 +89,32 @@ export async function getViewer(): Promise<Viewer | null> {
     id: user.id,
     email: user.email ?? "student",
     displayName,
+    leaderboardAlias:
+      typeof safeProfile.leaderboard_alias === "string" &&
+      safeProfile.leaderboard_alias.trim().length > 0
+        ? safeProfile.leaderboard_alias.trim()
+        : displayName,
     role,
     demo: false,
     verified: Boolean(user.email_confirmed_at),
-
     mustChangePassword:
-      profile?.must_change_password ??
+      safeProfile.must_change_password ??
       (user.user_metadata?.must_change_password === true ||
         user.user_metadata?.force_reset === true),
-
-    // Use the database avatar first, while preserving your old
-    // Auth-metadata behaviour as a fallback.
     avatar:
-      typeof profile?.avatar_key === "string" &&
-      profile.avatar_key.trim().length > 0
-        ? profile.avatar_key
+      typeof safeProfile.avatar_key === "string" && safeProfile.avatar_key.trim().length > 0
+        ? safeProfile.avatar_key
         : typeof user.user_metadata?.avatar === "string"
           ? user.user_metadata.avatar
           : "sun",
-
-    // Keep your existing bio logic unchanged because your
-    // current profiles table does not contain a bio column.
     bio:
-      typeof user.user_metadata?.bio === "string"
-        ? user.user_metadata.bio
-        : "School learner building practical electronics skills.",
-
-    // Database value is authoritative, but preserve the old
-    // metadata fallback if a profile is ever missing.
+      typeof safeProfile.bio === "string" && safeProfile.bio.trim().length > 0
+        ? safeProfile.bio.trim()
+        : typeof user.user_metadata?.bio === "string"
+          ? user.user_metadata.bio
+          : "School learner building practical electronics skills.",
     leaderboardOptIn:
-      profile?.leaderboard_opt_in ??
+      safeProfile.leaderboard_opt_in ??
       (user.user_metadata?.leaderboard_opt_in === true ||
         user.user_metadata?.leaderboardOptIn === true),
   };

@@ -34,6 +34,36 @@ export default async function FirstLoginPage({ searchParams }: FirstLoginPagePro
 
         <form action={completeFirstLogin} className="mt-8 space-y-5">
           <div>
+            <label htmlFor="password" className="text-sm font-semibold text-slate-800">
+              New password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              minLength={8}
+              required
+              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="confirmPassword" className="text-sm font-semibold text-slate-800">
+              Confirm password
+            </label>
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              minLength={8}
+              required
+              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
+            />
+          </div>
+
+          <div>
             <label htmlFor="displayName" className="text-sm font-semibold text-slate-800">
               Display name
             </label>

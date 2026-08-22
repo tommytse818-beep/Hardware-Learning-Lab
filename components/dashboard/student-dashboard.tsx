@@ -3,6 +3,7 @@ import { getStudentPortalData } from "@/lib/portal-data";
 
 export async function StudentDashboard() {
   const data = await getStudentPortalData();
+  const leaderboard = Array.isArray(data.leaderboard) ? data.leaderboard : [];
 
   return (
     <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -20,21 +21,27 @@ export async function StudentDashboard() {
         </div>
 
         <div className="p-6 sm:p-8">
-          <div className="space-y-3">
-            {data.leaderboard.map((item, index) => (
-              <div
-                key={item.alias}
-                className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="font-bold text-slate-400">#{index + 1}</span>
-                  <AvatarBadge name={item.alias} size="sm" />
-                  <span className="font-semibold text-slate-900">{item.alias}</span>
+          {leaderboard.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm leading-6 text-slate-600">
+              No cohort leaderboard data is connected yet. Once the school programme is provisioned, this panel will show live points and rankings.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {leaderboard.map((item, index) => (
+                <div
+                  key={item.alias}
+                  className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold text-slate-400">#{index + 1}</span>
+                    <AvatarBadge name={item.alias} size="sm" />
+                    <span className="font-semibold text-slate-900">{item.alias}</span>
+                  </div>
+                  <span className="font-semibold text-slate-700">{item.points.toLocaleString()} pts</span>
                 </div>
-                <span className="font-semibold text-slate-700">{item.points.toLocaleString()} pts</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

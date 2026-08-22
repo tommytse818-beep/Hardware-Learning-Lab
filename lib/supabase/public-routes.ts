@@ -12,6 +12,8 @@ const publicExactRoutes = new Set([
   "/safeguarding",
 ]);
 
+const previewCourseRoute = /^\/courses\/[^/]+\/preview$/;
+
 export function isPublicRoute(pathname: string) {
   return (
     publicExactRoutes.has(pathname) ||
@@ -19,6 +21,7 @@ export function isPublicRoute(pathname: string) {
     pathname === "/auth" ||
     pathname.startsWith("/auth/") ||
     pathname === "/api/quiz" ||
-    pathname === "/api/school-enquiry"
+    pathname === "/api/school-enquiry" ||
+    previewCourseRoute.test(pathname)
   );
 }

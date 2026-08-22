@@ -13,8 +13,6 @@ const publicLinks = [
 
 export async function SiteHeader() {
   const viewer = await getViewer();
-  const dashboardHref = viewer?.role === "admin" ? "/admin" : viewer?.role === "teacher" ? "/teacher" : "/dashboard";
-  const dashboardLabel = viewer?.role === "admin" ? "Admin" : viewer?.role === "teacher" ? "Teacher" : viewer?.demo ? "Open demo" : "Dashboard";
 
   return (
     <>
@@ -28,10 +26,13 @@ export async function SiteHeader() {
           className="flex items-center gap-3 font-semibold tracking-tight text-slate-950"
         >
           <Image
-            src="/logo.png"
+            src="/logo.svg"
             alt="Hardware Learning Lab logo"
             width={240}
             height={96}
+            priority
+            loading="eager"
+            sizes="(max-width: 640px) 140px, 240px"
             className="h-16 w-auto object-contain max-sm:h-14"
           />
         </Link>
@@ -54,24 +55,7 @@ export async function SiteHeader() {
         <MobileNav />
 
         <div className="order-2 flex items-center gap-2 sm:order-3">
-          {viewer ? (
-            <>
-              <Link
-                href={dashboardHref}
-                className="hidden rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 transition hover:border-slate-950 sm:inline-flex"
-              >
-                {dashboardLabel}
-              </Link>
-              <UserMenu viewer={viewer} />
-            </>
-          ) : (
-            <Link
-              href="/login"
-              className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              Log in
-            </Link>
-          )}
+          <UserMenu viewer={viewer} />
         </div>
       </div>
       </header>

@@ -5,18 +5,24 @@ import { requireViewerRole } from "@/lib/authorization";
 export async function GET() {
   await requireViewerRole(["admin"]);
 
-  return NextResponse.json({
-    ok: true,
-    message: "Admin user listing is prepared for the trusted provisioning flow.",
-    users: [],
-  });
+  return NextResponse.json(
+    {
+      ok: false,
+      message: "The live admin user-provisioning layer is not connected yet.",
+      users: [],
+    },
+    { status: 503 },
+  );
 }
 
 export async function POST() {
   await requireViewerRole(["admin"]);
 
-  return NextResponse.json({
-    ok: true,
-    message: "Provisioning is limited to the trusted admin workflow and the live Supabase project.",
-  });
+  return NextResponse.json(
+    {
+      ok: false,
+      message: "Provisioning is not available until the live Supabase admin flow is configured.",
+    },
+    { status: 503 },
+  );
 }

@@ -15,6 +15,14 @@ export function isSupabaseConfigured() {
   return !isPlaceholder(supabaseUrl) && !isPlaceholder(supabasePublishableKey);
 }
 
+export function isDemoModeEnabled() {
+  return (
+    process.env.NODE_ENV !== "production" &&
+    process.env.ENABLE_DEMO_MODE === "true" &&
+    !isSupabaseConfigured()
+  );
+}
+
 export function getSupabaseConfig() {
   if (!isSupabaseConfigured()) {
     throw new Error(

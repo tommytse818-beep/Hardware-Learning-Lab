@@ -20,20 +20,20 @@ export default async function AdminPage() {
           Welcome, {viewer.displayName}
         </h1>
         <p className="mt-3 max-w-2xl text-slate-600">
-          Manage provisioned schools, teacher accounts, cohort seats and course assignments after a verified school purchase.
+          This admin workspace will show schools, cohort seats and programme status once a trusted school provision is connected to the live database.
         </p>
       </div>
 
       <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         {[
-          ["Schools", "3"],
-          ["Active cohorts", "6"],
-          ["Student seats", "72/72"],
-          ["Pending enrolments", "4"],
+          ["Schools", "Waiting for live data"],
+          ["Active cohorts", "Waiting for live data"],
+          ["Student seats", "Waiting for live data"],
+          ["Pending enrolments", "Waiting for live data"],
         ].map(([label, value]) => (
           <div key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">{label}</p>
-            <p className="mt-4 text-3xl font-bold text-slate-950">{value}</p>
+            <p className="mt-4 text-xl font-bold text-slate-950">{value}</p>
           </div>
         ))}
       </div>
@@ -41,12 +41,9 @@ export default async function AdminPage() {
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-slate-950">Provisioning actions</h2>
-          <ul className="mt-5 space-y-3 text-sm leading-6 text-slate-700">
-            <li>• Create schools and validate the confirmed commercial agreement.</li>
-            <li>• Set cohort seat limits and assign the purchased course.</li>
-            <li>• Batch import student accounts from Name,email lines.</li>
-            <li>• Allocate teacher accounts without consuming student seats.</li>
-          </ul>
+          <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm leading-6 text-slate-600">
+            Live school, teacher and cohort provisioning will appear here after the trusted admin flow is connected to the database. Until then, this workspace intentionally stays empty rather than showing fictional operational numbers.
+          </div>
         </section>
 
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -54,7 +51,7 @@ export default async function AdminPage() {
           <ul className="mt-5 space-y-3 text-sm leading-6 text-slate-700">
             <li>• Verify each learner has an individual school-issued account.</li>
             <li>• Confirm temporary passwords are replaced on first login.</li>
-            <li>• Review the cohort leaderboard and progress status before distribution.</li>
+            <li>• Review cohort seats and course assignments before distribution.</li>
             <li>• Keep student and teacher emails private and separate from public boards.</li>
           </ul>
         </section>

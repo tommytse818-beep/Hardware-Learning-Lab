@@ -1,12 +1,29 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getSupabaseConfig, isSupabaseConfigured } from "@/lib/env";
+import {
+  getSupabaseConfig,
+  isDemoModeEnabled,
+  isSupabaseConfigured,
+} from "@/lib/env";
 import { isPublicRoute } from "@/lib/supabase/public-routes";
 
 export async function updateSession(request: NextRequest) {
-  // Demo mode: allow the visual prototype to open before Supabase is connected.
+  const pathname = request.nextUrl.pathname;
+
   if (!isSupabaseConfigured()) {
+    if (isDemoModeEnabled()) {
+      return NextResponse.next({ request });
+    }
+
+    if (!isPublicRoute(pathname)) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/login";
+      loginUrl.search = "";
+      loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+      return NextResponse.redirect(loginUrl);
+    }
+
     return NextResponse.next({ request });
   }
 
@@ -39,7 +56,6 @@ export async function updateSession(request: NextRequest) {
   // Verify the access token before using it to protect a route.
   const { data } = await supabase.auth.getClaims();
   const claims = data?.claims;
-  const pathname = request.nextUrl.pathname;
 
   if (!claims && !isPublicRoute(pathname)) {
     const loginUrl = request.nextUrl.clone();

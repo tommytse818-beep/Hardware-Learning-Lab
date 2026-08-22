@@ -9,6 +9,7 @@ import {
 } from "@/lib/env";
 import { safeInternalPath } from "@/lib/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getViewer } from "@/lib/viewer";
 
 function readText(formData: FormData, field: string) {
   const value = formData.get(field);
@@ -89,23 +90,25 @@ export async function login(formData: FormData) {
     redirectWithMessage("/login", "error", message, { next });
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const viewer = await getViewer();
 
-  const role = typeof user?.user_metadata?.role === "string" ? user.user_metadata.role : "student";
-  const mustChangePassword =
-    user?.user_metadata?.must_change_password === true ||
-    user?.user_metadata?.force_reset === true;
+  if (!viewer) {
+    redirectWithMessage(
+      "/login",
+      "error",
+      "Your account profile is not ready. Please contact your programme administrator.",
+      { next },
+    );
+  }
 
-  if (mustChangePassword) {
+  if (viewer.mustChangePassword) {
     redirect("/first-login");
   }
 
   const targetPath =
-    role === "admin"
+    viewer.role === "admin"
       ? "/admin"
-      : role === "teacher"
+      : viewer.role === "teacher"
         ? "/teacher"
         : next || "/dashboard";
 
