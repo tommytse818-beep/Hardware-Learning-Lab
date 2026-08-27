@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireApiViewer } from "@/lib/api-authorization";
+import { getCourse } from "@/lib/courses";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
@@ -9,7 +10,9 @@ export async function GET() {
 
   const { data, error } = await createAdminClient()
     .from("cohorts")
-    .select("id, school_id, name, course_slug, student_seat_limit, active, created_at")
+    .select(
+      "id, school_id, name, course_slug, student_seat_limit, active, created_at",
+    )
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -36,7 +39,7 @@ export async function POST(request: Request) {
   const schoolId =
     typeof body.schoolId === "string" ? body.schoolId.trim() : "";
   const name = typeof body.name === "string" ? body.name.trim() : "";
-  const courseSlug =
+  const requestedCourseSlug =
     typeof body.courseSlug === "string" ? body.courseSlug.trim() : "";
   const seatLimit = Number(body.studentSeatLimit);
 
@@ -44,7 +47,7 @@ export async function POST(request: Request) {
     !/^[0-9a-f-]{36}$/i.test(schoolId) ||
     name.length < 2 ||
     name.length > 100 ||
-    !/^[a-z0-9][a-z0-9-]{1,80}$/.test(courseSlug) ||
+    !/^[a-z0-9][a-z0-9-]{1,80}$/.test(requestedCourseSlug) ||
     !Number.isInteger(seatLimit) ||
     seatLimit < 1 ||
     seatLimit > 200
@@ -55,16 +58,38 @@ export async function POST(request: Request) {
     );
   }
 
+  const course = getCourse(requestedCourseSlug);
+  if (!course) {
+    return NextResponse.json(
+      { error: "The selected course is not available in this deployment." },
+      { status: 400 },
+    );
+  }
+
   const admin = createAdminClient();
 
-  const { data: school } = await admin
+  const { data: school, error: schoolError } = await admin
     .from("schools")
-    .select("id")
+    .select("id, status")
     .eq("id", schoolId)
     .maybeSingle();
 
+  if (schoolError) {
+    return NextResponse.json(
+      { error: "The school could not be verified." },
+      { status: 503 },
+    );
+  }
+
   if (!school) {
     return NextResponse.json({ error: "School not found." }, { status: 404 });
+  }
+
+  if (!new Set(["approved", "active"]).has(school.status)) {
+    return NextResponse.json(
+      { error: "Approve or activate the school before creating a cohort." },
+      { status: 409 },
+    );
   }
 
   const { data: cohort, error: cohortError } = await admin
@@ -72,7 +97,7 @@ export async function POST(request: Request) {
     .insert({
       school_id: schoolId,
       name,
-      course_slug: courseSlug,
+      course_slug: course.slug,
       student_seat_limit: seatLimit,
       active: true,
     })
@@ -90,14 +115,17 @@ export async function POST(request: Request) {
     .from("cohort_courses")
     .insert({
       cohort_id: cohort.id,
-      course_slug: courseSlug,
+      course_slug: course.slug,
       active: true,
     });
 
   if (assignmentError) {
     await admin.from("cohorts").delete().eq("id", cohort.id);
     return NextResponse.json(
-      { error: "The course assignment failed; the incomplete cohort was removed." },
+      {
+        error:
+          "The course assignment failed; the incomplete cohort was removed.",
+      },
       { status: 503 },
     );
   }

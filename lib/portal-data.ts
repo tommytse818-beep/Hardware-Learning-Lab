@@ -266,20 +266,3 @@ export async function getTeacherPortalData(teacherId: string) {
     cohorts,
   };
 }
-
-export type StudentLeaderboardEntry = {
-  name: string;
-  alias: string;
-  points: number;
-};
-
-export async function getStudentPortalData() {
-  return {
-    leaderboard: [] as StudentLeaderboardEntry[],
-    progress: [
-      { label: "Checkpoints complete", value: "Waiting for live data" },
-      { label: "Current streak", value: "Waiting for live data" },
-      { label: "Seat status", value: "Waiting for live data" },
-    ] as PortalMetric[],
-  };
-}

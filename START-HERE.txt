@@ -1,19 +1,20 @@
-HARDWARE LEARNING PLATFORM — START HERE
+HARDWARE LEARNING LAB — START HERE
 
-1. Unzip this folder.
-2. Open the folder in Visual Studio Code.
-3. Open Terminal inside Visual Studio Code.
-4. Run:
-      npm install
+1. Open the Git repository root in Visual Studio Code.
+2. Read AGENTS.md and README.md.
+3. Copy .env.example to .env.local and add real values locally only.
+4. In the VS Code terminal run:
+      npm ci
       npm run dev
 5. Open http://localhost:3000 in your browser.
 
-Before Supabase is connected, public pages are available and protected course
-pages redirect to login. There is no demo account.
+There is no demo account and no public self-registration. Public pages work
+without login; protected dashboards, course lessons and portals require an
+account provisioned by an administrator.
 
-For real login, confirmation email, password reset and cloud progress:
-open README.md and follow Section 5.
+For database work, read supabase/README.md. The live project already has its
+migrations. Do not run old scaffold SQL from an earlier archive.
 
-To learn how the code works rather than only running it:
-open LEARNING-GUIDE.md after the website starts.
-
+Before committing any change, run:
+      npm test
+      npm run check

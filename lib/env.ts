@@ -116,10 +116,6 @@ export function getConfiguredSiteUrl() {
   }
 }
 
-export function isPublicSignupEnabled() {
-  return process.env.ENABLE_PUBLIC_SIGNUP === "true";
-}
-
 export function getSafeConfigurationStatus() {
   return {
     supabaseConfigured: isSupabaseConfigured(),

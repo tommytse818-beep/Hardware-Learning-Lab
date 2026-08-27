@@ -1,249 +1,90 @@
-# Learning Guide — Understand the Starter Instead of Only Copying It
+# Learning Guide — Current Architecture
 
-This guide explains the code in the order a beginner should learn it. Do not try to understand every file on the first day.
+This guide explains the current system, not the earlier public-signup starter.
+Read `AGENTS.md` first because the repository uses Next.js 16 conventions.
 
-## 1. The whole system in one picture
-
-```text
-Student's browser
-       |
-       v
-Next.js pages and components
-       |
-       +--> Server Actions: signup, login, reset password
-       |
-       +--> API route: check a quiz answer
-       |
-       +--> Supabase Auth: accounts and sessions
-       |
-       +--> Supabase Database: lesson progress
-```
-
-The first version intentionally keeps verified lesson content in the code. Supabase stores changing student information, not the official answer key.
-
-## 2. What Next.js is doing
-
-The `app` folder controls the website routes. A folder containing `page.tsx` becomes a page.
-
-Examples:
+## 1. Request flow
 
 ```text
-app/page.tsx                         -> /
-app/about/page.tsx                   -> /about
-app/dashboard/page.tsx               -> /dashboard
-app/courses/[courseSlug]/page.tsx    -> /courses/smart-door-lab
+Browser
+  -> Next.js page / client component
+  -> server action or API route
+  -> authenticated Supabase user
+  -> trusted public.profiles role
+  -> role/course/cohort authorization
+  -> Row Level Security or server-only administrative client
 ```
 
-Square brackets mean that part of the address is dynamic. The same lesson-page code can therefore display many different lessons.
+The publishable key may reach the browser. The service-role key must remain in
+server-only modules and environment variables.
 
-## 3. Read these files in this order
+## 2. Identity and roles
 
-### A. `app/page.tsx`
+`lib/viewer.ts` loads the Auth user, then resolves `admin`, `teacher` or
+`student` from `public.profiles.role`. Missing or invalid profiles fail closed.
+Auth `user_metadata.role` is not trusted.
 
-This is the public homepage. It is mainly HTML-like JSX plus Tailwind class names.
+`lib/authorization.ts`, `lib/api-authorization.ts` and the Supabase proxy guard
+protected pages and APIs. First-login accounts are redirected until the
+provisioned temporary password has been replaced.
 
-First exercise: change one heading, save the file and watch the browser update.
+## 3. Provisioning
 
-### B. `lib/courses.ts`
+The admin portal creates:
 
-This is the verified curriculum data for Stage 1. Each lesson contains:
+1. an approved school;
+2. an active cohort with a supported course and seat limit;
+3. a learner or teacher Auth account;
+4. the matching trusted profile and cohort membership.
 
-- title and duration
-- objectives
-- explanation sections
-- practical task
-- quiz
-- approved tutor guidance
+Temporary passwords are generated server-side. Teacher accounts do not consume
+student seats. The database trigger is the final concurrent seat-limit guard.
 
-First exercise: change the wording of one lesson summary. Do not change the correct answer until you understand the quiz route.
+## 4. Course and quiz flow
 
-### C. `app/courses/[courseSlug]/lessons/[lessonSlug]/page.tsx`
+Verified curriculum content and correct answers live in `lib/courses.ts`.
 
-This file takes one course slug and one lesson slug, finds the matching content and displays:
+`app/api/quiz/route.ts`:
 
-- lesson sidebar
-- video area
-- explanation
-- practical task
-- quiz
-- tutor panel
-- previous and next buttons
+1. requires an authenticated user;
+2. verifies course access;
+3. resolves the known course, lesson and quiz;
+4. scores the submitted answer on the server;
+5. records the attempt and best progress through trusted database operations.
 
-### D. `components/lesson-quiz.tsx`
+Never put a correct answer or service-role credential in a Client Component.
 
-This is a Client Component because the learner clicks radio buttons and receives an immediate result. The words `"use client"` tell Next.js that this component needs browser-side interactivity.
+## 5. Private resources
 
-It does not contain the correct answer.
+`app/api/courses/[courseSlug]/resources/[resourceKey]/route.ts` verifies the
+user and course access before creating a short-lived signed URL. The
+`course-private` bucket remains private and has no broad direct learner policy.
 
-### E. `app/api/quiz/route.ts`
+## 6. Teacher operations
 
-This server route receives the selected option, finds the verified answer in `lib/courses.ts`, checks it and returns the explanation.
+Teachers may view only assigned cohorts. A target lesson must resolve to a real
+lesson in that cohort's course. Reminder delivery uses a database reservation
+before sending so simultaneous requests cannot send duplicates.
 
-With Supabase connected, it stores progress in the database after verifying the
-learner's authenticated course entitlement.
+## 7. Password recovery
 
-### F. `lib/auth-actions.ts`
+`lib/auth-actions.ts`, `app/auth/callback/route.ts` and the password pages handle
+recovery. Use only the newest recovery email and open a one-time link once.
+Repeated rapid tests may hit Supabase email limits. Configure custom SMTP before
+a real pilot.
 
-This file contains server actions for:
+## 8. Database changes
 
-- account creation
-- login
-- password-reset email
-- setting the new password
-- sign out
+Use timestamped files under `supabase/migrations/`. The live database already
+contains the migrations listed in `supabase/README.md`. Do not restore or run
+the deleted scaffold SQL files.
 
-The browser never receives a Supabase service-role key. This project does not use one.
+## 9. Safe change order
 
-### G. `lib/supabase/proxy.ts`
-
-This checks the user's session before protected pages open. Public pages such as Home and About remain available without an account.
-
-### H. `supabase/schema.sql`
-
-This creates the lesson-progress table and Row Level Security policies. The policies limit each signed-in learner to their own progress records.
-
-## 4. Server Components and Client Components
-
-Most pages are Server Components by default. Use them for secure data access and content that does not need browser state.
-
-A Client Component begins with:
-
-```ts
-"use client";
-```
-
-Use it only when you need interaction such as:
-
-- `useState`
-- click handlers
-- browser-only APIs
-- interactive forms that do not use a server action
-
-Keeping most of the platform server-rendered reduces the amount of JavaScript sent to school devices.
-
-## 5. How authentication flows
-
-### Signup
-
-```text
-/signup form
-    -> signup() server action
-    -> Supabase creates account
-    -> confirmation email
-    -> /auth/callback exchanges the code for a session
-    -> /dashboard
-```
-
-### Forgot password
-
-```text
-/forgot-password form
-    -> Supabase sends recovery email
-    -> /auth/callback creates temporary recovery session
-    -> /update-password
-    -> updateUser() changes password
-```
-
-Raw passwords are never stored in the course database.
-
-## 6. How to add a video
-
-Each lesson accepts an optional `videoEmbedUrl` in `lib/courses.ts`:
-
-```ts
-videoEmbedUrl: "https://www.youtube-nocookie.com/embed/VIDEO_ID",
-```
-
-Use your own videos and confirm that the video host and privacy settings are suitable for schools. Without an embed URL, the clean placeholder remains visible.
-
-## 7. How to add a fifth lesson
-
-In `lib/courses.ts`, copy one complete lesson object, then change:
-
-- `slug`
-- `number`
-- `title`
-- `summary`
-- objectives and sections
-- quiz ID, options, correct index and explanation
-- tutor guidance
-
-The course overview, sidebar and previous/next navigation update automatically from the array order.
-
-Use a unique slug such as:
-
-```text
-transistor-buzzer-driver
-```
-
-Do not use spaces in a slug.
-
-## 8. Why the tutor is offline in Stage 1
-
-The tutor panel currently selects only human-written guidance. This proves the student interface without API cost or hallucinated grading.
-
-The live AI stage should later receive only:
-
-- current lesson
-- current verified question
-- approved answer rubric
-- approved common mistakes
-- recent student attempts
-
-The deterministic quiz route must remain responsible for official scoring.
-
-## 9. Safe first edits
-
-Make these changes one at a time:
-
-1. Change the temporary brand name in the header and footer.
-2. Rewrite the homepage value proposition.
-3. Add one real Smart Door Lab diagram to `public/`.
-4. Add your first short lesson video.
-5. Expand Lesson 1 with your verified circuit instructions.
-6. Add a fifth lesson only after the first four pages work.
-
-After each meaningful change, run:
-
-```bash
-npm run typecheck
-npm run lint
-```
-
-Before deployment, run:
-
-```bash
-npm run check
-```
-
-## 10. Git habit to learn immediately
-
-Initialize Git once from the project folder:
-
-```bash
-git init
-```
-
-After each working change:
-
-```bash
-git status
-git add .
-git commit -m "Describe the change clearly"
-```
-
-Commit small working stages. This gives you a safe point to return to when a later change breaks the website.
-
-## 11. What not to build yet
-
-Do not add these before the basic course flow is reliable:
-
-- payment system
-- unrestricted live AI
-- browser KiCad clone
-- custom PCB ordering
-- student social messaging
-- multiple school roles
-- 15 complete courses
-
-The next genuine milestone is a teacher-controlled class and invitation system, followed by the restricted live tutor.
+1. Create a Git branch and confirm a clean working tree.
+2. Read the page, API route, authorization helper and relevant migration.
+3. Make one bounded change.
+4. Add or update focused tests.
+5. Run `npm test` and `npm run check`.
+6. Review `git diff --check` and the complete diff.
+7. Commit only after the role and access boundaries remain clear.

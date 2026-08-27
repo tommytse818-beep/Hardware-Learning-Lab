@@ -1,413 +1,123 @@
-# Hardware Learning Platform — Stage 1
+# Hardware Learning Lab
 
-This is the first runnable version of the planned Hong Kong secondary-school hardware education platform.
+Hardware Learning Lab is a Next.js learning platform for school-managed
+hardware and electronics programmes. The current working course is OpenGuard
+Mini. Public visitors can view the site and course preview; protected lessons,
+progress, teacher tools and administration require a provisioned Supabase
+account.
 
-It deliberately focuses on the foundation:
+## Current account model
 
-- Clean public pages: Home, Projects, For Schools and About
-- Email/password signup and login through Supabase
-- Automatic password-reset email flow
-- Protected student dashboard
-- Smart Door Lab course overview
-- Four prototype lessons with previous/next navigation
-- Server-checked quiz answers
-- Cloud progress storage with Row Level Security
-- An instant, human-verified tutor preview
+There is **no public self-registration**. The `/signup` route explains the
+invitation-only process rather than creating an account.
 
-It does **not** connect a paid AI API yet. The tutor preview uses approved lesson guidance and demonstrates the interface and logic before live AI is added.
+1. A school requests and confirms a programme.
+2. An administrator creates an approved school and cohort.
+3. The administrator assigns a supported course and issues one private account
+   per learner or teacher.
+4. The learner replaces the temporary password on first login.
+5. Later recovery uses the registered email and a Supabase recovery link.
 
----
+Roles are trusted only from `public.profiles.role`. Client-editable Auth metadata
+must never grant admin, teacher or course access.
 
-## 1. Which computer to use
+## Local development
 
-Use your **Mac Studio** or Windows desktop, not the iPhone or iPad, for development.
+Requirements:
 
-The instructions below work on both macOS and Windows.
+- Node.js 24, as specified by `.nvmrc`
+- npm
+- Git
+- Visual Studio Code or another editor
 
----
-
-## 2. Install the tools once
-
-Install:
-
-1. **Visual Studio Code**
-2. **Git**
-3. **Node.js 24 LTS** (recommended; Node.js 22 LTS is also supported)
-
-After Node.js is installed, open a new Terminal and verify:
-
-```bash
-node --version
-npm --version
-```
-
-Node 24.x is recommended. Node 22.x LTS also satisfies this starter project.
-
----
-
-## 3. Open the downloaded project
-
-### macOS
-
-1. Unzip the downloaded file.
-2. Move the `hardware-learning-platform` folder somewhere easy, such as Documents.
-3. Open Visual Studio Code.
-4. Select **File -> Open Folder**.
-5. Choose `hardware-learning-platform`.
-6. In VS Code, select **Terminal -> New Terminal**.
-
-Run:
-
-```bash
-npm install
-npm run dev
-```
-
-### Windows PowerShell
-
-1. Unzip the downloaded file.
-2. Open Visual Studio Code.
-3. Select **File -> Open Folder**.
-4. Choose `hardware-learning-platform`.
-5. Select **Terminal -> New Terminal**.
-
-Run:
+From the repository root:
 
 ```powershell
-npm install
-npm run dev
-```
-
-Then open this address in Chrome, Edge or Safari:
-
-```text
-http://localhost:3000
-```
-
-Do not type the address into the VS Code terminal. Type it into the browser address bar.
-
-To stop the website, return to the terminal and press:
-
-```text
-Control + C
-```
-
----
-
-## 4. What works before Supabase is connected
-
-Before Supabase is connected, only public pages and previews are available.
-Protected dashboards, courses and lessons redirect to login.
-
-You can immediately test:
-
-- Homepage and navigation
-- Public project and course previews
-- Login and school access pages
-- Verified tutor preview
-- Loading and error states
-- Responsive layout
-
-Real account forms are disabled until you add Supabase. After connecting Supabase,
-only verified accounts with an active course entitlement can access lessons and
-save progress.
-
----
-
-## 5. Connect Supabase for real login and password email
-
-### A. Create the project
-
-Create a Supabase project from the Supabase dashboard.
-
-From its **Connect** panel, copy:
-
-- Project URL
-- Publishable key
-
-Do **not** use a service-role key in this website.
-
-### B. Create `.env.local`
-
-In the project root, duplicate `.env.example` and name the copy:
-
-```text
-.env.local
-```
-
-On macOS Terminal:
-
-```bash
-cp .env.example .env.local
-```
-
-On Windows PowerShell:
-
-```powershell
+npm ci
 Copy-Item .env.example .env.local
-```
-
-Open `.env.local` in VS Code and replace the placeholders:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-ENABLE_PUBLIC_SIGNUP=false
-# Server-only, never expose these values to the browser.
-SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
-RATE_LIMIT_SALT=REPLACE_WITH_AT_LEAST_32_RANDOM_CHARACTERS
-ENQUIRY_NOTIFICATION_EMAIL=your_private_inbox@example.com
-RESEND_API_KEY=YOUR_SERVER_ONLY_RESEND_KEY
-EMAIL_FROM=Hardware Learning Lab <enquiries@YOUR_VERIFIED_DOMAIN>
-```
-
-A transactional email provider (such as Resend) sends notifications to the
-private inbox above; the application never stores or signs in to a personal
-mailbox. Save the file.
-
-### C. Create the progress table
-
-In Supabase:
-
-1. Open **SQL Editor**
-2. Select **New query**
-3. Open `supabase/schema.sql` from this project
-4. Copy the whole SQL file into Supabase
-5. Select **Run**
-
-The SQL enables Row Level Security so each student can read and change only their own progress row.
-
-### D. Configure authentication URLs
-
-In Supabase, open:
-
-```text
-Authentication -> URL Configuration
-```
-
-Set:
-
-```text
-Site URL:
-http://localhost:3000
-```
-
-Add this redirect URL for local development:
-
-```text
-http://localhost:3000/**
-```
-
-The wildcard is useful locally because confirmation and reset flows both return through `/auth/callback`.
-
-### E. Restart the development server
-
-Stop it with `Control + C`, then run:
-
-```bash
 npm run dev
 ```
 
-### Security review before real accounts are created
+Open `http://localhost:3000` in a browser. Stop the server with `Control+C`.
 
-- confirm Row Level Security is enabled on every learner-data table;
-- confirm the service-role key is only ever read from a server environment variable;
-- confirm public signup remains disabled in both the UI and the server action;
-- test that a student cannot open `/teacher` or `/admin`;
-- test that a teacher cannot provision accounts;
-- test that seat 13 is rejected for a 12-seat cohort;
-- test that password-reset links return to the intended production domain.
+## Environment variables
 
----
+Fill `.env.local` from `.env.example`.
 
-## 6. Test the complete account flow
+Browser-safe values:
 
-### Registration
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_SITE_URL`
 
-1. Open `http://localhost:3000/signup`
-2. Create an account
-3. Open the confirmation email
-4. Select the confirmation link
-5. You should arrive at the dashboard
+Server-only values:
 
-### Login
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `RATE_LIMIT_SALT`
+- `ENQUIRY_NOTIFICATION_EMAIL`
+- `RESEND_API_KEY`
+- `EMAIL_FROM`
 
-1. Sign out
-2. Open `http://localhost:3000/login`
-3. Enter the same email and password
+Never prefix a server secret with `NEXT_PUBLIC_`, print it in logs, return it
+from an API route or commit `.env.local`.
 
-### Forgot password
+## Supabase
 
-1. Open `http://localhost:3000/forgot-password`
-2. Enter the account email
-3. Open the newest reset email
-4. Choose a new password
-5. Return to the dashboard
+The live project already has its migrations. Do **not** run the removed
+`schema.sql`, `access-cohorts-v1.sql` or other old one-off SQL files.
 
-Supabase's default test email service is rate-limited and best-effort. It is suitable for initial development, not the September 2027 production service. A branded custom SMTP provider should be connected before school pilots.
+The repository source of truth is `supabase/migrations/`. Read
+`supabase/README.md` before changing the database. Read-only checks live in
+`supabase/VERIFY-*.sql`.
 
----
+The service-role key is intentionally used only by server-side administrative,
+quiz, private-resource, rate-limit and notification paths. Browser code uses the
+publishable key and remains subject to Row Level Security.
 
-## 7. Learn the code as you build
+## Main routes
 
-Open:
+- `/` — public home
+- `/projects/open-guard-mini` — public project page
+- `/courses/open-guard-mini/preview` — public preview
+- `/login`, `/forgot-password`, `/update-password` — account lifecycle
+- `/dashboard` — authenticated learner progress
+- `/teacher` — assigned teacher cohorts only
+- `/admin` — trusted administrator provisioning only
 
-```text
-LEARNING-GUIDE.md
-```
+Protected course APIs validate authentication, role and course access on the
+server. Correct quiz answers remain server-side.
 
-It explains the browser/server flow, dynamic course routes, authentication, quiz checking and the safest first edits in beginner order.
+## Validation
 
----
+Run before every commit:
 
-## 8. Where to edit your business content
-
-### Change the course and lesson content
-
-Open:
-
-```text
-lib/courses.ts
-```
-
-That file currently contains:
-
-- Smart Door Lab course details
-- Four lessons
-- Learning objectives
-- Quiz options and verified answers
-- Tutor hints and diagnostic prompts
-
-Keeping verified content in code is sensible for the first course because Git records every change.
-
-### Change the homepage
-
-Open:
-
-```text
-app/page.tsx
-```
-
-### Change the project roadmap
-
-Open:
-
-```text
-app/projects/page.tsx
-```
-
-### Change the school package wording
-
-Open:
-
-```text
-app/schools/page.tsx
-```
-
-### Change the visual style
-
-Open:
-
-```text
-app/globals.css
-```
-
-Most layout styling is applied with Tailwind utility classes directly inside the `.tsx` page and component files.
-
----
-
-## 9. Important prototype limitations
-
-Before a real school launch, add or review:
-
-- Invite-only school accounts
-- Teacher and administrator roles
-- Child-centred privacy notice and retention rules
-- CAPTCHA and stricter rate limits
-- Custom SMTP email delivery
-- Production error monitoring
-- Server-side assessment rules for larger question banks
-- Teacher dashboard and class management
-- Video hosting
-- Live AI tutor with restricted approved context
-- Human escalation
-- Security testing
-- Traditional Chinese localization
-- PCB upload, ERC/DRC and human approval workflow
-
-The current quiz is checked on the server, so the correct answer is not sent to the lesson page. The course content itself is still prototype material and should be reviewed as you build the final curriculum.
-
----
-
-## 10. First files to understand
-
-Read them in this order:
-
-1. `app/page.tsx` — homepage
-2. `lib/courses.ts` — course data
-3. `app/courses/[courseSlug]/lessons/[lessonSlug]/page.tsx` — lesson layout
-4. `components/lesson-quiz.tsx` — interactive quiz interface
-5. `app/api/quiz/route.ts` — server checks the answer and saves progress
-6. `lib/auth-actions.ts` — login, signup and password reset
-7. `lib/supabase/proxy.ts` — protects private pages
-8. `supabase/schema.sql` — database and access rules
-
----
-
-## 11. Common problems
-
-### `npm` is not recognized
-
-Node.js is not installed correctly, or the terminal was open before installation. Install Node.js LTS and open a new terminal.
-
-### The browser says it cannot connect
-
-Confirm that `npm run dev` is still running and that the terminal shows a local address.
-
-### Pages redirect to login even though the server is running
-
-Check that the file is named exactly `.env.local`, the keys are not placeholders, and the server was restarted. There is no demo account; protected pages require a real Supabase-configured deployment.
-
-### Confirmation or reset email does not arrive
-
-Check spam, Supabase Auth logs and the default email rate limit. Confirm that `http://localhost:3000/**` is in the allowed Redirect URLs.
-
-### Quiz checks but progress is not saved
-
-Run the whole `supabase/schema.sql` file in the Supabase SQL Editor.
-
-### A course page sends you to login
-
-That is expected after Supabase is connected. Private learning pages are protected by `proxy.ts`.
-
----
-
-## 12. Check the project after making changes
-
-Run these from the project folder:
-
-```bash
-npm run typecheck
-npm run lint
-```
-
-Before publishing a deployment, run the combined check:
-
-```bash
+```powershell
+npm test
 npm run check
+git diff --check
+node scripts/audit-public-assets.mjs
 ```
 
----
+Or on Windows:
 
-## 13. The next development step
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/validate-project.ps1
+```
 
-After this foundation works reliably, the next code milestone should be:
+GitHub Actions runs `npm ci`, the Vitest suite, ESLint, TypeScript checking and a
+production Next.js build on pushes and pull requests.
 
-1. Teacher roles and invite-only classes
-2. Real lesson video storage
-3. A `/api/chat` route that retrieves only the current verified lesson context
-4. Streaming tutor responses
-5. Usage limits and teacher escalation
+## Production checklist
 
-Do not place an OpenAI API key in a variable beginning with `NEXT_PUBLIC_`. The live tutor request must run on the server.
+Before a real school pilot:
+
+- configure production Site URL and allowed redirect URLs in Supabase Auth;
+- keep public signup disabled at the Supabase project level;
+- enable leaked-password protection when the project plan supports it;
+- configure custom SMTP and verify recovery-email delivery and rate limits;
+- configure the Resend notification sender and private inbox;
+- test admin, teacher and student access with separate accounts;
+- test first-login password change and a fresh recovery link exactly once;
+- test that an additional student is rejected at the cohort seat limit;
+- upload private course files only to the private `course-private` bucket;
+- run the full validation commands and review the Git diff.
