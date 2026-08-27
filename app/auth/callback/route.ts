@@ -1,37 +1,54 @@
 import { NextResponse } from "next/server";
 
+import { getConfiguredSiteUrl } from "@/lib/env";
 import { safeInternalPath } from "@/lib/navigation";
+import {
+  PASSWORD_RECOVERY_COOKIE,
+  PASSWORD_RECOVERY_COOKIE_VALUE,
+  PASSWORD_RECOVERY_MAX_AGE_SECONDS,
+} from "@/lib/password-recovery";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const next = safeInternalPath(requestUrl.searchParams.get("next"));
+  const next = safeInternalPath(
+    requestUrl.searchParams.get("next"),
+    "/dashboard",
+  );
+  const appOrigin = getConfiguredSiteUrl();
+  const destination = new URL(next, appOrigin);
+  const recoveryDestination = destination.pathname === "/update-password";
 
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      const forwardedHost = request.headers.get("x-forwarded-host");
-      const forwardedProtocol =
-        request.headers.get("x-forwarded-proto") ?? "https";
+      const response = NextResponse.redirect(destination);
 
-      if (process.env.NODE_ENV === "development") {
-        return NextResponse.redirect(new URL(next, requestUrl.origin));
-      }
-
-      if (forwardedHost) {
-        return NextResponse.redirect(
-          `${forwardedProtocol}://${forwardedHost}${next}`,
+      if (recoveryDestination) {
+        response.cookies.set(
+          PASSWORD_RECOVERY_COOKIE,
+          PASSWORD_RECOVERY_COOKIE_VALUE,
+          {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            maxAge: PASSWORD_RECOVERY_MAX_AGE_SECONDS,
+          },
         );
       }
 
-      return NextResponse.redirect(new URL(next, requestUrl.origin));
+      return response;
     }
   }
 
-  const errorUrl = new URL("/login", requestUrl.origin);
+  const errorUrl = new URL(
+    recoveryDestination ? "/forgot-password" : "/login",
+    appOrigin,
+  );
   errorUrl.searchParams.set(
     "error",
     "The email link is invalid or has expired. Request a new one.",

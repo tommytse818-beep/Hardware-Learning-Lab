@@ -1,6 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import {
@@ -8,12 +8,23 @@ import {
   isSupabaseConfigured,
 } from "@/lib/env";
 import { safeInternalPath } from "@/lib/navigation";
+import { validateNewPassword } from "@/lib/password-policy";
+import {
+  hasActivePasswordRecovery,
+  PASSWORD_RECOVERY_COOKIE,
+} from "@/lib/password-recovery";
+import { getRoleHome } from "@/lib/role-home";
 import { createClient } from "@/lib/supabase/server";
-import { getViewer } from "@/lib/viewer";
+import { getViewerFromClient } from "@/lib/viewer";
 
-function readText(formData: FormData, field: string) {
+function readTrimmed(formData: FormData, field: string) {
   const value = formData.get(field);
   return typeof value === "string" ? value.trim() : "";
+}
+
+function readPassword(formData: FormData, field: string) {
+  const value = formData.get(field);
+  return typeof value === "string" ? value : "";
 }
 
 function isValidEmail(value: string) {
@@ -31,47 +42,25 @@ function redirectWithMessage(
   redirect(`${pathname}?${params.toString()}`);
 }
 
-async function getRequestOrigin() {
-  const headerStore = await headers();
-  const origin = headerStore.get("origin");
-
-  if (origin) {
-    return origin.replace(/\/+$/, "");
-  }
-
-  const forwardedHost = headerStore.get("x-forwarded-host");
-  const host = forwardedHost ?? headerStore.get("host");
-
-  if (host) {
-    const forwardedProtocol = headerStore.get("x-forwarded-proto");
-    const protocol =
-      forwardedProtocol ?? (host.includes("localhost") ? "http" : "https");
-
-    return `${protocol}://${host}`;
-  }
-
-  return getConfiguredSiteUrl();
-}
-
 export async function login(formData: FormData) {
   if (!isSupabaseConfigured()) {
     redirectWithMessage(
       "/login",
       "error",
-      "Connect Supabase first. The visual prototype is currently running in demo mode.",
+      "Account access is not configured on this deployment.",
     );
   }
 
-  const email = readText(formData, "email").toLowerCase();
-  const password = readText(formData, "password");
-  const next = safeInternalPath(readText(formData, "next"));
+  const email = readTrimmed(formData, "email").toLowerCase();
+  const password = readPassword(formData, "password");
+  const requestedNext = readTrimmed(formData, "next");
 
   if (!isValidEmail(email) || password.length === 0) {
     redirectWithMessage(
       "/login",
       "error",
       "Enter a valid email address and password.",
-      { next },
+      requestedNext ? { next: requestedNext } : {},
     );
   }
 
@@ -82,22 +71,26 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
-    const message =
-      error.message.toLowerCase().includes("email not confirmed")
-        ? "Confirm your email address before signing in."
-        : "The email or password is incorrect.";
+    const message = error.message.toLowerCase().includes("email not confirmed")
+      ? "Confirm your email address before signing in."
+      : "The email or password is incorrect.";
 
-    redirectWithMessage("/login", "error", message, { next });
-  }
-
-  const viewer = await getViewer();
-
-  if (!viewer) {
     redirectWithMessage(
       "/login",
       "error",
-      "Your account profile is not ready. Please contact your programme administrator.",
-      { next },
+      message,
+      requestedNext ? { next: requestedNext } : {},
+    );
+  }
+
+  const viewer = await getViewerFromClient(supabase);
+
+  if (!viewer) {
+    await supabase.auth.signOut();
+    redirectWithMessage(
+      "/login",
+      "error",
+      "This account is authenticated but has not been provisioned for the programme. Contact your school administrator.",
     );
   }
 
@@ -105,14 +98,12 @@ export async function login(formData: FormData) {
     redirect("/first-login");
   }
 
-  const targetPath =
-    viewer.role === "admin"
-      ? "/admin"
-      : viewer.role === "teacher"
-        ? "/teacher"
-        : next || "/dashboard";
+  const roleHome = getRoleHome(viewer.role);
+  const target = requestedNext
+    ? safeInternalPath(requestedNext, roleHome)
+    : roleHome;
 
-  redirect(targetPath);
+  redirect(target);
 }
 
 export async function signup(formData: FormData) {
@@ -121,7 +112,7 @@ export async function signup(formData: FormData) {
   redirectWithMessage(
     "/signup",
     "error",
-    "Public registration is closed. All accounts are school-issued and provisioned by an administrator.",
+    "Public registration is closed. Accounts are issued through an approved school programme.",
   );
 }
 
@@ -130,11 +121,11 @@ export async function requestPasswordReset(formData: FormData) {
     redirectWithMessage(
       "/forgot-password",
       "error",
-      "Connect Supabase first. Password email is disabled in demo mode.",
+      "Password recovery is not configured on this deployment.",
     );
   }
 
-  const email = readText(formData, "email").toLowerCase();
+  const email = readTrimmed(formData, "email").toLowerCase();
 
   if (!isValidEmail(email)) {
     redirectWithMessage(
@@ -144,10 +135,10 @@ export async function requestPasswordReset(formData: FormData) {
     );
   }
 
-  const origin = await getRequestOrigin();
   const supabase = await createClient();
+  const redirectTo = `${getConfiguredSiteUrl()}/auth/callback?next=/update-password`;
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=/update-password`,
+    redirectTo,
   });
 
   if (error) {
@@ -158,7 +149,6 @@ export async function requestPasswordReset(formData: FormData) {
     );
   }
 
-  // Keep this generic so the page does not reveal whether an account exists.
   redirectWithMessage(
     "/forgot-password",
     "message",
@@ -166,27 +156,38 @@ export async function requestPasswordReset(formData: FormData) {
   );
 }
 
-export async function updatePassword(formData: FormData) {
+export async function updateRecoveredPassword(formData: FormData) {
   if (!isSupabaseConfigured()) {
     redirectWithMessage(
       "/update-password",
       "error",
-      "Connect Supabase first.",
+      "Password recovery is unavailable.",
     );
   }
 
-  const password = readText(formData, "password");
-  const confirmPassword = readText(formData, "confirmPassword");
+  const cookieStore = await cookies();
 
-  if (password.length < 8) {
+  if (
+    !hasActivePasswordRecovery(
+      cookieStore.get(PASSWORD_RECOVERY_COOKIE)?.value,
+    )
+  ) {
     redirectWithMessage(
-      "/update-password",
+      "/forgot-password",
       "error",
-      "Use a password with at least 8 characters.",
+      "Open the newest password-recovery link from your email.",
     );
   }
 
-  if (password !== confirmPassword) {
+  const password = readPassword(formData, "password");
+  const confirmation = readPassword(formData, "confirmPassword");
+  const validation = validateNewPassword(password);
+
+  if (!validation.ok) {
+    redirectWithMessage("/update-password", "error", validation.message);
+  }
+
+  if (password !== confirmation) {
     redirectWithMessage(
       "/update-password",
       "error",
@@ -197,13 +198,14 @@ export async function updatePassword(formData: FormData) {
   const supabase = await createClient();
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (userError || !user) {
     redirectWithMessage(
-      "/login",
+      "/forgot-password",
       "error",
-      "Open the newest password-reset link from your email.",
+      "The recovery session is invalid or has expired. Request a new link.",
     );
   }
 
@@ -213,15 +215,16 @@ export async function updatePassword(formData: FormData) {
     redirectWithMessage(
       "/update-password",
       "error",
-      "The password could not be updated. Request a new reset link.",
+      "The password could not be updated. Request a new recovery link.",
     );
   }
 
-  redirectWithMessage(
-    "/dashboard",
-    "message",
-    "Your password has been updated.",
-  );
+  cookieStore.delete(PASSWORD_RECOVERY_COOKIE);
+
+  const viewer = await getViewerFromClient(supabase);
+  const target = viewer ? getRoleHome(viewer.role) : "/login";
+
+  redirectWithMessage(target, "message", "Your password has been updated.");
 }
 
 export async function signOut() {

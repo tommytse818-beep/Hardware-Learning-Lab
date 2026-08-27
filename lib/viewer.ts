@@ -1,3 +1,5 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -17,105 +19,95 @@ export type Viewer = {
   leaderboardOptIn: boolean;
 };
 
-export async function getViewer(): Promise<Viewer | null> {
-  if (!isSupabaseConfigured()) {
-    if (process.env.NODE_ENV === "production") {
-      return null;
-    }
+type ProfileRow = {
+  role: string;
+  display_name: string | null;
+  leaderboard_alias: string | null;
+  avatar_key: string | null;
+  bio: string | null;
+  leaderboard_opt_in: boolean;
+  must_change_password: boolean;
+};
 
-    return {
-      id: null,
-      email: "demo.student@example.com",
-      displayName: "Demo Student",
-      leaderboardAlias: "Demo",
-      role: "student",
-      demo: true,
-      verified: true,
-      mustChangePassword: false,
-      avatar: "sun",
-      bio: "Prototype learner reviewing the local platform.",
-      leaderboardOptIn: false,
-    };
+function parseRole(value: string): ViewerRole | null {
+  if (value === "admin" || value === "teacher" || value === "student") {
+    return value;
   }
 
-  const supabase = await createClient();
+  return null;
+}
+
+export async function getViewerFromClient(
+  supabase: SupabaseClient,
+): Promise<Viewer | null> {
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (userError || !user) {
     return null;
   }
 
-  const { data: profile } = await supabase
+  const { data, error: profileError } = await supabase
     .from("profiles")
     .select(
       "role, display_name, leaderboard_alias, avatar_key, bio, leaderboard_opt_in, must_change_password",
     )
     .eq("id", user.id)
-    .maybeSingle();
+    .maybeSingle<ProfileRow>();
 
-  const safeProfile = profile ?? {
-    role: user.user_metadata?.role,
-    display_name: user.user_metadata?.display_name,
-    leaderboard_alias: user.user_metadata?.leaderboard_alias,
-    avatar_key: user.user_metadata?.avatar,
-    bio: user.user_metadata?.bio,
-    leaderboard_opt_in:
-      user.user_metadata?.leaderboard_opt_in === true ||
-      user.user_metadata?.leaderboardOptIn === true,
-    must_change_password:
-      user.user_metadata?.must_change_password === true ||
-      user.user_metadata?.force_reset === true,
-  };
+  if (profileError) {
+    // Never log tokens, cookies, passwords or the full user record.
+    console.error("Profile lookup failed", {
+      code: profileError.code,
+      userId: user.id,
+    });
+    return null;
+  }
 
-  const metadataName = user.user_metadata?.display_name;
-  const displayName =
-    typeof safeProfile.display_name === "string" && safeProfile.display_name.trim().length > 0
-      ? safeProfile.display_name.trim()
-      : typeof metadataName === "string" && metadataName.trim().length > 0
-        ? metadataName.trim()
-        : user.email?.split("@")[0] ?? "Student";
+  if (!data) {
+    console.error("Authenticated account has no provisioned profile", {
+      userId: user.id,
+    });
+    return null;
+  }
 
-  const roleValue = safeProfile.role;
-  const role: ViewerRole =
-    roleValue === "admin" ||
-    roleValue === "teacher" ||
-    roleValue === "student"
-      ? roleValue
-      : "student";
+  const role = parseRole(data.role);
+
+  if (!role) {
+    console.error("Profile contains an unsupported role", {
+      userId: user.id,
+    });
+    return null;
+  }
+
+  const fallbackName = user.email?.split("@")[0] || "Learner";
+  const displayName = data.display_name?.trim() || fallbackName;
+  const leaderboardAlias = data.leaderboard_alias?.trim() || displayName;
 
   return {
     id: user.id,
-    email: user.email ?? "student",
+    email: user.email || "account",
     displayName,
-    leaderboardAlias:
-      typeof safeProfile.leaderboard_alias === "string" &&
-      safeProfile.leaderboard_alias.trim().length > 0
-        ? safeProfile.leaderboard_alias.trim()
-        : displayName,
+    leaderboardAlias,
     role,
     demo: false,
     verified: Boolean(user.email_confirmed_at),
-    mustChangePassword:
-      safeProfile.must_change_password ??
-      (user.user_metadata?.must_change_password === true ||
-        user.user_metadata?.force_reset === true),
-    avatar:
-      typeof safeProfile.avatar_key === "string" && safeProfile.avatar_key.trim().length > 0
-        ? safeProfile.avatar_key
-        : typeof user.user_metadata?.avatar === "string"
-          ? user.user_metadata.avatar
-          : "sun",
+    mustChangePassword: data.must_change_password,
+    avatar: data.avatar_key?.trim() || "spark",
     bio:
-      typeof safeProfile.bio === "string" && safeProfile.bio.trim().length > 0
-        ? safeProfile.bio.trim()
-        : typeof user.user_metadata?.bio === "string"
-          ? user.user_metadata.bio
-          : "School learner building practical electronics skills.",
-    leaderboardOptIn:
-      safeProfile.leaderboard_opt_in ??
-      (user.user_metadata?.leaderboard_opt_in === true ||
-        user.user_metadata?.leaderboardOptIn === true),
+      data.bio?.trim() ||
+      "School learner building practical electronics skills.",
+    leaderboardOptIn: data.leaderboard_opt_in,
   };
+}
+
+export async function getViewer(): Promise<Viewer | null> {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  const supabase = await createClient();
+  return getViewerFromClient(supabase);
 }

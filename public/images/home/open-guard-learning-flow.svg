@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1000" viewBox="0 0 1200 1000" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="1000">
+      <stop stop-color="#111827"/>
+      <stop offset="1" stop-color="#07120E"/>
+    </linearGradient>
+    <linearGradient id="line" x1="160" y1="180" x2="1030" y2="820">
+      <stop stop-color="#67E8F9"/>
+      <stop offset=".48" stop-color="#6EE7B7"/>
+      <stop offset="1" stop-color="#C4B5FD"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1000" rx="52" fill="url(#bg)"/>
+  <circle cx="980" cy="130" r="230" fill="#10B981" fill-opacity=".08"/>
+  <circle cx="150" cy="860" r="250" fill="#4F46E5" fill-opacity=".08"/>
+
+  <text x="72" y="92" fill="#6EE7B7" font-family="Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="4">ONE CONNECTED LEARNING STORY</text>
+
+  <path d="M220 230C390 230 360 430 530 430C700 430 670 650 840 650C1000 650 960 825 1065 825" stroke="url(#line)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M1052 804L1074 825L1052 846" stroke="#C4B5FD" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g>
+    <circle cx="220" cy="230" r="94" fill="#0F172A" stroke="#67E8F9" stroke-width="4"/>
+    <text x="220" y="216" fill="#67E8F9" font-family="Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle">01</text>
+    <text x="220" y="250" fill="white" font-family="Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">NEED</text>
+    <text x="220" y="340" fill="#CBD5E1" font-family="Arial, sans-serif" font-size="19" text-anchor="middle">When should it act?</text>
+    <text x="220" y="370" fill="#CBD5E1" font-family="Arial, sans-serif" font-size="19" text-anchor="middle">What must it do?</text>
+  </g>
+
+  <g>
+    <circle cx="530" cy="430" r="94" fill="#0F172A" stroke="#A7F3D0" stroke-width="4"/>
+    <text x="530" y="416" fill="#A7F3D0" font-family="Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle">02</text>
+    <text x="530" y="450" fill="white" font-family="Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">BUILD</text>
+    <text x="530" y="540" fill="#CBD5E1" font-family="Arial, sans-serif" font-size="19" text-anchor="middle">Sensor · timing · logic</text>
+    <text x="530" y="570" fill="#CBD5E1" font-family="Arial, sans-serif" font-size="19" text-anchor="middle">Driver · buzzer · LED</text>
+  </g>
+
+  <g>
+    <circle cx="840" cy="650" r="94" fill="#0F172A" stroke="#6EE7B7" stroke-width="4"/>
+    <text x="840" y="636" fill="#6EE7B7" font-family="Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle">03</text>
+    <text x="840" y="670" fill="white" font-family="Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">MEASURE</text>
+    <text x="840" y="760" fill="#CBD5E1" font-family="Arial, sans-serif" font-size="19" text-anchor="middle">Voltages · states · delay</text>
+    <text x="840" y="790" fill="#CBD5E1" font-family="Arial, sans-serif" font-size="19" text-anchor="middle">Find faults with evidence</text>
+  </g>
+
+  <g>
+    <circle cx="1045" cy="825" r="86" fill="#0F172A" stroke="#C4B5FD" stroke-width="4"/>
+    <text x="1045" y="812" fill="#C4B5FD" font-family="Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle">04</text>
+    <text x="1045" y="846" fill="white" font-family="Arial, sans-serif" font-size="25" font-weight="700" text-anchor="middle">VERIFY</text>
+  </g>
+
+  <rect x="72" y="866" width="780" height="82" rx="22" fill="#FFFFFF" fill-opacity=".055" stroke="#FFFFFF" stroke-opacity=".1"/>
+  <text x="104" y="914" fill="#E2E8F0" font-family="Arial, sans-serif" font-size="20">KiCad capture → ERC/DRC → human review → useful take-home PCB</text>
+</svg>

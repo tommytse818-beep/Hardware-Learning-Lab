@@ -1,7 +1,4 @@
-import { cookies } from "next/headers";
-
-import { decodeDemoProgress, DEMO_PROGRESS_COOKIE } from "@/lib/demo-progress";
-import { isDemoModeEnabled, isSupabaseConfigured } from "@/lib/env";
+import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
 export type LessonProgressRecord = {
@@ -20,26 +17,8 @@ export async function getCourseProgress(
   courseSlug: string,
 ): Promise<CourseProgressResult> {
   if (!isSupabaseConfigured()) {
-    if (!isDemoModeEnabled()) {
-      return {
-        records: [],
-        databaseReady: false,
-      };
-    }
-
-    const cookieStore = await cookies();
-    const demoRecords = decodeDemoProgress(
-      cookieStore.get(DEMO_PROGRESS_COOKIE)?.value,
-    )
-      .filter((entry) => entry.courseSlug === courseSlug)
-      .map((entry) => ({
-        lesson_slug: entry.lessonSlug,
-        completed: entry.completed,
-        quiz_score: entry.quizScore,
-      }));
-
     return {
-      records: demoRecords,
+      records: [],
       databaseReady: false,
     };
   }

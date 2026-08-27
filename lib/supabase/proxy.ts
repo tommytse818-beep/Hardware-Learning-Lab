@@ -3,7 +3,6 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import {
   getSupabaseConfig,
-  isDemoModeEnabled,
   isSupabaseConfigured,
 } from "@/lib/env";
 import { isPublicRoute } from "@/lib/supabase/public-routes";
@@ -12,10 +11,6 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   if (!isSupabaseConfigured()) {
-    if (isDemoModeEnabled()) {
-      return NextResponse.next({ request });
-    }
-
     if (!isPublicRoute(pathname)) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/login";

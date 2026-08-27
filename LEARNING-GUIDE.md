@@ -79,7 +79,8 @@ It does not contain the correct answer.
 
 This server route receives the selected option, finds the verified answer in `lib/courses.ts`, checks it and returns the explanation.
 
-In demo mode it stores progress in a browser cookie. With Supabase connected it stores progress in the database.
+With Supabase connected, it stores progress in the database after verifying the
+learner's authenticated course entitlement.
 
 ### F. `lib/auth-actions.ts`
 

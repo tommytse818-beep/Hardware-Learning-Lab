@@ -3,7 +3,6 @@ import Image from "next/image";
 
 import { UserMenu } from "@/components/user-menu";
 import { getViewer } from "@/lib/viewer";
-import { MobileNav } from "@/components/site-mobile-nav";
 
 const publicLinks = [
   { href: "/projects", label: "Projects" },
@@ -20,10 +19,10 @@ export async function SiteHeader() {
         Skip to main content
       </a>
       <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex min-h-20 w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-20 w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="flex items-center gap-3 font-semibold tracking-tight text-slate-950"
+          className="flex shrink-0 items-center gap-3 font-semibold tracking-tight text-slate-950"
         >
           <Image
             src="/logo.svg"
@@ -39,22 +38,20 @@ export async function SiteHeader() {
 
         <nav
           aria-label="Main navigation"
-          className="order-3 hidden items-center gap-1 sm:order-2 sm:flex sm:w-auto"
+          className="flex min-w-0 shrink items-center gap-1 overflow-x-auto"
         >
           {publicLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
+              className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 max-sm:px-2 max-sm:text-xs"
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <MobileNav />
-
-        <div className="order-2 flex items-center gap-2 sm:order-3">
+        <div className="relative z-50 flex shrink-0 items-center gap-2">
           <UserMenu viewer={viewer} />
         </div>
       </div>

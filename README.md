@@ -96,22 +96,21 @@ Control + C
 
 ## 4. What works before Supabase is connected
 
-The project automatically starts in **demo mode**.
+Before Supabase is connected, only public pages and previews are available.
+Protected dashboards, courses and lessons redirect to login.
 
 You can immediately test:
 
 - Homepage and navigation
-- Dashboard
-- Smart Door Lab overview
-- Lesson sidebar
-- Previous/next buttons
-- Quiz checking
-- Browser-only demo progress across the lesson, course and dashboard pages
+- Public project and course previews
+- Login and school access pages
 - Verified tutor preview
 - Loading and error states
 - Responsive layout
 
-Real account forms are intentionally disabled until you add Supabase. Demo progress uses an HTTP-only browser cookie and is not a school record or cloud account.
+Real account forms are disabled until you add Supabase. After connecting Supabase,
+only verified accounts with an active course entitlement can access lessons and
+save progress.
 
 ---
 
@@ -154,12 +153,18 @@ Open `.env.local` in VS Code and replace the placeholders:
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_ALLOW_PUBLIC_SIGNUP=false
-# Server-only, never expose this value to the browser.
+ENABLE_PUBLIC_SIGNUP=false
+# Server-only, never expose these values to the browser.
 SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
+RATE_LIMIT_SALT=REPLACE_WITH_AT_LEAST_32_RANDOM_CHARACTERS
+ENQUIRY_NOTIFICATION_EMAIL=your_private_inbox@example.com
+RESEND_API_KEY=YOUR_SERVER_ONLY_RESEND_KEY
+EMAIL_FROM=Hardware Learning Lab <enquiries@YOUR_VERIFIED_DOMAIN>
 ```
 
-Save the file.
+A transactional email provider (such as Resend) sends notifications to the
+private inbox above; the application never stores or signs in to a personal
+mailbox. Save the file.
 
 ### C. Create the progress table
 
@@ -204,7 +209,15 @@ Stop it with `Control + C`, then run:
 npm run dev
 ```
 
-The yellow demo banner should disappear.
+### Security review before real accounts are created
+
+- confirm Row Level Security is enabled on every learner-data table;
+- confirm the service-role key is only ever read from a server environment variable;
+- confirm public signup remains disabled in both the UI and the server action;
+- test that a student cannot open `/teacher` or `/admin`;
+- test that a teacher cannot provision accounts;
+- test that seat 13 is rejected for a 12-seat cohort;
+- test that password-reset links return to the intended production domain.
 
 ---
 
@@ -352,9 +365,9 @@ Node.js is not installed correctly, or the terminal was open before installation
 
 Confirm that `npm run dev` is still running and that the terminal shows a local address.
 
-### The yellow demo banner remains
+### Pages redirect to login even though the server is running
 
-Check that the file is named exactly `.env.local`, the keys are not placeholders, and the server was restarted.
+Check that the file is named exactly `.env.local`, the keys are not placeholders, and the server was restarted. There is no demo account; protected pages require a real Supabase-configured deployment.
 
 ### Confirmation or reset email does not arrive
 
@@ -367,10 +380,6 @@ Run the whole `supabase/schema.sql` file in the Supabase SQL Editor.
 ### A course page sends you to login
 
 That is expected after Supabase is connected. Private learning pages are protected by `proxy.ts`.
-
-### I want to clear the demo progress
-
-Clear the site data/cookies for `localhost:3000` in your browser, then refresh the dashboard.
 
 ---
 

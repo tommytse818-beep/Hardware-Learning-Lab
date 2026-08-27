@@ -1,18 +1,11 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { getCourseAccessForUser } from "@/lib/course-access";
 import { getCourse, getLesson } from "@/lib/courses";
-import {
-  decodeDemoProgress,
-  DEMO_PROGRESS_COOKIE,
-  encodeDemoProgress,
-  mergeDemoProgress,
-} from "@/lib/demo-progress";
 import { isSupabaseConfigured } from "@/lib/env";
+import { parseEngineeringNumber } from "@/lib/engineering";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { parseEngineeringNumber } from "@/lib/engineering";
 
 type QuizRequestBody = {
   courseSlug?: unknown;
@@ -20,6 +13,13 @@ type QuizRequestBody = {
   questionId?: unknown;
   selectedIndex?: unknown;
   numericValue?: unknown;
+};
+
+type AttemptResult = {
+  attempt_number: number;
+  points_awarded: number;
+  correct: boolean;
+  completed: boolean;
 };
 
 export { parseEngineeringNumber } from "@/lib/engineering";
@@ -55,9 +55,14 @@ export async function POST(request: Request) {
     );
   }
 
+  const questionId =
+    typeof body.questionId === "string" && body.questionId.trim()
+      ? body.questionId.trim()
+      : "lesson-checkpoint";
+
   const quizDefinition =
-    typeof body.questionId === "string"
-      ? (lesson.microChecks ?? []).find((item) => item.id === body.questionId)
+    questionId !== "lesson-checkpoint"
+      ? (lesson.microChecks ?? []).find((item) => item.id === questionId)
       : lesson.quiz;
 
   if (!quizDefinition) {
@@ -68,6 +73,7 @@ export async function POST(request: Request) {
   }
 
   let correct = false;
+  let submittedAnswer: Record<string, unknown>;
 
   if (quizDefinition.kind === "choice") {
     if (!Number.isInteger(body.selectedIndex)) {
@@ -87,6 +93,7 @@ export async function POST(request: Request) {
     }
 
     correct = answerIndex === quizDefinition.correctIndex;
+    submittedAnswer = { selectedIndex: answerIndex };
   } else {
     const numericAnswer = parseEngineeringNumber(body.numericValue);
 
@@ -94,20 +101,23 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Enter a valid number. You may use engineering notation such as 550 or 0.55 kΩ.",
+            "Enter a valid number. Engineering notation such as 550 or 0.55 kΩ is accepted.",
         },
         { status: 400 },
       );
     }
 
     correct =
-      Math.abs(numericAnswer - quizDefinition.answer) <= quizDefinition.tolerance;
+      Math.abs(numericAnswer - quizDefinition.answer) <=
+      quizDefinition.tolerance;
+    submittedAnswer = { numericValue: numericAnswer };
   }
 
-  const score = correct ? 100 : 0;
   let saved = false;
+  let attemptNumber = 1;
+  let pointsAwarded = correct ? 100 : 0;
+  let completed = correct;
   let saveMessage: string | undefined;
-  let demoProgressCookie: string | undefined;
 
   if (isSupabaseConfigured()) {
     const supabase = await createClient();
@@ -125,54 +135,60 @@ export async function POST(request: Request) {
     const access = await getCourseAccessForUser(user.id, course.slug);
 
     if (!access.allowed) {
-      return NextResponse.json(
-        { error: access.message },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: access.message }, { status: 403 });
     }
 
-    const { error: saveError } = await createAdminClient()
-      .from("lesson_progress")
-      .upsert(
-        {
-          user_id: user.id,
-          course_slug: course.slug,
-          lesson_slug: lesson.slug,
-          completed: correct,
-          quiz_score: score,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,course_slug,lesson_slug" },
-      );
-
-    if (saveError) {
-      saveMessage =
-        "Your answer is correct, but progress sync is temporarily unavailable. You can continue reviewing the course.";
-    } else {
-      saved = true;
-    }
-  } else {
-    const cookieStore = await cookies();
-    const existing = decodeDemoProgress(
-      cookieStore.get(DEMO_PROGRESS_COOKIE)?.value,
+    const { data, error } = await createAdminClient().rpc(
+      "record_quiz_attempt_v1",
+      {
+        p_user_id: user.id,
+        p_course_slug: course.slug,
+        p_lesson_slug: lesson.slug,
+        p_question_id: questionId,
+        p_submitted_answer: submittedAnswer,
+        p_correct: correct,
+      },
     );
-    const updated = mergeDemoProgress(existing, {
-      courseSlug: course.slug,
-      lessonSlug: lesson.slug,
-      completed: correct,
-      quizScore: score,
-    });
 
-    demoProgressCookie = encodeDemoProgress(updated);
-    saveMessage =
-      "Demo mode: saved only in this browser, not as a school or cloud record.";
+    const row = (Array.isArray(data) ? data[0] : data) as
+      | AttemptResult
+      | null;
+
+    if (error || !row) {
+      return NextResponse.json(
+        {
+          error:
+            "Your answer was checked, but the attempt could not be recorded. Try again before continuing.",
+        },
+        { status: 503 },
+      );
+    }
+
+    attemptNumber = row.attempt_number;
+    pointsAwarded = row.points_awarded;
+    completed = row.completed;
+    saved = true;
+  } else {
+    return NextResponse.json(
+      { error: "Quiz storage is not configured on this deployment." },
+      { status: 503 },
+    );
   }
 
   const response = NextResponse.json({
     correct,
-    score,
+    completed,
+    attemptNumber,
+    pointsAwarded,
+    score: pointsAwarded,
     feedback: correct
-      ? "Your answer matches the engineering reasoning for this checkpoint."
+      ? attemptNumber === 1
+        ? "Correct on the first attempt — 100 points."
+        : attemptNumber === 2
+          ? "Correct on attempt 2 — 50 points."
+          : attemptNumber === 3
+            ? "Correct on attempt 3 — 25 points."
+            : "Checkpoint complete — no points are awarded after attempt 3."
       : quizDefinition.incorrectFeedback ??
         "The answer does not yet match the requirement. Use the hint, revise one step and try again.",
     hint: correct ? undefined : quizDefinition.hint,
@@ -181,16 +197,6 @@ export async function POST(request: Request) {
     saved,
     saveMessage,
   });
-
-  if (demoProgressCookie) {
-    response.cookies.set(DEMO_PROGRESS_COOKIE, demoProgressCookie, {
-      httpOnly: true,
-      maxAge: 60 * 60 * 24 * 30,
-      path: "/",
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-    });
-  }
 
   return response;
 }

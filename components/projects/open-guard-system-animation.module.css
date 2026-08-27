@@ -1,0 +1,91 @@
+.frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: inherit;
+  background: #071018;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.door {
+  transform-origin: 195px 270px;
+  animation: door-state 4.8s ease-in-out infinite;
+}
+
+.pulse {
+  stroke-dasharray: 32 530;
+  stroke-dashoffset: 0;
+  animation: signal-pulse 4.8s linear infinite;
+}
+
+.stage {
+  opacity: 0.48;
+  animation: stage-active 4.8s ease-in-out infinite;
+}
+
+.alert {
+  transform-origin: 865px 278px;
+  animation: alert-active 4.8s ease-in-out infinite;
+}
+
+.control {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  background: rgba(2, 6, 23, 0.84);
+  padding: 0.55rem 0.85rem;
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 700;
+  backdrop-filter: blur(14px);
+}
+
+.control:focus-visible {
+  outline: 3px solid rgba(110, 231, 183, 0.55);
+  outline-offset: 3px;
+}
+
+.paused * {
+  animation-play-state: paused !important;
+}
+
+@keyframes door-state {
+  0%, 15% { transform: rotateY(0deg); }
+  25%, 78% { transform: rotateY(-8deg); }
+  90%, 100% { transform: rotateY(0deg); }
+}
+
+@keyframes signal-pulse {
+  0%, 18% { stroke-dashoffset: 560; opacity: 0; }
+  24% { opacity: 1; }
+  72% { stroke-dashoffset: -40; opacity: 1; }
+  82%, 100% { stroke-dashoffset: -80; opacity: 0; }
+}
+
+@keyframes stage-active {
+  0%, 18%, 88%, 100% { opacity: 0.42; transform: translateY(0); }
+  36%, 70% { opacity: 1; transform: translateY(-3px); }
+}
+
+@keyframes alert-active {
+  0%, 58%, 92%, 100% { transform: scale(0.96); opacity: 0.55; }
+  68%, 82% { transform: scale(1.05); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .door,
+  .pulse,
+  .stage,
+  .alert {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1;
+  }
+}

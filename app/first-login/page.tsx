@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
+import { AuthShell } from "@/components/auth/auth-shell";
+import { PasswordField } from "@/components/auth/password-field";
+import { AvatarPicker } from "@/components/avatar-picker";
 import { StatusBanner } from "@/components/status-banner";
+import { PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
+import { getRoleHome } from "@/lib/role-home";
 import { completeFirstLogin } from "@/lib/settings-actions";
+import { getViewer } from "@/lib/viewer";
 
 export const metadata: Metadata = {
   title: "First login",
@@ -14,126 +21,44 @@ type FirstLoginPageProps = {
 
 export default async function FirstLoginPage({ searchParams }: FirstLoginPageProps) {
   const { error, message } = await searchParams;
+  const viewer = await getViewer();
+
+  if (!viewer?.id) redirect("/login");
+  if (!viewer.mustChangePassword) redirect(getRoleHome(viewer.role));
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">
-          First login
-        </p>
-        <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950">
-          Set up your account
-        </h1>
-        <p className="mt-3 text-slate-600">
-          This school-issued account must be completed before the programme unlocks. Choose a personal display name, optional alias and leaderboard preference.
-        </p>
+    <AuthShell
+      eyebrow="First login"
+      title="Make this school-issued account yours."
+      description="Replace the temporary password, choose how your name appears and select a friendly engineering avatar."
+      sideNote="Your role, email, school and course access cannot be changed from this form."
+    >
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">Account setup</p>
+      <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-slate-950">Complete your profile</h2>
+      <div className="mt-5"><StatusBanner error={error} message={message} /></div>
 
-        <div className="mt-6">
-          <StatusBanner error={error} message={message} />
+      <form action={completeFirstLogin} className="mt-7 space-y-6">
+        <PasswordField label="New password" name="password" autoComplete="new-password" minLength={PASSWORD_MIN_LENGTH} required hint={`Use at least ${PASSWORD_MIN_LENGTH} characters. Spaces are allowed.`} />
+        <PasswordField label="Confirm new password" name="confirmPassword" autoComplete="new-password" minLength={PASSWORD_MIN_LENGTH} required />
+        <AvatarPicker defaultValue={viewer.avatar} />
+        <div>
+          <label htmlFor="displayName" className="text-sm font-semibold text-slate-800">Display name</label>
+          <input id="displayName" name="displayName" defaultValue={viewer.displayName} maxLength={60} required className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100" />
         </div>
-
-        <form action={completeFirstLogin} className="mt-8 space-y-5">
-          <div>
-            <label htmlFor="password" className="text-sm font-semibold text-slate-800">
-              New password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              minLength={8}
-              required
-              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="confirmPassword" className="text-sm font-semibold text-slate-800">
-              Confirm password
-            </label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              minLength={8}
-              required
-              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="displayName" className="text-sm font-semibold text-slate-800">
-              Display name
-            </label>
-            <input
-              id="displayName"
-              name="displayName"
-              type="text"
-              autoComplete="name"
-              required
-              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="avatar" className="text-sm font-semibold text-slate-800">
-              Avatar
-            </label>
-            <select
-              id="avatar"
-              name="avatar"
-              defaultValue="sun"
-              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
-            >
-              <option value="sun">Sun</option>
-              <option value="moon">Moon</option>
-              <option value="star">Star</option>
-              <option value="leaf">Leaf</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="alias" className="text-sm font-semibold text-slate-800">
-              Leaderboard alias
-            </label>
-            <input
-              id="alias"
-              name="alias"
-              type="text"
-              maxLength={24}
-              placeholder="Aster"
-              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="bio" className="text-sm font-semibold text-slate-800">
-              About you
-            </label>
-            <textarea
-              id="bio"
-              name="bio"
-              rows={4}
-              placeholder="I enjoy building circuits and exploring practical electronics projects."
-              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
-            />
-          </div>
-
-          <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-            <input type="checkbox" name="leaderboardOptIn" defaultChecked={false} className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
-            I want to appear on the optional pseudonymous global leaderboard.
-          </label>
-
-          <button
-            type="submit"
-            className="w-full rounded-2xl bg-emerald-600 px-5 py-3.5 font-semibold text-white transition hover:bg-emerald-700"
-          >
-            Continue to dashboard
-          </button>
-        </form>
-      </div>
-    </div>
+        <div>
+          <label htmlFor="alias" className="text-sm font-semibold text-slate-800">Leaderboard alias</label>
+          <input id="alias" name="alias" defaultValue={viewer.leaderboardAlias} maxLength={32} className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100" />
+        </div>
+        <div>
+          <label htmlFor="bio" className="text-sm font-semibold text-slate-800">About you</label>
+          <textarea id="bio" name="bio" defaultValue={viewer.bio} maxLength={280} rows={4} className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100" />
+        </div>
+        <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
+          <input type="checkbox" name="leaderboardOptIn" defaultChecked={viewer.leaderboardOptIn} className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600" />
+          <span>Show my alias and avatar on the optional pseudonymous global leaderboard. My email and school remain private.</span>
+        </label>
+        <button type="submit" className="w-full rounded-2xl bg-emerald-600 px-5 py-3.5 font-semibold text-white transition hover:bg-emerald-700">Finish account setup</button>
+      </form>
+    </AuthShell>
   );
 }

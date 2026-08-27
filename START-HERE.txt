@@ -8,7 +8,8 @@ HARDWARE LEARNING PLATFORM — START HERE
       npm run dev
 5. Open http://localhost:3000 in your browser.
 
-The website opens in demo mode before Supabase is connected.
+Before Supabase is connected, public pages are available and protected course
+pages redirect to login. There is no demo account.
 
 For real login, confirmation email, password reset and cloud progress:
 open README.md and follow Section 5.

@@ -183,13 +183,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
         </div>
       </section>
 
-      {access.state === "demo" && (
-        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
-          {access.message} Real school access must be activated through a server-side entitlement, not by hiding or showing a browser button.
-        </div>
-      )}
-
-      {!access.allowed && access.state !== "demo" && (
+      {!access.allowed && (
         <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
           A verified Supabase account is required to enter the course. Sign in and confirm your email address before starting Section 0.
         </div>

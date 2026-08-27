@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 
-import { DemoModeBanner } from "@/components/demo-mode-banner";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { isDemoModeEnabled, isSupabaseConfigured } from "@/lib/env";
 
 import "./globals.css";
 
@@ -21,8 +19,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const demoMode = isDemoModeEnabled() && !isSupabaseConfigured();
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -30,7 +26,6 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <SiteHeader />
-        {demoMode && <DemoModeBanner />}
         <main id="main-content" className="block w-full overflow-x-hidden">
           {children}
         </main>

@@ -1,12 +1,8 @@
-import {
-  isDemoModeEnabled,
-  isSupabaseConfigured,
-} from "@/lib/env";
-import type { Viewer } from "@/lib/viewer";
+import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import type { Viewer } from "@/lib/viewer";
 
 export type CourseAccessState =
-  | "demo"
   | "entitled"
   | "signed-out"
   | "not-entitled"
@@ -18,7 +14,7 @@ export type CourseAccessResult = {
   message: string;
 };
 
-function accessResult(
+function result(
   allowed: boolean,
   state: CourseAccessState,
   message: string,
@@ -31,68 +27,53 @@ export async function getCourseAccess(
   courseSlug: string,
 ): Promise<CourseAccessResult> {
   if (!isSupabaseConfigured()) {
-    if (isDemoModeEnabled()) {
-      return accessResult(
-        true,
-        "demo",
-        "Local demo mode is enabled. Progress is browser-only and does not prove a school purchase.",
-      );
-    }
-
-    return accessResult(
+    return result(
       false,
       "setup-required",
-      "The platform is not configured. Course access cannot be verified in production.",
+      "Course access cannot be checked because this deployment is not configured.",
     );
   }
 
   if (!viewer?.id || !viewer.verified) {
-    return accessResult(
+    return result(
       false,
       "signed-out",
-      "Sign in with a verified Supabase account to access the course.",
+      "Sign in with a verified school-issued account.",
     );
   }
 
   if (viewer.mustChangePassword) {
-    return accessResult(
+    return result(
       false,
       "setup-required",
-      "Complete your first-login setup before your course seat becomes active.",
+      "Complete first-login account setup before entering the course.",
     );
   }
 
   if (viewer.role === "admin") {
-    return accessResult(
-      true,
-      "entitled",
-      "Administrator course access confirmed.",
-    );
+    return result(true, "entitled", "Administrator preview access confirmed.");
   }
 
-  return getCourseAccessForUser(viewer.id, courseSlug);
+  return getCourseAccessForUser(viewer.id, courseSlug, viewer.role);
 }
 
 export async function getCourseAccessForUser(
   userId: string,
   courseSlug: string,
+  knownRole?: "admin" | "teacher" | "student",
 ): Promise<CourseAccessResult> {
   if (!isSupabaseConfigured()) {
-    if (isDemoModeEnabled()) {
-      return accessResult(true, "demo", "Local demo mode is enabled.");
-    }
+    return result(false, "setup-required", "Supabase is not configured.");
+  }
 
-    return accessResult(
-      false,
-      "setup-required",
-      "Course access could not be verified because Supabase is not configured.",
-    );
+  if (knownRole === "admin") {
+    return result(true, "entitled", "Administrator preview access confirmed.");
   }
 
   const supabase = await createClient();
   const now = new Date().toISOString();
 
-  const { data: directAccess, error: directError } = await supabase
+  const { data: directRows, error: directError } = await supabase
     .from("course_entitlements")
     .select("id")
     .eq("user_id", userId)
@@ -100,83 +81,100 @@ export async function getCourseAccessForUser(
     .eq("active", true)
     .lte("starts_at", now)
     .or(`ends_at.is.null,ends_at.gt.${now}`)
-    .maybeSingle();
+    .limit(1);
 
-  if (directError && directError.code !== "PGRST116") {
-    return accessResult(
+  if (directError) {
+    return result(
       false,
       "setup-required",
-      "Course access could not be verified. Please try again later.",
+      "Course access could not be verified. Try again shortly.",
     );
   }
 
-  if (directAccess) {
-    return accessResult(
+  if (directRows && directRows.length > 0) {
+    return result(true, "entitled", "Individual course access confirmed.");
+  }
+
+  const { data: memberships, error: membershipError } = await supabase
+    .from("cohort_memberships")
+    .select("cohort_id, role")
+    .eq("user_id", userId);
+
+  if (membershipError) {
+    return result(
+      false,
+      "setup-required",
+      "Cohort access could not be verified. Try again shortly.",
+    );
+  }
+
+  if (!memberships || memberships.length === 0) {
+    return result(
+      false,
+      "not-entitled",
+      "This account does not have an active seat for this course.",
+    );
+  }
+
+  const cohortIds = [...new Set(memberships.map((row) => row.cohort_id))];
+
+  const { data: activeCohorts, error: cohortError } = await supabase
+    .from("cohorts")
+    .select("id")
+    .in("id", cohortIds)
+    .eq("active", true);
+
+  if (cohortError) {
+    return result(
+      false,
+      "setup-required",
+      "Cohort status could not be verified. Try again shortly.",
+    );
+  }
+
+  const activeIds = activeCohorts?.map((row) => row.id) ?? [];
+
+  if (activeIds.length === 0) {
+    return result(
+      false,
+      "not-entitled",
+      "The assigned cohort is not active.",
+    );
+  }
+
+  const { data: courseRows, error: courseError } = await supabase
+    .from("cohort_courses")
+    .select("id, cohort_id")
+    .in("cohort_id", activeIds)
+    .eq("course_slug", courseSlug)
+    .eq("active", true)
+    .limit(1);
+
+  if (courseError) {
+    return result(
+      false,
+      "setup-required",
+      "Course assignment could not be verified. Try again shortly.",
+    );
+  }
+
+  if (courseRows && courseRows.length > 0) {
+    const teacher = memberships.some(
+      (membership) =>
+        membership.role === "teacher" &&
+        courseRows.some((course) => course.cohort_id === membership.cohort_id),
+    );
+
+    return result(
       true,
       "entitled",
-      "Verified account access confirmed.",
+      teacher
+        ? "Assigned teacher course access confirmed."
+        : "Active cohort course access confirmed.",
     );
   }
 
-  const { data: membership, error: membershipError } = await supabase
-    .from("cohort_memberships")
-    .select("cohort_id")
-    .eq("user_id", userId)
-    .eq("role", "student")
-    .maybeSingle();
-
-  if (membershipError && membershipError.code !== "PGRST116") {
-    return accessResult(
-      false,
-      "setup-required",
-      "Course access could not be verified. Please try again later.",
-    );
-  }
-
-  if (membership) {
-    const { data: cohort, error: cohortError } = await supabase
-      .from("cohorts")
-      .select("id")
-      .eq("id", membership.cohort_id)
-      .eq("active", true)
-      .maybeSingle();
-
-    if (cohortError && cohortError.code !== "PGRST116") {
-      return accessResult(
-        false,
-        "setup-required",
-        "Course access could not be verified. Please try again later.",
-      );
-    }
-
-    if (cohort) {
-      const { data: cohortCourse, error: cohortCourseError } = await supabase
-        .from("cohort_courses")
-        .select("id")
-        .eq("cohort_id", membership.cohort_id)
-        .eq("course_slug", courseSlug)
-        .eq("active", true)
-        .maybeSingle();
-
-      if (cohortCourseError && cohortCourseError.code !== "PGRST116") {
-        return accessResult(
-          false,
-          "setup-required",
-          "Course access could not be verified. Please try again later.",
-        );
-      }
-
-      if (cohortCourse) {
-        return accessResult(
-          true,
-          "entitled",
-          "Verified cohort course access confirmed.",
-        );
-      }
-    }
-  }
-
-  return accessResult(
+  return result(
     false,
     "not-entitled",
     "This account does not have an active seat for this course.",

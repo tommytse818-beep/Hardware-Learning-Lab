@@ -5,55 +5,99 @@ const mockMaybeSingle = vi.fn();
 
 vi.mock("@/lib/env", () => ({
   isSupabaseConfigured: () => true,
-  isDemoModeEnabled: () => false,
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
-    auth: {
-      getUser: mockGetUser,
-    },
+    auth: { getUser: mockGetUser },
     from: () => ({
       select: () => ({
-        eq: () => ({
-          maybeSingle: mockMaybeSingle,
-        }),
+        eq: () => ({ maybeSingle: mockMaybeSingle }),
       }),
     }),
   }),
 }));
 
+const user = {
+  id: "user-123",
+  email: "student@example.com",
+  email_confirmed_at: "2026-01-01T00:00:00Z",
+  user_metadata: { role: "admin" },
+};
+
+const baseProfile = {
+  role: "student",
+  display_name: "Student One",
+  leaderboard_alias: "CircuitFox",
+  avatar_key: "spark",
+  bio: "I enjoy testing circuits.",
+  leaderboard_opt_in: false,
+  must_change_password: false,
+};
+
 describe("getViewer", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetUser.mockResolvedValue({
+      data: { user },
+      error: null,
+    });
   });
 
-  it("falls back to authenticated user metadata when the profile row is missing", async () => {
-    mockGetUser.mockResolvedValue({
-      data: {
-        user: {
-          id: "user-123",
-          email: "student@example.com",
-          email_confirmed_at: "2024-01-01T00:00:00Z",
-          user_metadata: {
-            display_name: "Student One",
-            avatar: "moon",
-            role: "student",
-            must_change_password: true,
-            leaderboard_opt_in: true,
-          },
-        },
-      },
+  it("uses the trusted profile role, not editable user metadata", async () => {
+    mockMaybeSingle.mockResolvedValue({
+      data: baseProfile,
+      error: null,
     });
-    mockMaybeSingle.mockResolvedValue({ data: null, error: null });
 
     const { getViewer } = await import("./viewer");
     const viewer = await getViewer();
 
-    expect(viewer).not.toBeNull();
-    expect(viewer?.id).toBe("user-123");
-    expect(viewer?.displayName).toBe("Student One");
     expect(viewer?.role).toBe("student");
-    expect(viewer?.mustChangePassword).toBe(true);
+    expect(viewer?.displayName).toBe("Student One");
+  });
+
+  it("returns the administrator role from the profile row", async () => {
+    mockMaybeSingle.mockResolvedValue({
+      data: { ...baseProfile, role: "admin" },
+      error: null,
+    });
+
+    const { getViewer } = await import("./viewer");
+    expect((await getViewer())?.role).toBe("admin");
+  });
+
+  it("fails closed when the profile is missing", async () => {
+    mockMaybeSingle.mockResolvedValue({ data: null, error: null });
+
+    const { getViewer } = await import("./viewer");
+    expect(await getViewer()).toBeNull();
+  });
+
+  it("fails closed when the profile query fails", async () => {
+    mockMaybeSingle.mockResolvedValue({
+      data: null,
+      error: { code: "42703" },
+    });
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { getViewer } = await import("./viewer");
+
+    expect(await getViewer()).toBeNull();
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  it("does not default an unsupported role to student", async () => {
+    mockMaybeSingle.mockResolvedValue({
+      data: { ...baseProfile, role: "owner" },
+      error: null,
+    });
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { getViewer } = await import("./viewer");
+
+    expect(await getViewer()).toBeNull();
+    errorSpy.mockRestore();
   });
 });

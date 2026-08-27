@@ -1,0 +1,332 @@
+.root {
+  --home-x: 0px;
+  --home-y: 0px;
+  overflow: hidden;
+  background: #f5f5f7;
+  color: #0f172a;
+}
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: #05070c;
+}
+
+.heroGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.055) 1px, transparent 1px);
+  background-size: 54px 54px;
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent 92%);
+  mask-image: linear-gradient(to bottom, black, transparent 92%);
+}
+
+.glowOne,
+.glowTwo,
+.finalGlow {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(25px);
+}
+
+.glowOne {
+  right: -8rem;
+  top: 5rem;
+  width: 28rem;
+  height: 28rem;
+  background: rgba(16, 185, 129, 0.16);
+}
+
+.glowTwo {
+  bottom: -10rem;
+  left: 36%;
+  width: 24rem;
+  height: 24rem;
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.eyebrow,
+.darkEyebrow,
+.lightEyebrow {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.eyebrow,
+.darkEyebrow {
+  color: #6ee7b7;
+}
+
+.lightEyebrow {
+  color: #047857;
+}
+
+.heroArt {
+  position: relative;
+  transform: translate3d(var(--home-x), var(--home-y), 0);
+  transition: transform 190ms ease-out;
+  will-change: transform;
+}
+
+.productFrame,
+.flowFrame {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 2.25rem;
+  background: rgba(255, 255, 255, 0.055);
+  box-shadow: 0 38px 120px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(22px);
+}
+
+.productFrame {
+  padding: clamp(0.65rem, 2vw, 1.1rem);
+}
+
+.flowFrame {
+  padding: 1rem;
+}
+
+.floatingNote {
+  position: absolute;
+  right: -0.5rem;
+  bottom: -1.25rem;
+  display: grid;
+  gap: 0.2rem;
+  max-width: 15rem;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 1.15rem;
+  background: rgba(5, 7, 12, 0.9);
+  padding: 0.9rem 1rem;
+  color: white;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(18px);
+}
+
+.floatingNote span {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.floatingNote strong {
+  font-size: 0.86rem;
+}
+
+.primaryButton,
+.secondaryButton,
+.darkButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 0.76rem 1.15rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition:
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.primaryButton {
+  background: #6ee7b7;
+  color: #052e16;
+  box-shadow: 0 12px 34px rgba(16, 185, 129, 0.18);
+}
+
+.secondaryButton {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.055);
+  color: white;
+}
+
+.darkButton {
+  background: #0f172a;
+  color: white;
+}
+
+.primaryButton:hover,
+.secondaryButton:hover,
+.darkButton:hover {
+  transform: translate3d(0, -2px, 0);
+}
+
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible,
+.darkButton:focus-visible {
+  outline: 3px solid rgba(110, 231, 183, 0.48);
+  outline-offset: 3px;
+}
+
+.pill {
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.045);
+  padding: 0.43rem 0.7rem;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0) scale(0.992);
+  transition:
+    opacity 680ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 680ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.journeyCard,
+.proofCard,
+.schoolCard,
+.themeCard {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: white;
+  transition:
+    transform 340ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 340ms ease,
+    box-shadow 340ms ease;
+}
+
+.journeyCard:hover,
+.proofCard:hover,
+.schoolCard:hover,
+.themeCard:hover {
+  transform: translate3d(0, -4px, 0);
+  border-color: #cbd5e1;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.09);
+}
+
+.journeyCard {
+  min-height: 18rem;
+  border-radius: 1.75rem;
+  padding: 1.4rem;
+}
+
+.stepNumber,
+.miniIndex {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.stepNumber {
+  width: 2.65rem;
+  height: 2.65rem;
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.featureRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.8rem 0.9rem;
+}
+
+.featureRow span {
+  color: #6ee7b7;
+  font-weight: 900;
+}
+
+.proofCard {
+  min-height: 16rem;
+  border-radius: 2rem;
+  padding: 1.6rem;
+}
+
+.schoolCard {
+  min-height: 13rem;
+  border-radius: 1.55rem;
+  padding: 1.25rem;
+}
+
+.miniIndex {
+  background: #e0e7ff;
+  padding: 0.38rem 0.62rem;
+  color: #4338ca;
+}
+
+.themeCard {
+  min-height: 17rem;
+  border-radius: 1.65rem;
+  padding: 1.3rem;
+}
+
+.themeDot {
+  display: block;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 1.1rem;
+  background:
+    radial-gradient(circle at 28% 24%, #6ee7b7, transparent 34%),
+    linear-gradient(145deg, #0f766e, #4338ca);
+  box-shadow: 0 15px 36px rgba(67, 56, 202, 0.16);
+}
+
+.finalGlow {
+  left: 50%;
+  top: -12rem;
+  width: 34rem;
+  height: 24rem;
+  transform: translateX(-50%);
+  background: rgba(16, 185, 129, 0.18);
+}
+
+@media (pointer: coarse), (max-width: 640px) {
+  .heroArt,
+  .primaryButton:hover,
+  .secondaryButton:hover,
+  .darkButton:hover,
+  .journeyCard:hover,
+  .proofCard:hover,
+  .schoolCard:hover,
+  .themeCard:hover {
+    transform: none;
+  }
+
+  .floatingNote {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    margin: 0.75rem auto 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroArt,
+  .reveal,
+  .primaryButton,
+  .secondaryButton,
+  .darkButton,
+  .journeyCard,
+  .proofCard,
+  .schoolCard,
+  .themeCard {
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .reveal {
+    opacity: 1;
+  }
+}

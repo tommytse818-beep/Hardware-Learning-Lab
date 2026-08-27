@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AuthShell } from "@/components/auth/auth-shell";
 import { StatusBanner } from "@/components/status-banner";
-import { isSupabaseConfigured } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "School access",
@@ -10,68 +10,40 @@ export const metadata: Metadata = {
 };
 
 type SignupPageProps = {
-  searchParams: Promise<{
-    error?: string;
-    message?: string;
-  }>;
+  searchParams: Promise<{ error?: string; message?: string }>;
 };
 
-export default async function SignupPage({
-  searchParams,
-}: SignupPageProps) {
+export default async function SignupPage({ searchParams }: SignupPageProps) {
   const { error, message } = await searchParams;
-  const configured = isSupabaseConfigured();
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-14 sm:px-6">
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">
-          School-issued access
-        </p>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
-          Registration is by invitation only.
-        </h1>
-
-        <div className="mt-5">
-          <StatusBanner error={error} message={message} />
-        </div>
-
-        {!configured && (
-          <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-            Supabase is not configured yet. School accounts are created by the
-            administrator after a verified school purchase.
+    <AuthShell
+      eyebrow="Invitation only"
+      title="Every learner receives an individual account."
+      description="Schools confirm the programme first. An administrator then provisions the cohort, course access and one private account per learner."
+      sideNote="A teacher account is separate and never consumes a student seat."
+    >
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">School-issued access</p>
+      <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-slate-950">No public registration</h2>
+      <div className="mt-5"><StatusBanner error={error} message={message} /></div>
+      <div className="mt-7 space-y-4">
+        {[
+          "The school requests a quotation and confirms the programme.",
+          "An administrator creates the school, cohort and purchased course assignment.",
+          "Each learner receives their own email account and unique temporary password.",
+          "The temporary password must be replaced at first login.",
+          "Later recovery uses a secure Supabase reset link sent to the registered email.",
+        ].map((item, index) => (
+          <div key={item} className="flex gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-800">0{index + 1}</span>
+            <p className="text-sm leading-6 text-slate-700">{item}</p>
           </div>
-        )}
-
-        <div className="mt-6 space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm leading-6 text-slate-700">
-          <p>
-            There is no public sign-up flow for this platform. Each learner
-            receives a separate school-issued account and a unique temporary
-            password.
-          </p>
-          <p>
-            Schools contact the programme team through the public enquiry form,
-            receive a quotation, and then an administrator provisions the cohort
-            and learner accounts. Teachers and administrators are managed by the
-            verified school workflow.
-          </p>
-        </div>
-
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/login"
-            className="inline-flex justify-center rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
-          >
-            Go to login
-          </Link>
-          <Link
-            href="/schools"
-            className="inline-flex justify-center rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:border-slate-950"
-          >
-            Request a school quotation
-          </Link>
-        </div>
-      </section>
-    </div>
+        ))}
+      </div>
+      <div className="mt-7 grid gap-3 sm:grid-cols-2">
+        <Link href="/login" className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-slate-950 px-5 font-semibold text-white hover:bg-slate-800">Go to login</Link>
+        <Link href="/schools" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-300 px-5 font-semibold text-slate-800 hover:border-slate-950">Request a quotation</Link>
+      </div>
+    </AuthShell>
   );
 }

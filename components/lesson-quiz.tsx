@@ -29,7 +29,6 @@ type LessonQuizProps = {
   initialMethod?: string[];
   initialExplanation?: string;
   cloudConnected: boolean;
-  demoMode: boolean;
   nextHref: string;
   nextLabel: string;
   humanReviewRequired?: boolean;
@@ -63,7 +62,6 @@ export function LessonMicroCheckGroup({
   nextHref,
   nextLabel,
   cloudConnected,
-  demoMode,
 }: {
   courseSlug: string;
   lessonSlug: string;
@@ -71,7 +69,6 @@ export function LessonMicroCheckGroup({
   nextHref: string;
   nextLabel: string;
   cloudConnected: boolean;
-  demoMode: boolean;
 }) {
   const [selectedIndexById, setSelectedIndexById] = useState<Record<string, number | null>>({});
   const [resultById, setResultById] = useState<Record<string, QuizResult | null>>({});
@@ -305,15 +302,9 @@ export function LessonMicroCheckGroup({
         </div>
       )}
 
-      {!allCorrect && !demoMode && cloudConnected && (
+      {!allCorrect && cloudConnected && (
         <p className="mt-4 text-xs leading-5 text-slate-500">
           Progress is saved only after each check is answered correctly.
-        </p>
-      )}
-
-      {demoMode && !allCorrect && (
-        <p className="mt-4 text-xs leading-5 text-slate-500">
-          Demo mode: the micro-checks are available for practice and remain browser-local.
         </p>
       )}
     </section>
@@ -330,7 +321,6 @@ export function LessonQuiz({
   initialMethod,
   initialExplanation,
   cloudConnected,
-  demoMode,
   nextHref,
   nextLabel,
   humanReviewRequired = false,
@@ -350,7 +340,7 @@ export function LessonQuiz({
           saved: cloudConnected,
           saveMessage: cloudConnected
             ? undefined
-            : "Demo mode: progress is browser-only and is not an official school record.",
+            : "Progress sync is temporarily unavailable.",
         }
       : null,
   );
@@ -362,7 +352,7 @@ export function LessonQuiz({
       ? selectedIndex !== null
       : numericValue.trim().length > 0;
   const completionRecorded =
-    result?.correct === true && (result.saved || demoMode);
+    result?.correct === true && result.saved;
 
   function clearResultForNewAttempt() {
     setResult(null);

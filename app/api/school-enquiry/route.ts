@@ -2,70 +2,122 @@ import { NextResponse } from "next/server";
 
 import { sendEnquiryNotification } from "@/lib/email";
 import { isSupabaseConfigured } from "@/lib/env";
+import { consumeRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const requestCounts = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 5;
-const WINDOW_MS = 60 * 60 * 1000;
-
-function getClientKey(request: Request) {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-}
 
 export async function POST(request: Request) {
   const contentLength = Number(request.headers.get("content-length") ?? 0);
+
   if (contentLength > 12_000) {
     return NextResponse.json({ error: "The enquiry is too large." }, { status: 413 });
   }
-  const key = getClientKey(request);
-  const now = Date.now();
-  const current = requestCounts.get(key);
-  if (!current || current.resetAt <= now) {
-    requestCounts.set(key, { count: 1, resetAt: now + WINDOW_MS });
-  } else if (current.count >= RATE_LIMIT) {
-    return NextResponse.json({ error: "Too many enquiries. Please try again later." }, { status: 429 });
-  } else {
-    current.count += 1;
+
+  try {
+    const allowed = await consumeRateLimit(
+      request,
+      "school-enquiry",
+      5,
+      60 * 60,
+    );
+
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Too many enquiries. Please try again later." },
+        { status: 429 },
+      );
+    }
+  } catch {
+    return NextResponse.json(
+      { error: "The enquiry service is temporarily unavailable." },
+      { status: 503 },
+    );
   }
 
   let body: Record<string, unknown>;
-  try { body = (await request.json()) as Record<string, unknown>; } catch { return NextResponse.json({ error: "Invalid request." }, { status: 400 }); }
-  if (body.website) return NextResponse.json({ ok: true });
-  const schoolName = typeof body.schoolName === "string" ? body.schoolName.trim() : "";
-  const contactName = typeof body.contactName === "string" ? body.contactName.trim() : "";
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-  const message = typeof body.message === "string" ? body.message.trim() : "";
-  if (!schoolName || !contactName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || message.length < 10 || message.length > 4000) {
-    return NextResponse.json({ error: "Please provide a school, contact name, valid email and a message of at least 10 characters." }, { status: 400 });
-  }
-  if (!isSupabaseConfigured()) return NextResponse.json({ error: "Enquiries are unavailable until Supabase is configured." }, { status: 503 });
   try {
-    const { error } = await createAdminClient().from("school_enquiries").insert({
+    body = (await request.json()) as Record<string, unknown>;
+  } catch {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
+
+  if (body.website) return NextResponse.json({ ok: true });
+
+  const schoolName =
+    typeof body.schoolName === "string" ? body.schoolName.trim() : "";
+  const contactName =
+    typeof body.contactName === "string" ? body.contactName.trim() : "";
+  const email =
+    typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  const message =
+    typeof body.message === "string" ? body.message.trim() : "";
+
+  if (
+    schoolName.length < 2 ||
+    schoolName.length > 120 ||
+    contactName.length < 2 ||
+    contactName.length > 80 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+    message.length < 10 ||
+    message.length > 4000
+  ) {
+    return NextResponse.json(
+      { error: "Provide a valid school, contact, email and message." },
+      { status: 400 },
+    );
+  }
+
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json(
+      { error: "Enquiries are unavailable on this deployment." },
+      { status: 503 },
+    );
+  }
+
+  const admin = createAdminClient();
+  const { data: enquiry, error: insertError } = await admin
+    .from("school_enquiries")
+    .insert({
       school_name: schoolName,
       contact_name: contactName,
       email,
       message,
-    });
+      notification_status: "pending",
+    })
+    .select("id")
+    .single();
 
-    if (error) throw error;
-
-    const emailResult = await sendEnquiryNotification({
-      schoolName,
-      contactName,
-      email,
-      message,
-    });
-
-    if (!emailResult.ok) {
-      return NextResponse.json({
-        ok: true,
-        emailStatus: emailResult.reason,
-        notice: "The enquiry was saved, but the private notification could not be sent right now.",
-      });
-    }
-
-    return NextResponse.json({ ok: true, emailStatus: "sent" });
-  } catch {
-    return NextResponse.json({ error: "We could not send your enquiry. Please try again later." }, { status: 503 });
+  if (insertError || !enquiry) {
+    return NextResponse.json(
+      { error: "The enquiry could not be saved." },
+      { status: 503 },
+    );
   }
+
+  const emailResult = await sendEnquiryNotification({
+    schoolName,
+    contactName,
+    email,
+    message,
+  });
+
+  await admin
+    .from("school_enquiries")
+    .update({
+      notification_status: emailResult.ok ? "sent" : "failed",
+      notification_error_code: emailResult.ok
+        ? null
+        : emailResult.errorCode ?? emailResult.reason,
+      notification_sent_at: emailResult.ok
+        ? new Date().toISOString()
+        : null,
+    })
+    .eq("id", enquiry.id);
+
+  return NextResponse.json({
+    ok: true,
+    notification: emailResult.ok ? "sent" : "pending-follow-up",
+    notice: emailResult.ok
+      ? "Your enquiry was received."
+      : "Your enquiry was saved. The programme team will review it even though the private notification is delayed.",
+  });
 }

@@ -294,7 +294,6 @@ export default async function LessonPage({ params }: LessonPageProps) {
               nextHref={nextHref}
               nextLabel={nextLabel}
               cloudConnected={progress.databaseReady}
-              demoMode={viewer.demo}
             />
           ) : (
             <LessonQuiz
@@ -310,7 +309,6 @@ export default async function LessonPage({ params }: LessonPageProps) {
                 currentProgress?.completed ? lesson.quiz.explanation : undefined
               }
               cloudConnected={progress.databaseReady}
-              demoMode={viewer.demo}
               nextHref={nextHref}
               nextLabel={nextLabel}
               humanReviewRequired={lesson.humanReviewRequired}

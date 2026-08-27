@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1100" viewBox="0 0 1600 1100" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="90" y1="0" x2="1510" y2="1100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111827"/>
+      <stop offset=".55" stop-color="#071018"/>
+      <stop offset="1" stop-color="#07140F"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFFFFF" stop-opacity=".1"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity=".025"/>
+    </linearGradient>
+    <linearGradient id="trace" x1="280" y1="560" x2="1390" y2="560">
+      <stop stop-color="#67E8F9"/>
+      <stop offset=".46" stop-color="#A7F3D0"/>
+      <stop offset="1" stop-color="#C4B5FD"/>
+    </linearGradient>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="1100" rx="62" fill="url(#bg)"/>
+  <circle cx="1320" cy="170" r="250" fill="#10B981" fill-opacity=".09"/>
+  <circle cx="270" cy="930" r="310" fill="#4F46E5" fill-opacity=".09"/>
+
+  <g opacity=".14">
+    <path d="M0 140H1600M0 280H1600M0 420H1600M0 560H1600M0 700H1600M0 840H1600M0 980H1600" stroke="#94A3B8"/>
+    <path d="M140 0V1100M280 0V1100M420 0V1100M560 0V1100M700 0V1100M840 0V1100M980 0V1100M1120 0V1100M1260 0V1100M1400 0V1100" stroke="#94A3B8"/>
+  </g>
+
+  <text x="92" y="104" fill="#6EE7B7" font-family="Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="5">OPENGUARD MINI · FOUNDATION SYSTEM</text>
+  <text x="92" y="168" fill="white" font-family="Arial, sans-serif" font-size="56" font-weight="700">See the signal. Understand the decision.</text>
+  <text x="92" y="214" fill="#CBD5E1" font-family="Arial, sans-serif" font-size="24">A low-voltage opening alert built from visible, testable circuit stages.</text>
+
+  <g>
+    <rect x="92" y="300" width="310" height="506" rx="38" fill="url(#panel)" stroke="#FFFFFF" stroke-opacity=".14" stroke-width="2"/>
+    <rect x="144" y="354" width="172" height="362" rx="18" fill="#0B1220" stroke="#94A3B8" stroke-opacity=".42" stroke-width="3"/>
+    <path d="M276 374V696" stroke="#334155" stroke-width="7"/>
+    <circle cx="180" cy="535" r="12" fill="#E2E8F0"/>
+    <rect x="323" y="464" width="18" height="100" rx="9" fill="#A7F3D0"/>
+    <rect x="354" y="478" width="24" height="72" rx="10" fill="#6EE7B7" fill-opacity=".32" stroke="#6EE7B7"/>
+    <path d="M338 514H354" stroke="#6EE7B7" stroke-width="5" stroke-dasharray="6 8"/>
+    <text x="144" y="758" fill="white" font-family="Arial, sans-serif" font-size="24" font-weight="700">Door + reed sensor</text>
+    <text x="144" y="790" fill="#94A3B8" font-family="Arial, sans-serif" font-size="18">Opening becomes a digital state.</text>
+  </g>
+
+  <path d="M402 554H500" stroke="url(#trace)" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="470" cy="554" r="8" fill="#67E8F9"/>
+  <circle cx="470" cy="554" r="25" fill="#67E8F9" fill-opacity=".15" filter="url(#glow)"/>
+
+  <g>
+    <rect x="500" y="356" width="250" height="394" rx="30" fill="url(#panel)" stroke="#FFFFFF" stroke-opacity=".14" stroke-width="2"/>
+    <text x="532" y="408" fill="#67E8F9" font-family="Arial, sans-serif" font-size="19" font-weight="700" letter-spacing="3">01 · DELAY</text>
+    <path d="M548 558H608V490H670V558H708" stroke="#A7F3D0" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M610 620C610 575 626 530 670 498" stroke="#C4B5FD" stroke-width="5" stroke-linecap="round"/>
+    <line x1="610" y1="635" x2="610" y2="688" stroke="#94A3B8" stroke-width="5"/>
+    <line x1="590" y1="635" x2="630" y2="635" stroke="#94A3B8" stroke-width="5"/>
+    <line x1="590" y1="650" x2="630" y2="650" stroke="#94A3B8" stroke-width="5"/>
+    <text x="532" y="710" fill="white" font-family="Arial, sans-serif" font-size="23" font-weight="700">RC timing</text>
+    <text x="532" y="738" fill="#94A3B8" font-family="Arial, sans-serif" font-size="17">The alert waits before acting.</text>
+  </g>
+
+  <path d="M750 554H810" stroke="url(#trace)" stroke-width="8" stroke-linecap="round"/>
+
+  <g>
+    <rect x="810" y="304" width="300" height="498" rx="34" fill="url(#panel)" stroke="#FFFFFF" stroke-opacity=".14" stroke-width="2"/>
+    <text x="844" y="358" fill="#A7F3D0" font-family="Arial, sans-serif" font-size="19" font-weight="700" letter-spacing="3">02 · DECIDE</text>
+    <path d="M858 472H940L1000 532L940 592H858Z" stroke="#A7F3D0" stroke-width="6" stroke-linejoin="round"/>
+    <circle cx="1012" cy="532" r="12" stroke="#A7F3D0" stroke-width="5"/>
+    <path d="M858 532H814M1024 532H1060" stroke="#A7F3D0" stroke-width="6"/>
+    <path d="M860 670C906 618 948 622 986 670C1017 709 1051 711 1082 674" stroke="#C4B5FD" stroke-width="6" stroke-linecap="round"/>
+    <text x="844" y="742" fill="white" font-family="Arial, sans-serif" font-size="23" font-weight="700">Schmitt clean-up + AND logic</text>
+    <text x="844" y="772" fill="#94A3B8" font-family="Arial, sans-serif" font-size="17">Only ARMED · DELAYED OPEN can alert.</text>
+  </g>
+
+  <path d="M1110 554H1168" stroke="url(#trace)" stroke-width="8" stroke-linecap="round"/>
+
+  <g>
+    <rect x="1168" y="356" width="340" height="394" rx="30" fill="url(#panel)" stroke="#FFFFFF" stroke-opacity=".14" stroke-width="2"/>
+    <text x="1202" y="408" fill="#C4B5FD" font-family="Arial, sans-serif" font-size="19" font-weight="700" letter-spacing="3">03 · OUTPUT</text>
+    <circle cx="1280" cy="540" r="48" stroke="#C4B5FD" stroke-width="6"/>
+    <path d="M1280 492V588M1232 540H1328" stroke="#C4B5FD" stroke-width="5"/>
+    <path d="M1368 497C1410 514 1410 566 1368 583M1395 474C1463 505 1463 575 1395 606" stroke="#6EE7B7" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="1280" cy="540" r="9" fill="#FDE68A"/>
+    <text x="1202" y="710" fill="white" font-family="Arial, sans-serif" font-size="23" font-weight="700">Transistor driver · buzzer · LED</text>
+    <text x="1202" y="738" fill="#94A3B8" font-family="Arial, sans-serif" font-size="17">A visible and audible reminder.</text>
+  </g>
+
+  <g>
+    <rect x="92" y="874" width="1416" height="132" rx="28" fill="#020617" fill-opacity=".62" stroke="#FFFFFF" stroke-opacity=".11"/>
+    <text x="130" y="930" fill="#E2E8F0" font-family="Arial, sans-serif" font-size="21" font-weight="700">MEASURE</text>
+    <text x="265" y="930" fill="#94A3B8" font-family="Arial, sans-serif" font-size="20">D_RAW</text>
+    <circle cx="350" cy="923" r="9" fill="#67E8F9"/>
+    <text x="420" y="930" fill="#94A3B8" font-family="Arial, sans-serif" font-size="20">V_DELAY</text>
+    <circle cx="526" cy="923" r="9" fill="#A7F3D0"/>
+    <text x="600" y="930" fill="#94A3B8" font-family="Arial, sans-serif" font-size="20">D_CLEAN</text>
+    <circle cx="714" cy="923" r="9" fill="#C4B5FD"/>
+    <text x="804" y="930" fill="#E2E8F0" font-family="Arial, sans-serif" font-size="21" font-weight="700">VERIFY</text>
+    <text x="914" y="930" fill="#94A3B8" font-family="Arial, sans-serif" font-size="20">requirement · calculation · measurement · schematic · review</text>
+    <text x="130" y="974" fill="#6EE7B7" font-family="Arial, sans-serif" font-size="18">Opening alert / reminder only · low-voltage teaching prototype</text>
+  </g>
+</svg>

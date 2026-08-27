@@ -82,16 +82,10 @@ export default async function DashboardPage({
         <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
           <p className="font-semibold text-slate-900">{viewer.email}</p>
           <p className="mt-1 text-xs text-slate-500">
-            {viewer.demo ? "Local demo student" : "Authenticated student"}
+            Authenticated student
           </p>
         </div>
       </div>
-
-      {viewer.demo && (
-        <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-950">
-          Demo mode lets you review the project and lesson flow locally. It is not evidence of a school purchase, active seat or official completion.
-        </div>
-      )}
 
       {!access.allowed && (
         <div className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm leading-6 text-rose-950">
@@ -99,7 +93,7 @@ export default async function DashboardPage({
         </div>
       )}
 
-      {!viewer.demo && access.allowed && !progress.databaseReady && (
+      {access.allowed && !progress.databaseReady && (
         <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-950">
           Your verified account has course access. Progress sync is temporarily unavailable, but you can still review the course lessons.
         </div>
@@ -178,7 +172,7 @@ export default async function DashboardPage({
               ["Public project experience", "Ready"],
               [
                 "Email/password accounts",
-                supabaseConnected ? "Connected" : "Demo only",
+                supabaseConnected ? "Connected" : "Not configured",
               ],
               [
                 "Course entitlement",

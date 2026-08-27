@@ -1,9 +1,18 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
+import { AuthShell } from "@/components/auth/auth-shell";
+import { PasswordField } from "@/components/auth/password-field";
 import { StatusBanner } from "@/components/status-banner";
-import { updatePassword } from "@/lib/auth-actions";
-import { isSupabaseConfigured } from "@/lib/env";
+import { updateRecoveredPassword } from "@/lib/auth-actions";
+import { PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
+import {
+  hasActivePasswordRecovery,
+  PASSWORD_RECOVERY_COOKIE,
+} from "@/lib/password-recovery";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Choose a new password",
@@ -18,81 +27,74 @@ export default async function UpdatePasswordPage({
   searchParams,
 }: UpdatePasswordPageProps) {
   const { error, message } = await searchParams;
-  const configured = isSupabaseConfigured();
+  const cookieStore = await cookies();
+
+  if (
+    !hasActivePasswordRecovery(
+      cookieStore.get(PASSWORD_RECOVERY_COOKIE)?.value,
+    )
+  ) {
+    redirect(
+      "/forgot-password?error=Open+the+newest+password-recovery+link+from+your+email.",
+    );
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    redirect(
+      "/forgot-password?error=The+recovery+session+is+invalid+or+has+expired.",
+    );
+  }
 
   return (
-    <div className="access-v1-shell relative overflow-hidden bg-[#05070c] px-4 py-16 text-white sm:px-6 sm:py-24 lg:px-8">
-      <div className="access-v1-orb access-v1-orb-one" />
-      <div className="relative mx-auto w-full max-w-xl">
-        <section className="access-v1-reveal rounded-[2.2rem] bg-white p-6 text-slate-950 shadow-[0_35px_120px_rgba(0,0,0,0.35)] sm:p-9">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">
-            Secure your account
-          </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-            Choose a new password
-          </h1>
-          <p className="mt-4 text-sm leading-6 text-slate-600">
-            Use the newest reset link from your email. After the update, return to your role dashboard and continue the programme.
-          </p>
-
-          <div className="mt-5">
-            <StatusBanner error={error} message={message} />
-          </div>
-
-          {!configured && (
-            <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
-              Connect Supabase before testing password updates.
-            </div>
-          )}
-
-          <form action={updatePassword} className="mt-7 space-y-5">
-            <div>
-              <label htmlFor="password" className="text-sm font-semibold text-slate-800">
-                New password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                minLength={10}
-                required
-                disabled={!configured}
-                className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3.5 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
-              />
-              <p className="mt-2 text-xs leading-5 text-slate-500">
-                Use at least 10 characters and avoid a password shared with classmates.
-              </p>
-            </div>
-            <div>
-              <label htmlFor="confirmPassword" className="text-sm font-semibold text-slate-800">
-                Confirm new password
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                minLength={10}
-                required
-                disabled={!configured}
-                className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3.5 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={!configured}
-              className="w-full rounded-2xl bg-emerald-600 px-5 py-3.5 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-            >
-              Save new password
-            </button>
-          </form>
-
-          <Link href="/login" className="mt-6 inline-flex text-sm font-semibold text-slate-600 hover:text-slate-950">
-            ← Return to sign in
-          </Link>
-        </section>
+    <AuthShell
+      eyebrow="Secure recovery session"
+      title="Choose a new password for your own account."
+      description="Open this page from the newest recovery email. The link establishes a temporary recovery session before the password can change."
+    >
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">
+        New password
+      </p>
+      <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-slate-950">
+        Finish account recovery
+      </h2>
+      <div className="mt-5">
+        <StatusBanner error={error} message={message} />
       </div>
-    </div>
+      <form action={updateRecoveredPassword} className="mt-7 space-y-5">
+        <PasswordField
+          label="New password"
+          name="password"
+          autoComplete="new-password"
+          minLength={PASSWORD_MIN_LENGTH}
+          required
+          hint={`Use at least ${PASSWORD_MIN_LENGTH} characters. A short passphrase is welcome.`}
+        />
+        <PasswordField
+          label="Confirm new password"
+          name="confirmPassword"
+          autoComplete="new-password"
+          minLength={PASSWORD_MIN_LENGTH}
+          required
+        />
+        <button
+          type="submit"
+          className="w-full rounded-2xl bg-emerald-600 px-5 py-3.5 font-semibold text-white transition hover:bg-emerald-700"
+        >
+          Save new password
+        </button>
+      </form>
+      <Link
+        href="/forgot-password"
+        className="mt-6 inline-flex text-sm font-semibold text-emerald-700"
+      >
+        Request another link
+      </Link>
+    </AuthShell>
   );
 }
