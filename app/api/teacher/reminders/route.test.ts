@@ -14,7 +14,7 @@ const cohortId = "33333333-3333-3333-3333-333333333333";
 const studentId = "44444444-4444-4444-4444-444444444444";
 type QueryBuilder = {
   select: () => QueryBuilder;
-  eq: () => QueryBuilder;
+  eq: (column: string, value: unknown) => QueryBuilder;
   maybeSingle: () => unknown;
   update: (value: unknown) => QueryBuilder;
   insert: (value: unknown) => QueryBuilder;
@@ -22,19 +22,22 @@ type QueryBuilder = {
 };
 
 function adminMock(responses: Record<string, unknown[]>, rpcResult?: unknown) {
-  const events: Array<{ table?: string; operation: string; value?: unknown }> = [];
+  const events: Array<{ table?: string; operation: string; column?: string; value?: unknown }> = [];
   const next = (table: string) => responses[table]?.shift() ?? { data: null, error: null };
   const from = vi.fn((table: string) => {
     const builder = {} as QueryBuilder;
     builder.select = vi.fn(() => { events.push({ table, operation: "select" }); return builder; });
-    builder.eq = vi.fn(() => builder);
+    builder.eq = vi.fn((column: string, value: unknown) => { events.push({ table, operation: "eq", column, value }); return builder; });
     builder.maybeSingle = vi.fn(() => next(table));
     builder.update = vi.fn((value: unknown) => { events.push({ table, operation: "update", value }); return builder; });
     builder.insert = vi.fn((value: unknown) => { events.push({ table, operation: "insert", value }); return builder; });
     builder.then = (resolve: (value: unknown) => unknown) => Promise.resolve(next(table)).then(resolve);
     return builder;
   });
-  const rpc = vi.fn(async () => rpcResult ?? { data: null, error: null });
+  const rpc = vi.fn(async (name: string) => {
+    events.push({ operation: "rpc", value: name });
+    return rpcResult ?? { data: null, error: null };
+  });
   return { client: { from, rpc }, events };
 }
 
@@ -100,11 +103,8 @@ describe("POST /api/teacher/reminders", () => {
     const { POST } = await import("./route");
 
     expect((await POST(request())).status).toBe(200);
-    expect(mock.events.findIndex((event) => event.operation === "email")).toBeLessThan(
-      mock.events.findIndex((event) => event.operation === "update"),
-    );
     expect(mock.events).toContainEqual(expect.objectContaining({ table: "teacher_reminders", operation: "update", value: expect.objectContaining({ status: "sent" }) }));
-    expect(mock.events.filter((event) => event.table === "teacher_reminders").map((event) => event.operation)).toEqual(["update"]);
+    expect(mock.events).toContainEqual({ table: "teacher_reminders", operation: "eq", column: "id", value: 17 });
   });
 
   it("updates the same ID to failed and returns 503 when email delivery fails", async () => {
@@ -115,6 +115,35 @@ describe("POST /api/teacher/reminders", () => {
 
     expect((await POST(request())).status).toBe(503);
     expect(mock.events).toContainEqual(expect.objectContaining({ table: "teacher_reminders", operation: "update", value: expect.objectContaining({ status: "failed", error_code: "email_failed" }) }));
-    expect(mock.events.filter((event) => event.table === "teacher_reminders").map((event) => event.operation)).toEqual(["update"]);
+    expect(mock.events).toContainEqual({ table: "teacher_reminders", operation: "eq", column: "id", value: "reminder-9" });
+  });
+
+  it("calls the reservation RPC before sending email", async () => {
+    const mock = adminMock(readyResponses(), { data: { allowed: true, reminder_id: 18 }, error: null });
+    mocks.createAdminClient.mockReturnValue(mock.client);
+    mocks.sendCatchUpReminder.mockImplementation(async () => {
+      mock.events.push({ operation: "email" });
+      return { ok: true };
+    });
+    const { POST } = await import("./route");
+
+    expect((await POST(request())).status).toBe(200);
+    expect(mock.events).toContainEqual({ operation: "rpc", value: "reserve_teacher_reminder_v1" });
+    expect(mock.events.findIndex((event) => event.operation === "rpc")).toBeLessThan(
+      mock.events.findIndex((event) => event.operation === "email"),
+    );
+  });
+
+  it("does not use the old teacher_reminders select-then-insert duplicate check", async () => {
+    const mock = adminMock(readyResponses(), { data: { allowed: true, reminder_id: 19 }, error: null });
+    mocks.createAdminClient.mockReturnValue(mock.client);
+    const { POST } = await import("./route");
+
+    expect((await POST(request())).status).toBe(200);
+    expect(
+      mock.events
+        .filter((event) => event.table === "teacher_reminders")
+        .map((event) => event.operation),
+    ).not.toEqual(expect.arrayContaining(["select", "insert"]));
   });
 });
