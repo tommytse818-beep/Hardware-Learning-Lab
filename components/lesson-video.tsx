@@ -6,7 +6,9 @@ type LessonVideoProps = {
 };
 
 export function LessonVideo({ title, video }: LessonVideoProps) {
-  const hasLocalVideo = Boolean(video.videoSrc || video.webmSrc);
+  const hasLocalVideo = Boolean(
+    video.videoSrc || video.webmSrc || video.protectedVideoSrc,
+  );
 
   if (hasLocalVideo) {
     return (
@@ -21,6 +23,7 @@ export function LessonVideo({ title, video }: LessonVideoProps) {
         >
           {video.webmSrc && <source src={video.webmSrc} type="video/webm" />}
           {video.videoSrc && <source src={video.videoSrc} type="video/mp4" />}
+          {video.protectedVideoSrc && <source src={video.protectedVideoSrc} type="video/mp4" />}
           Your browser does not support the lesson video.
         </video>
         <figcaption className="border-t border-white/10 px-5 py-4 text-sm leading-6 text-slate-300">
@@ -57,14 +60,6 @@ export function LessonVideo({ title, video }: LessonVideoProps) {
           <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-300">
             {video.caption}
           </p>
-          {video.plannedPath && (
-            <div className="mt-5 rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-left font-mono text-xs leading-5 text-slate-300">
-              Replace this placeholder later by adding your recording at:
-              <span className="mt-1 block break-all text-emerald-200">
-                public{video.plannedPath}
-              </span>
-            </div>
-          )}
         </div>
       </div>
       <figcaption className="border-t border-slate-200 px-5 py-4 text-sm leading-6 text-slate-600">

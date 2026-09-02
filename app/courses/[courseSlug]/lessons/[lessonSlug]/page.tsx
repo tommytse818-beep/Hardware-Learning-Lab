@@ -15,6 +15,7 @@ import {
   getCourse,
   getLesson,
 } from "@/lib/courses";
+import { getLessonAvailability, getRecommendedLessonSlug } from "@/lib/lesson-readiness";
 import { getCourseProgress } from "@/lib/progress";
 import { getViewer } from "@/lib/viewer";
 
@@ -22,6 +23,9 @@ type LessonPageProps = {
   params: Promise<{
     courseSlug: string;
     lessonSlug: string;
+  }>;
+  searchParams?: Promise<{
+    blocked?: string;
   }>;
 };
 
@@ -37,8 +41,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function LessonPage({ params }: LessonPageProps) {
+export default async function LessonPage({ params, searchParams }: LessonPageProps) {
   const { courseSlug, lessonSlug } = await params;
+  const query = searchParams ? await searchParams : {};
   const course = getCourse(courseSlug);
   const lesson = getLesson(courseSlug, lessonSlug);
 
@@ -69,6 +74,29 @@ export default async function LessonPage({ params }: LessonPageProps) {
     (item) => item.slug === lesson.slug,
   );
   const { previous, next } = getAdjacentLessons(course, lesson.slug);
+  const completedLessonSlugs = new Set(
+    progress.records
+      .filter((record) => record.completed)
+      .map((record) => record.lesson_slug),
+  );
+  const canPreviewAll = access.allowed && viewer.role !== "student";
+  const availability = getLessonAvailability(
+    course,
+    completedLessonSlugs,
+    canPreviewAll,
+  );
+  const availabilityByLesson = new Map(
+    availability.map((item) => [item.lessonSlug, item]),
+  );
+
+  if (!(availabilityByLesson.get(lesson.slug)?.available ?? false)) {
+    const recommendedLessonSlug = getRecommendedLessonSlug(course, completedLessonSlugs);
+    redirect(
+      recommendedLessonSlug
+        ? `/courses/${course.slug}/lessons/${recommendedLessonSlug}?blocked=${lesson.slug}`
+        : `/courses/${course.slug}?blocked=${lesson.slug}`,
+    );
+  }
 
   const quizView =
     lesson.quiz.kind === "choice"
@@ -107,6 +135,12 @@ export default async function LessonPage({ params }: LessonPageProps) {
         </p>
       </div>
 
+      {query.blocked && !canPreviewAll && (
+        <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+          That lesson opens after the previous checkpoint is complete. Continue from this available lesson first.
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)_320px] lg:items-start">
         <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-28">
           <p className="px-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
@@ -117,7 +151,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
               const active = item.slug === lesson.slug;
               const complete =
                 progressByLesson.get(item.slug)?.completed ?? false;
-              const itemUnlocked = access.allowed;
+              const itemUnlocked = access.allowed && (availabilityByLesson.get(item.slug)?.available ?? false);
 
               const classes = `flex items-start gap-3 rounded-xl px-3 py-3 text-sm transition ${
                 active
@@ -206,7 +240,15 @@ export default async function LessonPage({ params }: LessonPageProps) {
             </div>
           </header>
 
-          <LessonVideo title={lesson.title} video={lesson.video} />
+          <LessonVideo
+            title={lesson.title}
+            video={{
+              ...lesson.video,
+              protectedVideoSrc: lesson.video.resourceKey
+                ? `/api/courses/${course.slug}/resources/${lesson.video.resourceKey}`
+                : undefined,
+            }}
+          />
 
           {lesson.diagram && (
             <figure className="lesson-v1-diagram overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -294,12 +336,14 @@ export default async function LessonPage({ params }: LessonPageProps) {
               nextHref={nextHref}
               nextLabel={nextLabel}
               cloudConnected={progress.databaseReady}
+              initialSolvedQuestions={currentProgress?.solved_questions ?? []}
             />
           ) : (
             <LessonQuiz
               courseSlug={course.slug}
               lessonSlug={lesson.slug}
               quiz={quizView}
+              questionId={lesson.quiz.id}
               initialCompleted={currentProgress?.completed ?? false}
               initialScore={currentProgress?.quiz_score ?? null}
               initialMethod={
@@ -312,6 +356,8 @@ export default async function LessonPage({ params }: LessonPageProps) {
               nextHref={nextHref}
               nextLabel={nextLabel}
               humanReviewRequired={lesson.humanReviewRequired}
+              reviewState={currentProgress?.review_state}
+              reviewFeedback={currentProgress?.review_feedback}
             />
           )}
 

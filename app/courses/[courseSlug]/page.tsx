@@ -4,12 +4,16 @@ import { notFound, redirect } from "next/navigation";
 
 import { getCourseAccess } from "@/lib/course-access";
 import { getCourse, type Lesson } from "@/lib/courses";
+import { getLessonAvailability } from "@/lib/lesson-readiness";
 import { getCourseProgress } from "@/lib/progress";
 import { getViewer } from "@/lib/viewer";
 
 type CoursePageProps = {
   params: Promise<{
     courseSlug: string;
+  }>;
+  searchParams?: Promise<{
+    blocked?: string;
   }>;
 };
 
@@ -25,8 +29,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function CoursePage({ params }: CoursePageProps) {
+export default async function CoursePage({ params, searchParams }: CoursePageProps) {
   const { courseSlug } = await params;
+  const query = searchParams ? await searchParams : {};
   const course = getCourse(courseSlug);
 
   if (!course) {
@@ -54,12 +59,24 @@ export default async function CoursePage({ params }: CoursePageProps) {
 
   const courseLessons = course.lessons;
   const canonicalCourseSlug = course.slug;
+  const canPreviewAll = access.allowed && viewer.role !== "student";
+  const availabilityByLesson = new Map(
+    getLessonAvailability(
+      course,
+      new Set(
+        progress.records
+          .filter((record) => record.completed)
+          .map((record) => record.lesson_slug),
+      ),
+      canPreviewAll,
+    ).map((item) => [item.lessonSlug, item]),
+  );
   const sectionZero = courseLessons.filter((lesson) => lesson.section === "0");
   const sectionOne = courseLessons.filter((lesson) => lesson.section.startsWith("1."));
 
   function lessonCard(lesson: Lesson) {
     const complete = progressByLesson.get(lesson.slug)?.completed ?? false;
-    const unlocked = access.allowed;
+    const unlocked = access.allowed && (availabilityByLesson.get(lesson.slug)?.available ?? false);
 
     const content = (
       <>
@@ -185,7 +202,13 @@ export default async function CoursePage({ params }: CoursePageProps) {
 
       {!access.allowed && (
         <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
-          A verified Supabase account is required to enter the course. Sign in and confirm your email address before starting Section 0.
+          {access.message}
+        </div>
+      )}
+
+      {query.blocked && access.allowed && (
+        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+          That lesson opens after the previous checkpoint is complete. Continue from the next available lesson below.
         </div>
       )}
 
@@ -197,7 +220,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
 
       <section className="mt-10 rounded-3xl border border-blue-200 bg-blue-50 p-6 sm:p-8">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
-          Learning outcome for this patch
+          What you will be able to show
         </p>
         <p className="mt-3 max-w-4xl text-lg leading-8 text-blue-950">
           {course.outcome}

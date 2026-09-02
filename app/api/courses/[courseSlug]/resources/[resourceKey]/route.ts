@@ -40,7 +40,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const { data, error } = await admin.storage
     .from(resource.bucket_id)
-    .createSignedUrl(resource.object_path, 60);
+    .createSignedUrl(resource.object_path, 60 * 60);
 
   if (error || !data?.signedUrl) {
     return NextResponse.json(
