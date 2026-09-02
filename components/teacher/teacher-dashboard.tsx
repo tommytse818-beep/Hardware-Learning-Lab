@@ -20,6 +20,10 @@ async function post(path: string, body: Record<string, unknown>) {
   if (!response.ok) throw new Error(payload.error || "Operation failed.");
 }
 
+function reviewLabel(state: string) {
+  return state === "revision_requested" ? "Revision requested" : "Awaiting review";
+}
+
 export function TeacherDashboard({ metrics, cohorts }: TeacherDashboardProps) {
   const [notice, setNotice] = useState("");
 
@@ -85,6 +89,63 @@ export function TeacherDashboard({ metrics, cohorts }: TeacherDashboardProps) {
                     <div>
                       <p className="font-semibold text-slate-950">{learner.name}</p>
                       <p className="text-sm text-slate-500">{learner.alias} · {learner.completed} complete · {learner.points} points</p>
+                      {learner.pendingReviews.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {learner.pendingReviews.map((review) => (
+                            <form
+                              key={`${learner.id}-${review.lessonSlug}`}
+                              className="rounded-xl border border-violet-200 bg-white p-3 text-sm"
+                              onSubmit={(event) => {
+                                event.preventDefault();
+                                const form = new FormData(event.currentTarget);
+                                void run(() =>
+                                  post("/api/teacher/lesson-review", {
+                                    studentId: learner.id,
+                                    courseSlug: review.courseSlug,
+                                    lessonSlug: review.lessonSlug,
+                                    decision: form.get("decision"),
+                                    feedback: form.get("feedback"),
+                                  }),
+                                );
+                              }}
+                            >
+                              <p className="font-semibold text-violet-950">
+                                {review.lessonTitle}
+                              </p>
+                              <p className="mt-1 text-xs font-semibold text-violet-700">
+                                {reviewLabel(review.reviewState)}
+                              </p>
+                              {review.feedback && (
+                                <p className="mt-1 text-xs leading-5 text-slate-600">
+                                  {review.feedback}
+                                </p>
+                              )}
+                              <input
+                                name="feedback"
+                                maxLength={500}
+                                placeholder="Optional feedback"
+                                className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
+                              />
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                <button
+                                  name="decision"
+                                  value="approved"
+                                  className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  name="decision"
+                                  value="revision_requested"
+                                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+                                >
+                                  Request revision
+                                </button>
+                              </div>
+                            </form>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`rounded-full px-3 py-1 text-xs font-bold ${

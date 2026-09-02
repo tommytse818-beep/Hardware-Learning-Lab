@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 
+import { MobileNav } from "@/components/site-mobile-nav";
 import { UserMenu } from "@/components/user-menu";
 import { getViewer } from "@/lib/viewer";
 
@@ -38,7 +39,7 @@ export async function SiteHeader() {
 
         <nav
           aria-label="Main navigation"
-          className="flex min-w-0 shrink items-center gap-1 overflow-x-auto"
+          className="hidden min-w-0 shrink items-center gap-1 overflow-x-auto sm:flex"
         >
           {publicLinks.map((link) => (
             <Link
@@ -52,6 +53,7 @@ export async function SiteHeader() {
         </nav>
 
         <div className="relative z-50 flex shrink-0 items-center gap-2">
+          <MobileNav />
           <UserMenu viewer={viewer} />
         </div>
       </div>

@@ -50,7 +50,8 @@ export type LessonVideo = {
   videoSrc?: string;
   webmSrc?: string;
   posterSrc?: string;
-  plannedPath?: string;
+  resourceKey?: string;
+  protectedVideoSrc?: string;
   caption: string;
 };
 
@@ -132,8 +133,7 @@ const openGuardMiniCourse: Course = {
       practicalTask:
         "Write down the name of your teacher or programme contact and where your school stores the induction recording and workshop schedule.",
       video: {
-        plannedPath:
-          "/media/courses/open-guard-mini/section-0-school-induction.mp4",
+        resourceKey: "section-0-school-induction-video",
         posterSrc:
           "/images/projects/open-guard-mini/open-guard-concept-poster.webp",
         caption:
@@ -224,10 +224,9 @@ const openGuardMiniCourse: Course = {
       practicalTask:
         "Rewrite 'make a cool door gadget' as three testable requirements and one honest non-goal. Each requirement must contain a state, condition, dimension, timing or observable pass/fail result.",
       video: {
-        plannedPath:
-          "/media/courses/open-guard-mini/week-1/lesson-1-1-user-need-engineering-requirement.mp4",
+        resourceKey: "lesson-1-1-user-need-engineering-requirement-video",
         posterSrc:
-          "/images/projects/open-guard-mini/lessons/lesson-1-1-user-need-requirement.webp",
+          "/images/projects/open-guard-mini/lessons/lesson-1-1-input-process-output.webp",
         caption:
           "Record this as one concise concept video. The reasoning is revealed inside the same lesson after correct micro-check answers; do not create a separate solution video.",
       },
@@ -356,8 +355,7 @@ const openGuardMiniCourse: Course = {
       practicalTask:
         "On a simple battery-resistor-LED drawing, mark source, load, return path and the point where an open wire would stop current.",
       video: {
-        plannedPath:
-          "/media/courses/open-guard-mini/week-1/lesson-1-2-complete-circuit.mp4",
+        resourceKey: "lesson-1-2-complete-circuit-video",
         posterSrc:
           "/images/projects/open-guard-mini/lessons/lesson-1-2-complete-circuit.webp",
         caption:
@@ -427,8 +425,7 @@ const openGuardMiniCourse: Course = {
       practicalTask:
         "On a screenshot of a simple circuit, mark two probe points for a voltage measurement and write the expected unit beside the meter.",
       video: {
-        plannedPath:
-          "/media/courses/open-guard-mini/week-1/lesson-1-3-voltage-current-resistance.mp4",
+        resourceKey: "lesson-1-3-voltage-current-resistance-video",
         posterSrc:
           "/images/projects/open-guard-mini/lessons/lesson-1-3-meter-v-i-r.webp",
         caption:
@@ -498,8 +495,7 @@ const openGuardMiniCourse: Course = {
       practicalTask:
         "Write the calculation in four lines: known values, resistor voltage, equation and substitution, then the selected standard value.",
       video: {
-        plannedPath:
-          "/media/courses/open-guard-mini/week-1/lesson-1-4-led-resistor.mp4",
+        resourceKey: "lesson-1-4-led-resistor-video",
         posterSrc:
           "/images/projects/open-guard-mini/lessons/lesson-1-4-led-resistor.webp",
         caption:
@@ -567,8 +563,7 @@ const openGuardMiniCourse: Course = {
       practicalTask:
         "With power removed and teacher approval, move a magnet near and away from the protected reed sensor and record the two continuity observations.",
       video: {
-        plannedPath:
-          "/media/courses/open-guard-mini/week-1/lesson-1-5-reed-sensor-states.mp4",
+        resourceKey: "lesson-1-5-reed-sensor-states-video",
         posterSrc:
           "/images/projects/open-guard-mini/lessons/lesson-1-5-reed-state.webp",
         caption:
@@ -638,8 +633,7 @@ const openGuardMiniCourse: Course = {
       practicalTask:
         "Draw one pull-up and one pull-down example. Label the open-switch default state and the closed-switch active state for each one.",
       video: {
-        plannedPath:
-          "/media/courses/open-guard-mini/week-1/lesson-1-6-pull-resistors.mp4",
+        resourceKey: "lesson-1-6-pull-resistors-video",
         posterSrc:
           "/images/projects/open-guard-mini/lessons/lesson-1-6-pull-up.webp",
         caption:
@@ -709,8 +703,7 @@ const openGuardMiniCourse: Course = {
       practicalTask:
         "Complete AND, OR and NOT truth tables, then describe one row in words without using the gate symbol.",
       video: {
-        plannedPath:
-          "/media/courses/open-guard-mini/week-1/lesson-1-7-logic-gates.mp4",
+        resourceKey: "lesson-1-7-logic-gates-video",
         posterSrc:
           "/images/projects/open-guard-mini/lessons/lesson-1-7-logic-gates.webp",
         caption:
@@ -780,8 +773,7 @@ const openGuardMiniCourse: Course = {
       practicalTask:
         "Submit the signal definitions, Boolean equation and four-row truth table. The teacher reviews the written reasoning after the webpage checks completeness.",
       video: {
-        plannedPath:
-          "/media/courses/open-guard-mini/week-1/lesson-1-8-boolean-requirement.mp4",
+        resourceKey: "lesson-1-8-boolean-requirement-video",
         posterSrc:
           "/images/projects/open-guard-mini/lessons/lesson-1-8-truth-table.webp",
         caption:
@@ -857,8 +849,7 @@ const openGuardMiniCourse: Course = {
       practicalTask:
         "Prepare a 60-90 word design defence explaining why OpenGuard uses a pull-up on the reed input, a pull-down on ARM and an AND relationship for the alert.",
       video: {
-        plannedPath:
-          "/media/courses/open-guard-mini/week-1/lesson-1-9-live-checkpoint-briefing.mp4",
+        resourceKey: "lesson-1-9-live-checkpoint-briefing-video",
         posterSrc:
           "/images/projects/open-guard-mini/lessons/lesson-1-9-design-checkpoint.webp",
         caption:

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getCourse } from "@/lib/courses";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type PortalMetric = {
@@ -33,6 +34,15 @@ export type TeacherLearner = {
   completed: number;
   points: number;
   status: "On track" | "Behind target" | "Needs review";
+  pendingReviews: TeacherPendingReview[];
+};
+
+export type TeacherPendingReview = {
+  courseSlug: string;
+  lessonSlug: string;
+  lessonTitle: string;
+  reviewState: string;
+  feedback: string | null;
 };
 
 export type TeacherCohort = {
@@ -183,7 +193,7 @@ export async function getTeacherPortalData(teacherId: string) {
             .in("id", studentIds),
           admin
             .from("lesson_progress")
-            .select("user_id, lesson_slug, completed, quiz_score")
+            .select("user_id, course_slug, lesson_slug, completed, quiz_score, review_state, review_feedback")
             .in("user_id", studentIds),
         ])
       : [
@@ -211,8 +221,32 @@ export async function getTeacherPortalData(teacherId: string) {
       .map((membership) => {
         const profile = profileMap.get(membership.user_id);
         const progress = (progressResult.data ?? []).filter(
-          (row) => row.user_id === membership.user_id,
+          (row) =>
+            row.user_id === membership.user_id &&
+            row.course_slug === cohort.course_slug,
         );
+        const course = getCourse(cohort.course_slug);
+        const humanReviewLessons = new Map(
+          (course?.lessons ?? [])
+            .filter((lesson) => lesson.humanReviewRequired)
+            .map((lesson) => [lesson.slug, lesson]),
+        );
+        const pendingReviews = progress
+          .filter(
+            (row) =>
+              humanReviewLessons.has(row.lesson_slug) &&
+              ["awaiting_review", "revision_requested"].includes(
+                row.review_state ?? "not_started",
+              ),
+          )
+          .map((row) => ({
+            courseSlug: cohort.course_slug,
+            lessonSlug: row.lesson_slug,
+            lessonTitle:
+              humanReviewLessons.get(row.lesson_slug)?.title ?? row.lesson_slug,
+            reviewState: row.review_state ?? "not_started",
+            feedback: row.review_feedback ?? null,
+          }));
         const completed = progress.filter((row) => row.completed).length;
         const points = progress.reduce(
           (sum, row) => sum + (row.quiz_score ?? 0),
@@ -233,10 +267,13 @@ export async function getTeacherPortalData(teacherId: string) {
           completed,
           points,
           status: target
-            ? reachedTarget
+            ? pendingReviews.some((review) => review.reviewState === "awaiting_review")
+              ? ("Needs review" as const)
+              : reachedTarget
               ? ("On track" as const)
               : ("Behind target" as const)
             : ("Needs review" as const),
+          pendingReviews,
         };
       });
 

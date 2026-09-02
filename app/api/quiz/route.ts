@@ -4,6 +4,7 @@ import { getCourseAccessForUser } from "@/lib/course-access";
 import { getCourse, getLesson } from "@/lib/courses";
 import { isSupabaseConfigured } from "@/lib/env";
 import { parseEngineeringNumber } from "@/lib/engineering";
+import { getRequiredQuestionIds, type LessonReviewState } from "@/lib/lesson-readiness";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,6 +21,10 @@ type AttemptResult = {
   points_awarded: number;
   correct: boolean;
   completed: boolean;
+  online_ready: boolean;
+  quiz_score: number;
+  solved_question_ids: string[];
+  review_state: LessonReviewState;
 };
 
 export { parseEngineeringNumber } from "@/lib/engineering";
@@ -58,7 +63,7 @@ export async function POST(request: Request) {
   const questionId =
     typeof body.questionId === "string" && body.questionId.trim()
       ? body.questionId.trim()
-      : "lesson-checkpoint";
+      : lesson.quiz.id;
 
   const quizDefinition =
     questionId !== "lesson-checkpoint"
@@ -117,6 +122,10 @@ export async function POST(request: Request) {
   let attemptNumber = 1;
   let pointsAwarded = correct ? 100 : 0;
   let completed = correct;
+  let onlineReady = correct;
+  let quizScore = pointsAwarded;
+  let solvedQuestionIds: string[] = [];
+  let reviewState: LessonReviewState = "not_started";
   let saveMessage: string | undefined;
 
   if (isSupabaseConfigured()) {
@@ -139,12 +148,14 @@ export async function POST(request: Request) {
     }
 
     const { data, error } = await createAdminClient().rpc(
-      "record_quiz_attempt_v1",
+      "record_quiz_attempt_v2",
       {
         p_user_id: user.id,
         p_course_slug: course.slug,
         p_lesson_slug: lesson.slug,
         p_question_id: questionId,
+        p_required_question_ids: getRequiredQuestionIds(lesson),
+        p_human_review_required: lesson.humanReviewRequired ?? false,
         p_submitted_answer: submittedAnswer,
         p_correct: correct,
       },
@@ -167,6 +178,10 @@ export async function POST(request: Request) {
     attemptNumber = row.attempt_number;
     pointsAwarded = row.points_awarded;
     completed = row.completed;
+    onlineReady = row.online_ready;
+    quizScore = row.quiz_score;
+    solvedQuestionIds = row.solved_question_ids;
+    reviewState = row.review_state;
     saved = true;
   } else {
     return NextResponse.json(
@@ -178,9 +193,13 @@ export async function POST(request: Request) {
   const response = NextResponse.json({
     correct,
     completed,
+    onlineReady,
     attemptNumber,
     pointsAwarded,
     score: pointsAwarded,
+    quizScore,
+    solvedQuestionIds,
+    reviewState,
     feedback: correct
       ? attemptNumber === 1
         ? "Correct on the first attempt — 100 points."

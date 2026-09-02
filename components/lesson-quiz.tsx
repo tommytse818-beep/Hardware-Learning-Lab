@@ -32,6 +32,8 @@ type LessonQuizProps = {
   nextHref: string;
   nextLabel: string;
   humanReviewRequired?: boolean;
+  reviewState?: string;
+  reviewFeedback?: string | null;
 };
 
 type MicroCheckDefinition = {
@@ -53,6 +55,10 @@ type QuizResult = {
   explanation?: string;
   saved: boolean;
   saveMessage?: string;
+  completed?: boolean;
+  onlineReady?: boolean;
+  quizScore?: number;
+  solvedQuestionIds?: string[];
 };
 
 export function LessonMicroCheckGroup({
@@ -62,6 +68,7 @@ export function LessonMicroCheckGroup({
   nextHref,
   nextLabel,
   cloudConnected,
+  initialSolvedQuestions = [],
 }: {
   courseSlug: string;
   lessonSlug: string;
@@ -69,9 +76,28 @@ export function LessonMicroCheckGroup({
   nextHref: string;
   nextLabel: string;
   cloudConnected: boolean;
+  initialSolvedQuestions?: Array<{ questionId: string; score: number }>;
 }) {
+  const router = useRouter();
+  const initialSolved = Object.fromEntries(
+    initialSolvedQuestions.map((question) => {
+      const check = checks.find((item) => item.id === question.questionId);
+      return [
+        question.questionId,
+        {
+          correct: true,
+          score: question.score,
+          feedback:
+            "This micro-check is already complete. You can review the method or submit another attempt.",
+          method: check?.method,
+          explanation: check?.explanation,
+          saved: cloudConnected,
+        } satisfies QuizResult,
+      ];
+    }),
+  );
   const [selectedIndexById, setSelectedIndexById] = useState<Record<string, number | null>>({});
-  const [resultById, setResultById] = useState<Record<string, QuizResult | null>>({});
+  const [resultById, setResultById] = useState<Record<string, QuizResult | null>>(initialSolved);
   const [requestErrorById, setRequestErrorById] = useState<Record<string, string>>({});
   const [submittingById, setSubmittingById] = useState<Record<string, boolean>>({});
 
@@ -112,6 +138,9 @@ export function LessonMicroCheckGroup({
       }
 
       setResultById((previous) => ({ ...previous, [check.id]: data }));
+      if (data.completed || data.onlineReady) {
+        router.refresh();
+      }
     } catch (error) {
       setRequestErrorById((previous) => ({
         ...previous,
@@ -324,6 +353,8 @@ export function LessonQuiz({
   nextHref,
   nextLabel,
   humanReviewRequired = false,
+  reviewState = "not_started",
+  reviewFeedback = null,
 }: LessonQuizProps) {
   const router = useRouter();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -570,7 +601,12 @@ export function LessonQuiz({
 
             {result.correct && humanReviewRequired && (
               <p className="mt-4 rounded-xl border border-violet-200 bg-violet-50 p-3 text-xs leading-5 text-violet-900">
-                This online result confirms preparation only. Your teacher or authorised reviewer still owns the live checkpoint and release decision.
+                {reviewState === "revision_requested"
+                  ? reviewFeedback ||
+                    "Your teacher has requested a revision before this checkpoint can be approved."
+                  : reviewState === "approved"
+                    ? "This checkpoint has been approved by an authorised reviewer."
+                    : "This online result confirms preparation only. Your teacher or authorised reviewer still owns the live checkpoint and release decision."}
               </p>
             )}
           </div>
@@ -586,12 +622,10 @@ export function LessonQuiz({
             </div>
           )}
 
-          {result.correct && (
+          {result.correct && completionRecorded && (
             <div className="border-t border-emerald-200 bg-white/70 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
               <p className="text-sm font-semibold text-emerald-950">
-                {completionRecorded
-                  ? "Checkpoint complete. Continue when you are ready."
-                  : "Answer correct. Continue reviewing when you are ready."}
+                Checkpoint complete. Continue when you are ready.
               </p>
               <Link
                 href={nextHref}
