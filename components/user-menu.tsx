@@ -17,6 +17,7 @@ export function UserMenu({ viewer }: UserMenuProps) {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
+    if (!open) return;
     function handlePointerDown(event: MouseEvent) {
       if (!menuRef.current?.contains(event.target as Node)) {
         setOpen(false);
@@ -37,7 +38,7 @@ export function UserMenu({ viewer }: UserMenuProps) {
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, []);
+  }, [open]);
 
   if (!viewer) {
     return (

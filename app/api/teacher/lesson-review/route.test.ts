@@ -82,12 +82,14 @@ describe("POST /api/teacher/lesson-review", () => {
       cohort_memberships: [
         {
           data: [
-            { cohort_id: "cohort-1", role: "teacher" },
-            { cohort_id: "cohort-1", role: "student" },
+            { user_id: "teacher-1", cohort_id: "cohort-1", role: "teacher" },
+            { user_id: studentId, cohort_id: "cohort-1", role: "student" },
           ],
           error: null,
         },
       ],
+      cohorts: [{ data: [{ id: "cohort-1" }], error: null }],
+      cohort_courses: [{ data: [{ cohort_id: "cohort-1" }], error: null }],
       lesson_progress: [{ data: { lesson_slug: "induction-readiness", completed: true, review_state: "approved" }, error: null }],
     });
     mocks.createAdminClient.mockReturnValue(mock.client);
@@ -115,5 +117,50 @@ describe("POST /api/teacher/lesson-review", () => {
       operation: "update",
       value: expect.objectContaining({ completed: false, review_state: "revision_requested", reviewer_id: "admin-1" }),
     }));
+  });
+
+  it("does not authorize reversed user roles from unrelated memberships", async () => {
+    const mock = adminMock({ cohort_memberships: [{ data: [
+      { user_id: studentId, cohort_id: "cohort-1", role: "teacher" },
+      { user_id: "teacher-1", cohort_id: "cohort-1", role: "student" },
+    ], error: null }] });
+    mocks.createAdminClient.mockReturnValue(mock.client);
+    const { POST } = await import("./route");
+    expect((await POST(request({}))).status).toBe(403);
+    expect(mock.calls.some((call) => call.operation === "update")).toBe(false);
+  });
+
+  it.each(["inactive cohort", "unassigned course"])("requires an active shared course: %s", async (reason) => {
+    const mock = adminMock({
+      cohort_memberships: [{ data: [
+        { user_id: "teacher-1", cohort_id: "cohort-1", role: "teacher" },
+        { user_id: studentId, cohort_id: "cohort-1", role: "student" },
+      ], error: null }],
+      cohorts: [{ data: reason === "inactive cohort" ? [] : [{ id: "cohort-1" }], error: null }],
+      cohort_courses: [{ data: reason === "unassigned course" ? [] : [{ cohort_id: "cohort-1" }], error: null }],
+    });
+    mocks.createAdminClient.mockReturnValue(mock.client);
+    const { POST } = await import("./route");
+    expect((await POST(request({}))).status).toBe(403);
+    expect(mock.calls).toContainEqual({ table: "cohort_courses", operation: "eq", column: "course_slug", value: "open-guard-mini" });
+    expect(mock.calls.some((call) => call.operation === "update")).toBe(false);
+  });
+
+  it("accepts the known DrawerSense final physical checkpoint for human review", async () => {
+    mocks.getLesson.mockReturnValue(undefined);
+    mocks.requireApiViewer.mockResolvedValue({ viewer: { id: "admin-1", role: "admin" } });
+    const mock = adminMock({ lesson_progress: [{ data: { lesson_slug: "drawer-2-1f", completed: true, review_state: "approved" }, error: null }] });
+    mocks.createAdminClient.mockReturnValue(mock.client);
+    const { POST } = await import("./route");
+    expect((await POST(request({ lessonSlug: "drawer-2-1f" }))).status).toBe(200);
+    expect(mock.calls).toContainEqual({ table: "lesson_progress", operation: "eq", column: "lesson_slug", value: "drawer-2-1f" });
+    expect(mock.calls).toContainEqual({ table: "lesson_progress", operation: "in", column: "review_state", value: ["awaiting_review", "revision_requested"] });
+  });
+
+  it.each([{ lessonSlug: "drawer-2-1e" }, { lessonSlug: "drawer-2-1f", courseSlug: "another-course" }])("does not turn arbitrary activities into human-review checkpoints", async (body) => {
+    mocks.getLesson.mockReturnValue(undefined);
+    const { POST } = await import("./route");
+    expect((await POST(request(body))).status).toBe(400);
+    expect(mocks.createAdminClient).not.toHaveBeenCalled();
   });
 });

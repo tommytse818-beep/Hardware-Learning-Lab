@@ -39,7 +39,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid review request." }, { status: 400 });
   }
 
-  const lesson = getLesson(courseSlug, lessonSlug);
+  const lesson = getLesson(courseSlug, lessonSlug) ?? (
+    courseSlug === "open-guard-mini" && lessonSlug === "drawer-2-1f"
+      ? { slug: "drawer-2-1f", humanReviewRequired: true }
+      : undefined
+  );
   if (!lesson?.humanReviewRequired) {
     return NextResponse.json(
       { error: "This lesson does not require human review." },
@@ -52,7 +56,7 @@ export async function POST(request: Request) {
   if (auth.viewer.role === "teacher") {
     const { data, error } = await admin
       .from("cohort_memberships")
-      .select("cohort_id, role")
+      .select("user_id, cohort_id, role")
       .in("user_id", [auth.viewer.id, studentId]);
 
     if (error) {
@@ -64,18 +68,30 @@ export async function POST(request: Request) {
 
     const teacherCohorts = new Set(
       (data ?? [])
-        .filter((row) => row.role === "teacher")
+        .filter((row) => row.user_id === auth.viewer.id && row.role === "teacher")
         .map((row) => row.cohort_id),
     );
-    const assigned = (data ?? []).some(
-      (row) => row.role === "student" && teacherCohorts.has(row.cohort_id),
-    );
+    const sharedCohorts = (data ?? []).filter(
+      (row) => row.user_id === studentId && row.role === "student" && teacherCohorts.has(row.cohort_id),
+    ).map((row) => row.cohort_id);
 
-    if (!assigned) {
+    if (!sharedCohorts.length) {
       return NextResponse.json(
         { error: "This learner is not assigned to your cohort." },
         { status: 403 },
       );
+    }
+
+    const [cohorts, assignments] = await Promise.all([
+      admin.from("cohorts").select("id").in("id", sharedCohorts).eq("active", true),
+      admin.from("cohort_courses").select("cohort_id").in("cohort_id", sharedCohorts).eq("course_slug", courseSlug).eq("active", true),
+    ]);
+    if (cohorts.error || assignments.error) {
+      return NextResponse.json({ error: "The cohort course assignment could not be verified." }, { status: 503 });
+    }
+    const activeIds = new Set((cohorts.data ?? []).map((cohort) => cohort.id));
+    if (!(assignments.data ?? []).some((assignment) => activeIds.has(assignment.cohort_id))) {
+      return NextResponse.json({ error: "This course is not assigned to an active cohort you teach for this learner." }, { status: 403 });
     }
   }
 

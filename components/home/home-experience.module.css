@@ -52,7 +52,7 @@
 .eyebrow,
 .darkEyebrow,
 .lightEyebrow {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -69,6 +69,7 @@
 
 .heroArt {
   position: relative;
+  min-width: 0;
   transform: translate3d(var(--home-x), var(--home-y), 0);
   transition: transform 190ms ease-out;
   will-change: transform;
@@ -109,7 +110,7 @@
 }
 
 .floatingNote span {
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -175,11 +176,16 @@
 }
 
 .reveal {
-  opacity: 0;
-  transform: translate3d(0, 24px, 0) scale(0.992);
+  opacity: 1;
+  transform: none;
   transition:
-    opacity 680ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 680ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 760ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 760ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.motionReady .reveal:not(.visible) {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0) scale(0.985);
 }
 
 .visible {
@@ -211,7 +217,7 @@
 }
 
 .journeyCard {
-  min-height: 18rem;
+  min-height: 16rem;
   border-radius: 1.75rem;
   padding: 1.4rem;
 }
@@ -221,7 +227,7 @@
   display: inline-grid;
   place-items: center;
   border-radius: 9999px;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.16em;
 }
@@ -267,7 +273,7 @@
 }
 
 .themeCard {
-  min-height: 17rem;
+  min-height: 24rem;
   border-radius: 1.65rem;
   padding: 1.3rem;
 }

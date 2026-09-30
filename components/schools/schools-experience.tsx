@@ -4,77 +4,32 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { PlatformPreview } from "@/components/schools/platform-preview";
+import { ProgrammeComparison } from "@/components/schools/programme-comparison";
+import { programmePackages } from "@/lib/public-marketing";
+
 /* ------------------------------------------------------------------ */
 /* Content                                                             */
 /* ------------------------------------------------------------------ */
 
 const heroFacts = [
-  { label: "Ages", value: "14–16" },
+  { label: "Ages", value: "14–17" },
   { label: "Length", value: "3 weeks" },
   { label: "Live sessions", value: "6" },
-  { label: "Learner hours", value: "11–12" },
+  { label: "Week 2 practicals", value: "2 × 150 min" },
 ];
 
-const packages = [
-  {
-    name: "Pilot cohort",
-    seats: "Up to 12 learners",
-    price: "HK$32,000",
-    perLearner: "≈ HK$2,670 per learner",
-    tag: "Getting started",
-    summary:
-      "One small group, usually an ECA or a STEM club. The right size for a school testing the programme for the first time.",
-    points: [
-      "6 pairs at the bench",
-      "One instructor throughout",
-      "Full kit and manufactured board per learner",
-      "Written cohort outcome report",
-    ],
-    featured: false,
-  },
-  {
-    name: "Class programme",
-    seats: "Up to 25 learners",
-    price: "HK$52,000",
-    perLearner: "≈ HK$2,080 per learner",
-    tag: "Most schools",
-    summary:
-      "One timetabled class. This is the size the course was designed around and the best value per learner for most schools.",
-    points: [
-      "12–13 pairs at the bench",
-      "One instructor plus your subject teacher",
-      "Full kit and manufactured board per learner",
-      "Teacher account, lesson plans and marking rubric",
-    ],
-    featured: true,
-  },
-  {
-    name: "Double cohort",
-    seats: "Up to 50 learners",
-    price: "HK$94,000",
-    perLearner: "≈ HK$1,880 per learner",
-    tag: "At scale",
-    summary:
-      "Two classes, or a year-group block. Runs as two parallel groups of 25 so every learner still gets checked at the bench.",
-    points: [
-      "Two instructors during build and measure weeks",
-      "Shared live launch and showcase sessions",
-      "Full kit and manufactured board per learner",
-      "Combined and per-class outcome reporting",
-    ],
-    featured: false,
-  },
-];
+const packages = programmePackages;
 
 const includedEverywhere = [
   {
     title: "Six live sessions",
-    text: "Two per week, 50–55 minutes each, delivered in your lab or classroom by our instructor.",
+    text: "Two per week. Week 2 contains two 150-minute school practicals with agreed breaks and supervision.",
     icon: LiveSessionIcon,
   },
   {
-    title: "Recorded course access",
-    text: "Around 30 short micro-lessons with checks, hosted on our platform for every learner in the cohort.",
+    title: "Online course access",
+    text: "Section 0 and nine Week 1 checkpoints are implemented now. Week 2 and Week 3 lessons and their final recordings remain in development for the pilot.",
     icon: PlayIcon,
   },
   {
@@ -83,8 +38,8 @@ const includedEverywhere = [
     icon: KitIcon,
   },
   {
-    title: "One manufactured board",
-    text: "Every learner who passes the human design review receives a real, centrally manufactured PCB with their project ID.",
+    title: "Reference board and individual design",
+    text: "A standard reference PCB is prepared before Week 2. Each learner creates and explains a separate KiCad design in Week 3; personal fabrication is optional.",
     icon: BoardIcon,
   },
   {
@@ -109,13 +64,13 @@ const weeks = [
   {
     tag: "Week 2",
     title: "Engineer",
-    text: "Timing, Schmitt triggering, transistor drive and real datasheet selection. Learners build the circuit on the bench and compare every prediction against a measured reading.",
+    text: "Two 150-minute school practicals cover breadboard building, measurement, troubleshooting, assembly and commissioning with an instructor.",
     evidence: "Measurement table · working breadboard · fault log",
   },
   {
     tag: "Week 3",
     title: "Design",
-    text: "The validated circuit becomes a KiCad schematic and board layout. Learners clear ERC and DRC, then defend their design in a human review before anything is manufactured.",
+    text: "Each learner creates a KiCad schematic and board layout, clears ERC and DRC, then explains the design in a human review. Later personal fabrication is optional and separately quoted.",
     evidence: "KiCad source · clean ERC/DRC · spoken explanation",
   },
 ];
@@ -124,11 +79,11 @@ const fundingRoutes = [
   {
     name: "Quality Education Fund",
     short: "QEF",
-    status: "Open",
+    status: "Programme active",
     tone: "open" as const,
     detail:
-      "The Dedicated Funding Programme raises the cumulative cap for each publicly-funded school to HK$3 million. QEF Priority Themes also accept applications year-round for one-off, non-profit-making projects.",
-    fit: "Best route for a full cohort programme, including hardware and manufactured boards.",
+      "The Dedicated Funding Programme allows cumulative support of up to HK$3 million per publicly-funded school. Its published 2026/27 calls run from October 2026 to January 2027 and from April to July 2027.",
+    fit: "A potential route for an eligible school-based project; the school should confirm the application window and eligible budget items.",
   },
   {
     name: "Life-wide Learning and Sister School Grant",
@@ -136,8 +91,8 @@ const fundingRoutes = [
     status: "Recurrent",
     tone: "open" as const,
     detail:
-      "From 2025/26 the EDB consolidated the Life-wide Learning Grant, Sister School Grant and Outdoor Education Camp subsidy. The life-wide learning component is per capita, at HK$1,500 per secondary pupil per school year.",
-    fit: "Commonly used for an ECA or STEM-club cohort without a separate application.",
+      "EDB consolidated three grants into LWLSSG from 2025/26. The secondary per-pupil rate was HK$1,500 in 2025/26; the published 2026/27 rate is HK$1,350 and future rates may change.",
+    fit: "May support an eligible learning activity when it aligns with the school's approved plan and the grant's current rules.",
   },
   {
     name: "Composite Information Technology Grant",
@@ -145,8 +100,8 @@ const fundingRoutes = [
     status: "Recurrent",
     tone: "open" as const,
     detail:
-      "A recurrent grant schools may deploy flexibly for teaching hardware, software and related support. In 2024/25 rates ran from about HK$275,000 to HK$898,000 depending on school type and class count, and are adjusted annually.",
-    fit: "Useful for the reusable bench equipment side of a programme.",
+      "CITG supports specified IT facilities, digital resources and technical services. Published 2026/27 base rates range from HK$223,038 to HK$668,126 by school type and class count, with limited add-ons for eligible schools.",
+    fit: "Potentially relevant only for qualifying IT items. Confirm the equipment and procurement plan against the current CITG ambit.",
   },
   {
     name: "IT Innovation Lab / Knowing More About IT",
@@ -154,7 +109,7 @@ const fundingRoutes = [
     status: "Concluded",
     tone: "closed" as const,
     detail:
-      "Both programmes concluded at the end of the 2025/26 school year. Final applications closed on 30 September 2025 and approved activities had to finish by 31 August 2026.",
+      "New applications closed on 30 September 2025. The standard activity deadline was 31 August 2026; schools granted the one-off final extension may complete approved activities by 30 November 2026.",
     fit: "Do not budget against this route unless a successor programme is announced.",
   },
 ];
@@ -199,6 +154,18 @@ const resources = [
     note: "Policy documents and ongoing support for digital learning.",
   },
   {
+    title: "Composite Information Technology Grant",
+    source: "edb.gov.hk",
+    href: "https://www.edb.gov.hk/en/edu-system/primary-secondary/applicable-to-primary-secondary/it-in-edu/citg.html",
+    note: "Current ambit, accounting rules and annual grant-level tables.",
+  },
+  {
+    title: "IT Innovation Lab — end-of-programme arrangement",
+    source: "it-lab.gov.hk",
+    href: "https://www.it-lab.gov.hk/en/end_of_programme_arrangement.php",
+    note: "Official closure, final-extension and reporting milestones.",
+  },
+  {
     title: "STEM education in Hong Kong — statistical highlights",
     source: "legco.gov.hk",
     href: "https://app7.legco.gov.hk/rpdb/en/uploads/2026/ISSH/ISSH14_2026_20260424_en.pdf",
@@ -209,7 +176,7 @@ const resources = [
 const deliveryOptions = [
   {
     title: "Pre-assembled",
-    text: "The difficult surface-mount and power sections arrive factory assembled. Learners connect modules, program and measure.",
+    text: "Sensitive surface-mount and power sections of the reference board arrive prepared and screened. Learners connect, inspect and measure the agreed learning section.",
   },
   {
     title: "Student-soldered",
@@ -217,25 +184,25 @@ const deliveryOptions = [
   },
   {
     title: "Board keepsake",
-    text: "One standard board is personalised through firmware, enclosure, labels and a built-by area, rather than expensive one-off fabrication.",
+    text: "The included standard reference PCB is separate from each learner’s Week 3 design. Manufacturing a personal layout is an optional later step.",
   },
 ];
 
 const pilotStandards = [
   {
-    figure: "80%",
-    label: "of learners complete a working circuit",
-    text: "Measured on the bench, not self-reported. If a cohort falls short we change the course before we sell it again.",
+    figure: "≥80%",
+    label: "proposed working-circuit threshold",
+    text: "A pilot acceptance criterion to measure on the bench, not a result already achieved. The course would be revised if a pilot cohort fell short.",
   },
   {
     figure: "0",
-    label: "founder-dependent lessons",
-    text: "A teacher should be able to prepare and run a session from the pack alone, without calling us for every step.",
+    label: "founder-dependent lessons targeted",
+    text: "A delivery-readiness goal: a teacher should be able to prepare and run a session from the pack without relying on the founder.",
   },
   {
     figure: "100%",
-    label: "human-reviewed manufacture",
-    text: "No board is ordered on an automated check. An adult engineer reviews every design before it enters a batch.",
+    label: "human-review policy",
+    text: "A proposed operating control: every design must receive adult engineering review before it enters a manufacturing batch.",
   },
 ];
 
@@ -446,6 +413,8 @@ export function SchoolsExperience() {
     const root = rootRef.current;
     if (!root) return;
 
+    root.classList.add("is-motion-ready");
+
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const finePointer = window.matchMedia("(pointer: fine)").matches;
     const revealItems = Array.from(root.querySelectorAll<HTMLElement>("[data-schools-reveal]"));
@@ -524,6 +493,7 @@ export function SchoolsExperience() {
     return () => {
       heroTimers.forEach((timer) => window.clearTimeout(timer));
       observer?.disconnect();
+      root.classList.remove("is-motion-ready");
       root.removeEventListener("pointermove", updatePointer);
       root.removeEventListener("pointerleave", resetPointer);
       window.removeEventListener("scroll", updateScroll);
@@ -566,9 +536,9 @@ export function SchoolsExperience() {
                 data-schools-hero
                 className="schools-v2-reveal mt-7 max-w-xl text-lg leading-8 text-slate-700 sm:text-xl"
               >
-                A three-week practical electronics programme for F4–F5 learners. Six live sessions,
-                a full bench build, and a manufactured circuit board every learner can hold up and
-                explain.
+                A planned three-week practical electronics programme for F4–F5 learners. Six live
+                sessions include two 150-minute Week 2 practicals, followed by an individual KiCad
+                design and human review. Delivery remains proposed and subject to school readiness.
               </p>
 
               <div data-schools-reveal data-schools-hero className="schools-v2-reveal mt-9 flex flex-wrap gap-3">
@@ -596,7 +566,7 @@ export function SchoolsExperience() {
                   src="/images/schools/schools-outcome-context.webp"
                   alt="Connected technology that can inspire a practical school programme"
                   fill
-                  priority
+                  preload
                   className="schools-v2-hero-image object-cover object-center"
                   sizes="(min-width: 1024px) 54vw, 94vw"
                 />
@@ -753,7 +723,7 @@ export function SchoolsExperience() {
                         : "bg-slate-100 text-slate-500"
                     }`}
                   >
-                    {plan.tag}
+                    {plan.badge}
                   </span>
                 </div>
 
@@ -772,7 +742,7 @@ export function SchoolsExperience() {
                 <p className="mt-5 text-sm leading-6 text-slate-600">{plan.summary}</p>
 
                 <ul className="mt-6 flex-1 space-y-3 border-t border-slate-200 pt-6">
-                  {plan.points.map((point) => (
+                  {plan.features.map((point) => (
                     <li key={point} className="flex gap-3 text-sm leading-6 text-slate-700">
                       <CheckIcon className="mt-1 h-4 w-4 shrink-0 text-emerald-600" />
                       <span>{point}</span>
@@ -795,31 +765,9 @@ export function SchoolsExperience() {
             ))}
           </div>
 
-          <div
-            data-schools-reveal
-            className="schools-v2-reveal mt-6 grid gap-5 rounded-[2rem] border border-slate-200 bg-white p-7 sm:p-8 lg:grid-cols-[1fr_1fr]"
-          >
-            <div>
-              <h3 className="text-lg font-semibold tracking-[-0.01em] text-slate-950">
-                Cohorts that fall between sizes
-              </h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                A class of 31 or a group of 40 is common. Rather than force you into the next
-                package, additional learners are added to the nearest size at{" "}
-                <span className="font-semibold text-slate-950">HK$1,150 per learner</span>, covering
-                the kit, the manufactured board, platform access and the certificate.
-              </p>
-            </div>
-            <div className="rounded-[1.6rem] border border-amber-200 bg-amber-50 p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-800">
-                Foundation partner rate
-              </p>
-              <p className="mt-3 text-sm leading-6 text-amber-950">
-                Schools joining the first September 2027 cohorts receive a reduced rate in exchange
-                for completion data, teacher feedback and permission to publish an anonymised case
-                study. Limited places, agreed in writing before delivery.
-              </p>
-            </div>
+          <div data-schools-reveal className="schools-v2-reveal mt-6 rounded-[2rem] border border-slate-200 bg-white p-7 sm:p-8">
+            <h3 className="text-lg font-semibold tracking-[-0.01em] text-slate-950">Included across all three cohorts</h3>
+            <p className="mt-3 text-sm leading-6 text-slate-600">Full kit and standard reference PCB per learner, live teaching, reviewed individual design, learning platform and teacher resources. Personal-layout fabrication is optional.</p>
           </div>
 
           <p
@@ -832,6 +780,9 @@ export function SchoolsExperience() {
           </p>
         </div>
       </section>
+
+      <ProgrammeComparison />
+      <PlatformPreview />
 
       {/* ---------------------------------------------------------- */}
       {/* Funding                                                     */}
@@ -848,15 +799,15 @@ export function SchoolsExperience() {
                 Paying for it
               </p>
               <h2 className="mt-5 text-4xl font-semibold leading-[1.03] tracking-[-0.05em] sm:text-6xl">
-                Most schools fund this from a grant, not their own reserves.
+                Check which funding route fits your school and this activity.
               </h2>
             </div>
             <p
               data-schools-reveal
               className="schools-v2-reveal text-lg leading-8 text-slate-300 lg:justify-self-end"
             >
-              Publicly-funded and DSS schools hold several grants that can cover a practical STEM
-              programme. Here are the routes schools use, and one that has now closed.
+              Publicly-funded and DSS schools may have several relevant grants, but eligibility and
+              permitted spending differ. These are possible routes to check, including one now closed.
             </p>
           </div>
 
@@ -933,7 +884,7 @@ export function SchoolsExperience() {
                 your school supervisor before you build a budget around any route on this page.
               </p>
               <p className="mt-4 text-xs leading-5 text-slate-500">
-                Positions summarised here reflect published guidance as at August 2026.
+                Positions summarised here reflect published guidance checked on 3 September 2026.
               </p>
             </div>
           </div>
@@ -1037,7 +988,15 @@ export function SchoolsExperience() {
             </div>
           </div>
 
-          <div className="mt-16 grid gap-4 md:grid-cols-3">
+          <div className="mt-16">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">
+              Proposed pilot acceptance criteria
+            </p>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+              These are targets and operating commitments for future pilots, not published learner outcomes.
+            </p>
+          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
             {pilotStandards.map((standard) => (
               <div
                 key={standard.label}

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { requireApiViewer } from "@/lib/api-authorization";
-import { getLesson } from "@/lib/courses";
+import { getCourse, getLesson } from "@/lib/courses";
+import { getPublishedCourseLessons } from "@/lib/course-outline";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 async function checkTeacherCohortAssignment(
@@ -121,7 +122,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const lesson = getLesson(cohort.course_slug, requestedLessonSlug);
+  const canonicalSlug = getLesson(cohort.course_slug, requestedLessonSlug)?.slug ?? requestedLessonSlug;
+  const lesson = getPublishedCourseLessons(getCourse(cohort.course_slug)).find((item) => item.slug === canonicalSlug);
   if (!lesson) {
     return NextResponse.json(
       { error: "Choose a lesson that belongs to the cohort course." },

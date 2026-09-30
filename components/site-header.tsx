@@ -30,7 +30,6 @@ export async function SiteHeader() {
             alt="Hardware Learning Lab logo"
             width={240}
             height={96}
-            priority
             loading="eager"
             sizes="(max-width: 640px) 140px, 240px"
             className="h-16 w-auto object-contain max-sm:h-14"

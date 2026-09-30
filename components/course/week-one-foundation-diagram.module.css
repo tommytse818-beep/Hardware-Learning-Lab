@@ -1,0 +1,15 @@
+.figure { margin: 26px 0 0; overflow: hidden; border: 1px solid #cbd5e1; border-radius: 20px; background: #fff; box-shadow: 0 12px 30px -22px #0f172a4d; }
+.heading { padding: 17px 22px; border-bottom: 1px solid #1e293b; background: radial-gradient(ellipse at 100% 0, #4338ca40, transparent 75%), #0f172a; color: #fff; }
+.heading span { display: block; margin-bottom: 6px; color: #a7f3d0; font-size: 11px; font-weight: 750; letter-spacing: .14em; }
+.heading strong { font-size: 17px; font-weight: 650; line-height: 1.5; }
+.scroll { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-color: #94a3b8 #f1f5f9; }
+.scroll:focus-visible { outline: 3px solid #6366f1; outline-offset: -3px; }
+.diagram { display: block; width: 100%; min-width: 680px; height: auto; max-width: none; font-family: inherit; }
+.caption { padding: 18px 22px; border-top: 1px solid #e2e8f0; color: #334155; font-size: 15px; line-height: 1.8; background: #f8fafc; }
+.scrollHint { display: block; margin-top: 9px; color: #64748b; font-size: 13px; }
+.practiceTable { width: calc(100% - 40px); margin: 18px 20px 24px; border-collapse: collapse; text-align: center; font-size: 18px; font-variant-numeric: tabular-nums; }
+.practiceTable caption { padding: 0 0 18px; text-align: left; color: #475569; font-size: 14px; line-height: 1.7; }
+.practiceTable th, .practiceTable td { padding: 12px; border: 1px solid #cbd5e1; }
+.practiceTable th { background: #eef2ff; color: #3730a3; }
+.practiceTable td { color: #0f172a; }
+@media (max-width: 540px) { .heading, .caption { padding: 16px 18px; } }

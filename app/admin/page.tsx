@@ -18,9 +18,14 @@ export default async function AdminPage() {
       <section className="overflow-hidden rounded-[2.2rem] bg-slate-950 p-7 text-white shadow-xl sm:p-10">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">Trusted administrator workspace</p>
         <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">Provision the programme without sharing secrets.</h1>
-        <p className="mt-4 max-w-3xl leading-7 text-slate-300">Welcome, {viewer.displayName}. Create an approved school, set an exact cohort seat limit, assign OpenGuard Mini and issue one individual account per learner or teacher.</p>
+        <p className="mt-4 max-w-3xl leading-7 text-slate-300">Welcome, {viewer.displayName}. Create an approved school, set an exact cohort seat limit, assign DrawerSense Mini and issue one individual account per learner or teacher.</p>
       </section>
-      <AdminProvisioningConsole metrics={data.metrics} schools={data.schools} cohorts={data.cohorts} />
+      <AdminProvisioningConsole
+        metrics={data.metrics}
+        schools={data.schools}
+        cohorts={data.cohorts}
+        enquiries={data.enquiries}
+      />
     </div>
   );
 }

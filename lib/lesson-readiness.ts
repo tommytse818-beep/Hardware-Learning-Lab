@@ -73,29 +73,28 @@ export function getRecommendedLessonSlug(
   completedLessonSlugs: Set<string>,
 ) {
   return (
-    course.lessons.find((lesson, index) => {
-      if (completedLessonSlugs.has(lesson.slug)) return false;
-      if (index === 0) return true;
-      return completedLessonSlugs.has(course.lessons[index - 1].slug);
-    })?.slug ?? course.lessons[0]?.slug ?? null
+    course.lessons.find((lesson) => !completedLessonSlugs.has(lesson.slug))?.slug ??
+    course.lessons[0]?.slug ?? null
   );
 }
 
 export function getLessonAvailability(
   course: Course,
   completedLessonSlugs: Set<string>,
-  canPreviewAll: boolean,
+  explicitPreview = false,
 ): LessonAvailability[] {
-  return course.lessons.map((lesson, index) => {
+  let firstIncomplete: string | undefined;
+  return course.lessons.map((lesson) => {
     const completed = completedLessonSlugs.has(lesson.slug);
-    const available =
-      canPreviewAll || index === 0 || completed || completedLessonSlugs.has(course.lessons[index - 1].slug);
+    const available = explicitPreview || firstIncomplete === undefined;
+    const blockedBy = available ? undefined : firstIncomplete;
+    if (!completed && firstIncomplete === undefined) firstIncomplete = lesson.slug;
 
     return {
       lessonSlug: lesson.slug,
       available,
       completed,
-      blockedBy: available ? undefined : course.lessons[index - 1].slug,
+      blockedBy,
     };
   });
 }

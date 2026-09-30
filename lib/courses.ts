@@ -90,13 +90,13 @@ export type Course = {
 
 const openGuardMiniCourse: Course = {
   slug: "open-guard-mini",
-  title: "OpenGuard Mini: Electronics Product Design Foundations",
-  shortTitle: "OpenGuard Mini",
+  title: "DrawerSense Mini: Electronics Product Design Foundations",
+  shortTitle: "DrawerSense Mini",
   theme: "Smart living",
   status: "Working",
   level: "Foundation pathway",
   ageRange: "Recommended F4-F5 / ages 14-16",
-  duration: "Section 0 and Week 1 now in development",
+  duration: "Three-week programme · lessons released in stages",
   description:
     "Learn to investigate an electronic product as a system, build reliable circuit reasoning and prove logic before the later breadboard and KiCad stages.",
   outcome:
@@ -113,7 +113,7 @@ const openGuardMiniCourse: Course = {
         "Understand the programme, the honest product boundary, safety expectations, evidence requirements and how the online lessons connect to the practical workshop.",
       objectives: [
         "Describe the three-week learning journey and what evidence learners will create.",
-        "Recognise that OpenGuard Mini is a removable alert and reminder, not a lock or certified security device.",
+        "Recognise that DrawerSense Mini is a removable reminder, not a lock or certified security device.",
         "Know how to ask the teacher for the approved induction recording when the live session was missed.",
       ],
       sections: [
@@ -141,7 +141,7 @@ const openGuardMiniCourse: Course = {
       },
       diagram: {
         src: "/images/projects/open-guard-mini/open-guard-system-map.webp",
-        alt: "OpenGuard Mini input, process and output system map",
+        alt: "Foundation input, process and output system map for the DrawerSense Mini course",
         width: 1995,
         height: 656,
         caption:
@@ -189,7 +189,7 @@ const openGuardMiniCourse: Course = {
       objectives: [
         "Distinguish a user need, engineering requirement, feature and non-goal.",
         "Replace vague words with a state, condition, timing, dimension or observable result.",
-        "Write testable OpenGuard Mini requirements without choosing component values too early.",
+        "Write testable DrawerSense Mini requirements without choosing component values too early.",
         "State honest product boundaries without claiming locking, theft prevention or security certification.",
       ],
       sections: [
@@ -214,10 +214,10 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
-          heading: "Transfer to OpenGuard Mini",
+          heading: "Transfer to DrawerSense Mini",
           paragraphs: [
-            "The user wants to know when a personal door, locker or drawer has opened. Requirements include portable battery power, an arm control, visible and audible indication and predictable operation.",
-            "OpenGuard Mini is an opening alert and reminder. It does not physically lock a door, prevent theft or claim security certification.",
+            "The user wants a reminder when a drawer remains open beyond an agreed target wait. A brief opening should stay quiet; closing should stop the reminder and reset the wait. These behaviours can be tested before choosing component values.",
+            "DrawerSense Mini is a reminder. It does not physically lock a drawer, prevent theft or claim security certification. A sound-mute control is separate from switching the whole circuit off.",
           ],
         },
       ],
@@ -241,9 +241,9 @@ const openGuardMiniCourse: Course = {
       quiz: {
         kind: "choice",
         id: "open-guard-1-1-requirement",
-        question: "Which statement is an engineering requirement?",
+        question: "For a practice alert design, which statement is an engineering requirement?",
         options: [
-          "Use a blue PCB.",
+          "The product should look impressive.",
           "The output shall stay off while the unit is disarmed.",
           "The enclosure should look modern.",
           "Choose a specific resistor before comparing alternatives.",
@@ -255,15 +255,15 @@ const openGuardMiniCourse: Course = {
           "Set the unit to disarmed, create the opening condition and observe whether the output stays off.",
         ],
         explanation:
-          "The disarmed-output statement is functional and testable. PCB colour and appearance are preferences, while the component value is a later design choice.",
+          "The disarmed-output statement is functional and testable. 'Impressive' and 'modern' do not define a pass/fail test here; choosing a component is a later design action.",
       },
       microChecks: [
         {
           kind: "choice",
           id: "open-guard-1-1-requirement",
-          question: "Which statement is an engineering requirement?",
+          question: "For a practice alert design, which statement is an engineering requirement?",
           options: [
-            "Use a blue PCB.",
+            "The product should look impressive.",
             "The output shall stay off while the unit is disarmed.",
             "The enclosure should look modern.",
             "Choose a specific resistor before comparing alternatives.",
@@ -275,7 +275,7 @@ const openGuardMiniCourse: Course = {
             "Set the unit to disarmed, create the opening condition and observe whether the output stays off.",
           ],
           explanation:
-            "The disarmed-output statement is functional and testable. PCB colour and appearance are preferences, while the component value is a later design choice.",
+            "The disarmed-output statement is functional and testable. 'Impressive' and 'modern' do not define a pass/fail test here; choosing a component is a later design action.",
         },
         {
           kind: "choice",
@@ -294,7 +294,7 @@ const openGuardMiniCourse: Course = {
             "Make only claims that the prototype and course evidence can demonstrate responsibly.",
           ],
           explanation:
-            "OpenGuard Mini can alert or remind a user, but it does not stop entry, secure property or meet a security certification standard.",
+            "DrawerSense Mini can remind a user, but it does not stop entry, secure property or meet a security certification standard.",
         },
         {
           kind: "choice",
@@ -329,13 +329,14 @@ const openGuardMiniCourse: Course = {
       slug: "safety-complete-circuit",
       section: "1.2",
       title: "Safety and the complete circuit loop",
-      duration: "7 min video + 6 min check",
+      duration: "Self-paced concept and drawing practice",
       delivery: "Pre-recorded",
       summary:
         "Identify a complete source-load-return path and apply the course safety routine before moving wires or using a meter.",
       objectives: [
         "Trace conventional current through a complete low-voltage loop.",
         "Explain why an open return path stops continuous current.",
+        "Trace connected nodes and distinguish a physical switch from its electrical contact state.",
         "Apply the power-off, compare, check and power-on routine.",
       ],
       sections: [
@@ -346,14 +347,43 @@ const openGuardMiniCourse: Course = {
             "An open gap breaks the loop. Voltage may still exist across the gap even though current through the open path is approximately zero.",
           ],
           bullets: [
-            "Battery-powered extra-low voltage only.",
+            "Use only the tutor-approved extra-low-voltage source. The supervised bench supply and battery are alternatives, never connected together.",
             "Power off before rewiring or using continuity/resistance mode.",
             "Never place a meter in current mode directly across the battery.",
           ],
         },
+        {
+          heading: "Trace a node before naming a connection",
+          paragraphs: [
+            "A node is a set of points joined by conducting wire with no component between them. In this ideal circuit model those points have the same voltage. Follow the whole conductor, not just one dot on the drawing.",
+            "A wire crossing is not a connection unless the drawing marks a junction. On a breadboard, hidden metal strips determine which holes connect; the printed red or blue line is not proof that an entire rail is continuous.",
+          ],
+          bullets: [
+            "On paper, highlight each continuously connected node in a different colour and also give it a letter.",
+            "On the real board, remove power before the tutor-approved continuity check.",
+          ],
+        },
+        {
+          heading: "A switch picture is not a continuity result",
+          paragraphs: [
+            "The actuator is the part you move; the terminals connect to wires. A closed electrical contact conducts, while an open contact breaks that route. A physically closed drawer and a closed contact are separate descriptions.",
+            "Keep the source, load and return in the same positions in two sketches, then change only the switch contact. A real part's contact numbering must come from its exact datasheet and a power-off continuity test, not from guessed lever direction or a generic photograph.",
+          ],
+        },
+        {
+          heading: "Pause and trace before the check",
+          paragraphs: [
+            "Make your own drawing first. Point to every segment of the loop and predict what changes when one contact opens. Keep this attempt for your tutor; the multiple-choice check is only one part of the evidence.",
+          ],
+          bullets: [
+            "Draw the source, switch, resistor load and return as one complete loop.",
+            "Copy it with one contact open. Mark the gap without moving the other parts.",
+            "Write one sentence distinguishing a voltage between points from current through a path.",
+          ],
+        },
       ],
       practicalTask:
-        "On a simple battery-resistor-LED drawing, mark source, load, return path and the point where an open wire would stop current.",
+        "Before answering, draw closed-contact and open-contact versions of one source-switch-resistor-return loop. Label its nodes, trace the current path and explain where the route stops. Keep the drawing for the Week 1 review.",
       video: {
         resourceKey: "lesson-1-2-complete-circuit-video",
         posterSrc:
@@ -404,14 +434,16 @@ const openGuardMiniCourse: Course = {
       slug: "voltage-current-resistance",
       section: "1.3",
       title: "Voltage, current and resistance without memorising blindly",
-      duration: "8 min video + 7 min check",
+      duration: "Self-paced quantities and connection practice",
       delivery: "Pre-recorded",
       summary:
-        "Explain the three core circuit quantities and choose the correct measurement idea for each one.",
+        "Explain voltage, current and resistance, then use connected nodes to distinguish series and parallel circuits.",
       objectives: [
         "State voltage as potential difference between two nodes.",
         "State current as charge flow through a path.",
         "State resistance as opposition relating voltage and current, checked with power removed.",
+        "Identify series and parallel connections from their endpoints rather than their position on the page.",
+        "Add branch currents and place a voltmeter across the named nodes.",
       ],
       sections: [
         {
@@ -421,9 +453,41 @@ const openGuardMiniCourse: Course = {
             "Placing the black probe at circuit ground is a convenient node-voltage reference, not a universal rule for every possible measurement.",
           ],
         },
+        {
+          heading: "Series: one route through both elements",
+          paragraphs: [
+            "Draw two resistors one after the other in one complete loop. Their shared connection has no other branch, so the same current passes through both. The supply voltage is shared across the resistors; it is not necessarily shared equally.",
+            "For a paper example with two equal ideal resistors across 4 V, each has 2 V across it. If the resistor values differ, the voltage shares differ. These are practice values, not a supply instruction for the DrawerSense board.",
+          ],
+        },
+        {
+          heading: "Parallel: the same two endpoint nodes",
+          paragraphs: [
+            "Now draw an upper supply node and a lower return node. Connect each resistor between those same two nodes. Both branches have the same voltage across them, although their currents can differ.",
+            "In a paper example with an ideal maintained 4 V source, each parallel branch has 4 V across it. Rotating or moving a resistor symbol on the page does not change this relationship if its endpoints stay the same.",
+          ],
+        },
+        {
+          heading: "Current entering a junction must leave it",
+          paragraphs: [
+            "Put one current arrow into the supply junction and one down each branch. In this model, source current equals the sum of the branch currents: Iₛ = I₁ + I₂.",
+            "Separate rehearsal: 0.5 mA + 1.5 mA = 2 mA. This arithmetic example is not measured product consumption. A voltmeter goes across two nodes; a current measurement requires a checked series connection and tutor guidance.",
+          ],
+        },
+        {
+          heading: "Draw the endpoints before choosing an answer",
+          paragraphs: [
+            "Prepare the series and parallel sketches below, then use the online check to confirm the quantity and meter language. The check does not automatically assess your node drawing.",
+          ],
+          bullets: [
+            "Label the series shared node and confirm that no extra branch leaves it.",
+            "Label both endpoints of each parallel load, then add source and branch-current arrows.",
+            "Draw a voltmeter across one branch and write V beside its reading. Explain why an ammeter across the supply would be the wrong connection.",
+          ],
+        },
       ],
       practicalTask:
-        "On a screenshot of a simple circuit, mark two probe points for a voltage measurement and write the expected unit beside the meter.",
+        "Before answering, draw two resistors in series and then in parallel. Label every node, the current arrows and a voltmeter's two probe points. Write the current-sum equation beside the parallel drawing and keep both sketches for tutor review.",
       video: {
         resourceKey: "lesson-1-3-voltage-current-resistance-video",
         posterSrc:
@@ -473,17 +537,38 @@ const openGuardMiniCourse: Course = {
     {
       slug: "ohms-law-led-resistor",
       section: "1.4",
-      title: "Ohm's law and choosing an LED resistor",
-      duration: "9 min video + 10 min check",
+      title: "Ohm's law, charge and circuit calculations",
+      duration: "Self-paced maths and charge practice",
       delivery: "Pre-recorded",
       summary:
-        "Calculate the resistor from supply voltage, LED forward voltage and target current, then choose a sensible standard value.",
+        "Keep units and physical meaning beside the arithmetic: calculate an LED resistor, then connect capacitance, charge and voltage.",
       objectives: [
         "Use R = (VS - VF) / I for an LED series resistor.",
         "Convert milliamperes to amperes before substitution.",
         "Choose a standard resistor value without chasing maximum brightness.",
+        "Convert kΩ, mA, ms, µF and nF, and interpret a stated percentage tolerance.",
+        "Use Q = CV and ΔQ = IΔt with stated quantities before applying them to a design.",
       ],
       sections: [
+        {
+          heading: "Start with the quantity and its unit",
+          paragraphs: [
+            "Write what you know, what you need to find and the unit for each quantity. Voltage uses volts (V), current amperes (A), resistance ohms (Ω), capacitance farads (F) and time seconds (s). A number alone is not a complete electrical answer.",
+            "kilo means ×1000, milli means ÷1000, micro means ÷1,000,000 and nano means ÷1,000,000,000. Separate practice: 2.2 kΩ = 2200 Ω, 6 mA = 0.006 A, 4 ms = 0.004 s and 47 µF = 0.000047 F. Also, 100 nF = 0.1 µF.",
+          ],
+          bullets: [
+            "Write the equation before entering numbers into a calculator.",
+            "Substitute consistent base units, calculate, then convert the result to a convenient unit.",
+            "Keep calculator digits during the working and round at the end. Leading zeros do not count as significant figures: 0.00470 has three.",
+          ],
+        },
+        {
+          heading: "Rearrange Ohm's law for the question",
+          paragraphs: [
+            "For a resistor, V = IR. Divide both sides by R to get I = V/R, or by I to get R = V/I. The equation is the same relationship used to find a different unknown.",
+            "Separate rehearsal: a 2 kΩ resistor with 4 V across it carries I = 4/2000 = 0.002 A = 2 mA. These values demonstrate the method; the assessed LED problem has different givens.",
+          ],
+        },
         {
           heading: "The resistor receives the remaining voltage",
           paragraphs: [
@@ -491,9 +576,48 @@ const openGuardMiniCourse: Course = {
             "A slightly larger resistor gives lower current and is normally the safer first choice. LED forward voltage is a datasheet or measured value rather than a universal exact 2 V.",
           ],
         },
+        {
+          heading: "Pause: draw the LED loop",
+          paragraphs: [
+            "Before moving to capacitors, draw the source, LED, resistor and return. Label the supply voltage, LED voltage and target current from the later LED question. Write your equation and attempt the calculation on paper before checking it online.",
+            "The next short practice sequence introduces a different component. Keep its drawing on a separate page so charge and LED-current calculations do not become one unexplained formula list.",
+          ],
+        },
+        {
+          heading: "A capacitor stores separated charge",
+          paragraphs: [
+            "Sketch two conducting plates separated by an insulator. Connecting a capacitor in a circuit can leave equal and opposite charge on the plates. It stores finite electrical energy; it is not an unlimited source.",
+            "Q = CV links charge Q in coulombs, capacitance C in farads and voltage V in volts. The letter C in this equation means capacitance. The unit symbol C after a charge value means coulombs.",
+            "Separate rehearsal: 10 µF at 2 V gives Q = 0.000010 × 2 = 0.000020 C = 20 µC. Increasing capacitance stores more charge at the same voltage. A capacitor's voltage rating is a limit, not a voltage it generates; a polarised part also needs its correct terminal orientation.",
+          ],
+        },
+        {
+          heading: "Connect a current pulse to a charge change",
+          paragraphs: [
+            "Current is charge flow per unit time. For a constant current over an interval, the transferred charge is ΔQ = IΔt. The symbol Δ means 'change in'. A capacitor's charge change is also ΔQ = CΔV.",
+            "When both expressions describe the same transferred charge, CΔV = IΔt. Divide by C to find the voltage change, or by ΔV to find the capacitance. This ideal estimate prepares the later power-support calculation; real source and capacitor behaviour must still be measured.",
+          ],
+        },
+        {
+          heading: "A printed value is a nominal value",
+          paragraphs: [
+            "A ±20% capacitance tolerance allows variation around the label. The minimum is 80% of nominal: multiply by 0.80. Separate rehearsal: 220 µF × 0.80 = 176 µF. A quiz's numerical rounding allowance is not the component's physical tolerance.",
+          ],
+        },
+        {
+          heading: "Pause: sketch and calculate charge",
+          paragraphs: [
+            "Keep this capacitor page for the tutor. It is supporting practice, not another automatically marked quiz. Use different values from the demonstrations and explain the result in words.",
+          ],
+          bullets: [
+            "On the capacitor page, sketch the two plates and calculate charge for 22 µF at 2.0 V using Q = CV.",
+            "Write one sentence explaining why a 6.3 V rating does not make a capacitor generate a 6.3 V supply.",
+            "Find the minimum capacitance of a 47 µF ±20% part. Show the percentage multiplier and keep µF beside the result.",
+          ],
+        },
       ],
       practicalTask:
-        "Write the calculation in four lines: known values, resistor voltage, equation and substitution, then the selected standard value.",
+        "Before answering, draw the LED loop and write the given values with units, resistor voltage, equation and substitution. Keep a second practice page showing capacitor plates and Q = CV for 22 µF at 2.0 V. After feedback, record any correction and explain what each number means.",
       video: {
         resourceKey: "lesson-1-4-led-resistor-video",
         posterSrc:
@@ -517,7 +641,7 @@ const openGuardMiniCourse: Course = {
         answer: 550,
         tolerance: 1,
         unit: "ohms",
-        placeholder: "Example: 550 or 0.55 kΩ",
+        placeholder: "Enter resistance, e.g. 1.2 kΩ",
         hint:
           "First calculate the resistor voltage VS - VF, then convert 4 mA to 0.004 A before dividing.",
         method: [
@@ -542,7 +666,7 @@ const openGuardMiniCourse: Course = {
       slug: "reed-sensor-states",
       section: "1.5",
       title: "Reed sensors and reliable digital states",
-      duration: "7 min video + 7 min check",
+      duration: "Self-paced sensor and drawing practice",
       delivery: "Pre-recorded",
       summary:
         "Connect magnet position, reed contact state, physical door state and the chosen digital signal polarity.",
@@ -559,9 +683,27 @@ const openGuardMiniCourse: Course = {
             "When the door opens, the magnet moves away and the reed contact opens. The pull-up then makes the raw digital node HIGH.",
           ],
         },
+        {
+          heading: "Follow the signal node to one of two voltages",
+          paragraphs: [
+            "For this example, connect a resistor from the supply VCC to the signal node, and the reed from that node to ground. The digital input observes the node voltage relative to ground. The next lesson explains this pull-up arrangement in more detail.",
+            "With the reed open, the resistor gives the input a HIGH default. With the reed closed, the contact connects the input to ground, giving LOW, while the resistor limits current from VCC. Do not replace that resistor with a wire.",
+          ],
+        },
+        {
+          heading: "Pause: draw and record both sensor states",
+          paragraphs: [
+            "Draw the same resistor, reed and signal node twice. Change only the reed contact. Predict the contact and signal states, then compare them with the tutor-approved power-off continuity demonstration before selecting an answer.",
+          ],
+          bullets: [
+            "Use separate columns for physical closure, magnet position, contact state and D_RAW.",
+            "Explain why an open drawer can correspond to an open electrical contact, while HIGH describes the resulting signal voltage.",
+            "Record the exact sensor and tested magnet position; a generic picture is not a measured operating gap.",
+          ],
+        },
       ],
       practicalTask:
-        "With power removed and teacher approval, move a magnet near and away from the protected reed sensor and record the two continuity observations.",
+        "Before answering, draw both contact states and predict D_RAW for each. With power removed and teacher approval, move a magnet near and away from the protected reed sensor, record the two continuity observations and correct your state table if needed.",
       video: {
         resourceKey: "lesson-1-5-reed-sensor-states-video",
         posterSrc:
@@ -611,15 +753,18 @@ const openGuardMiniCourse: Course = {
     {
       slug: "pull-resistors-floating-input",
       section: "1.6",
-      title: "Pull-up, pull-down and the danger of a floating input",
-      duration: "8 min video + 8 min check",
+      title: "Defined inputs and a first look at RC circuits",
+      duration: "Self-paced input and RC drawing practice",
       delivery: "Pre-recorded",
       summary:
-        "Choose a pull-up or pull-down so an open switch still produces a deliberate and reliable digital state.",
+        "Give an open switch a defined digital state, then explore capacitor timing and two simple RC signal connections in separate paper examples.",
       objectives: [
         "Explain why an unconnected digital input is not automatically zero.",
         "Choose a pull-up for released HIGH and pressed LOW with a switch to ground.",
+        "Choose a pull-down for released LOW and pressed HIGH with a switch to VCC.",
         "Explain the current and noise trade-off when selecting the resistor value.",
+        "Explain one isolated RC time constant without confusing it with the reminder delay.",
+        "Identify the input, output and return in simple low-pass and high-pass RC examples.",
       ],
       sections: [
         {
@@ -629,9 +774,72 @@ const openGuardMiniCourse: Course = {
             "A pull-up connects the signal node to VCC. With the switch open the node is HIGH; when the switch closes to ground the node becomes LOW and current is limited by the resistor.",
           ],
         },
+        {
+          heading: "A pull-down gives the opposite default",
+          paragraphs: [
+            "Connect a resistor from the signal node to ground and a switch from that node to VCC. With the switch open, the resistor holds the input LOW. With the switch closed, the input becomes HIGH and the resistor limits the current to ground.",
+            "This is the ARM input used in the Week 1 practice logic: released means not armed. It is a foundation example, not an extra switch to add to the later DrawerSense design.",
+          ],
+        },
+        {
+          heading: "Choose the resistor for its job",
+          paragraphs: [
+            "A smaller pull resistor draws more current when the switch overrides it. A larger one draws less, but leakage and interference can more easily disturb the default voltage. Choose from the input's actual limits and the environment; there is no universal value that proves every design.",
+          ],
+        },
+        {
+          heading: "Pause: trace both switch defaults",
+          paragraphs: [
+            "Draw a pull-up and a pull-down before the online input check. For each, label VCC, ground and the signal node. Write the open-switch state first, then trace the complete resistor current path when the switch closes.",
+            "Finish these two drawings before starting the separate RC practice below. The online question checks a pull-resistor choice; your tutor reviews the additional RC sketches.",
+          ],
+        },
+        {
+          heading: "A capacitor voltage changes over time",
+          paragraphs: [
+            "Recall that changing capacitor voltage requires transferring charge. A resistor limits how quickly charge moves. In a simple resistor-capacitor circuit, the product τ = RC is the time constant: use ohms and farads to obtain seconds. The Greek letter τ is pronounced tau.",
+            "For an ideal capacitor initially at 0 V, charged through a resistor from a fixed voltage source, one time constant reaches about 63% of the final voltage. This describes a curved change, not a straight line and not an instant switch.",
+          ],
+        },
+        {
+          heading: "Isolated RC discharge: a separate power-off example",
+          paragraphs: [
+            "Now disconnect the source and leave a charged capacitor connected only across a resistor. Charge flows through that resistor and the capacitor voltage falls. After one time constant, about 37% of its starting voltage remains; after five, less than 1% remains in this ideal model.",
+            "Separate rehearsal: 4.7 kΩ × 10 µF = 4700 × 0.000010 = 0.047 s. This is a discharge example, not the DrawerSense reminder time. Other connected loads would change the discharge route, so the full board must be measured separately.",
+          ],
+        },
+        {
+          heading: "Pause: sketch a discharge curve",
+          paragraphs: [
+            "Draw the source disconnected and show the remaining resistor-capacitor loop. Beside it, sketch capacitor voltage against time, falling steeply at first and then more slowly. Mark the start, one time constant and five time constants.",
+            "For separate practice, calculate τ for 2.2 kΩ and 10 µF. Keep the units and explain what doubling only the resistance would change. This is tutor-reviewed preparation; the later assessed power circuit has different givens.",
+          ],
+        },
+        {
+          heading: "Low-pass: take the output across the capacitor",
+          paragraphs: [
+            "Draw a signal input, a series resistor, then an output node. Connect a capacitor from that output node to the shared return. Measure output between the node and return, so it is across the capacitor.",
+            "With an ideal source and no significant output load, a steady input eventually appears at the output. Faster changes are reduced. That is why this connection is called low-pass: it passes steady and slowly changing signals more readily.",
+          ],
+          bullets: [
+            "Pause and draw the input, output and return before reading the next connection.",
+            "Predict the settled output for a constant input. The circuit connection, not the capacitor alone, gives this behaviour.",
+          ],
+        },
+        {
+          heading: "High-pass: take the output across the resistor",
+          paragraphs: [
+            "Draw a signal input, a series capacitor, then an output node. Connect a resistor from that node to the shared return. The output is now across the resistor. Keep this as a new drawing, rather than silently changing the previous one.",
+            "In this ideal, unloaded example, an input change can create a temporary output. With a constant input, the output settles back to zero. This high-pass connection responds to changing signals and removes steady DC after settling.",
+          ],
+          bullets: [
+            "Pause and label the different component order and output measurement points.",
+            "Compare the two settled outputs in words. A capacitor placed across a power rail is a different job; do not assign an entire power block one simple signal-filter cutoff.",
+          ],
+        },
       ],
       practicalTask:
-        "Draw one pull-up and one pull-down example. Label the open-switch default state and the closed-switch active state for each one.",
+        "Before the check, draw pull-up and pull-down examples with both switch states. Keep separate practice sketches for isolated RC discharge and the low-pass and high-pass connections. Label every input, output and return, calculate the practice time constant and save the pages for the tutor; the online pull-up answer alone does not assess these drawings.",
       video: {
         resourceKey: "lesson-1-6-pull-resistors-video",
         posterSrc:
@@ -682,7 +890,7 @@ const openGuardMiniCourse: Course = {
       slug: "logic-gates-truth-tables",
       section: "1.7",
       title: "AND, OR and NOT gates: inputs, outputs and truth tables",
-      duration: "9 min video + 10 min check",
+      duration: "Self-paced logic and function practice",
       delivery: "Pre-recorded",
       summary:
         "Read the symbols and prove the behaviour of two-input AND, two-input OR and one-input NOT gates.",
@@ -690,6 +898,7 @@ const openGuardMiniCourse: Course = {
         "Identify input and output sides of the gate symbols.",
         "Complete all rows of AND, OR and NOT truth tables.",
         "Distinguish normal OR from exclusive OR.",
+        "Distinguish a logic decision, an oscillator, a counter and a transistor switch by their jobs.",
       ],
       sections: [
         {
@@ -699,9 +908,34 @@ const openGuardMiniCourse: Course = {
             "A two-input truth table has four rows because every combination of A and B must be checked.",
           ],
         },
+        {
+          heading: "Pause: complete every truth-table row",
+          paragraphs: [
+            "Draw a symbol and a blank truth table for AND, OR and NOT. Fill in one input combination at a time and explain each output in a short phrase before checking the online question. A two-input table has four rows; a one-input NOT table has two.",
+            "Optional paper extension: NAND means NOT-AND. Invert an AND output, then invert it again and compare the full table. This explores an equivalent logic function; it is not an instruction to add another IC to the project.",
+          ],
+        },
+        {
+          heading: "A clock makes events; a counter counts them",
+          paragraphs: [
+            "An oscillator repeatedly changes its output, giving a sequence of clock events. A counter remembers how many relevant events have occurred and reset returns it to a defined starting state. A static open-door signal alone does not tell us how long the door has been open.",
+            "Sketch a few clock pulses and mark the counted edges. The chosen counter's datasheet must define which edge, reset state and output are used. A first output transition is not automatically one whole output cycle. Detailed reminder timing remains a later, planned lesson.",
+          ],
+        },
+        {
+          heading: "A transistor controls a current path",
+          paragraphs: [
+            "A transistor can let a logic signal control another current path. In a simple BJT switch, base current controls conduction through the collector-emitter path. In a MOSFET, gate-to-source voltage controls its channel; charging the gate still requires charge during switching.",
+            "The control signal and the load supply do different jobs. A transistor is not automatically an AND gate, a timer or a source of energy. Exact pins, current limits and required drive come from the selected part's datasheet; this overview does not certify a buzzer driver.",
+          ],
+          bullets: [
+            "Make four labelled boxes: logic decision, oscillator, counter and transistor switch.",
+            "Write one job beneath each and distinguish the information arrow from the source-load-return path.",
+          ],
+        },
       ],
       practicalTask:
-        "Complete AND, OR and NOT truth tables, then describe one row in words without using the gate symbol.",
+        "Before answering, complete AND, OR and NOT truth tables and explain one row in words. On a separate small sketch, distinguish a logic decision, a clock, a counter and a transistor-controlled load path. Keep the sketches for discussion; later circuit stages are still planned.",
       video: {
         resourceKey: "lesson-1-7-logic-gates-video",
         posterSrc:
@@ -765,6 +999,7 @@ const openGuardMiniCourse: Course = {
         {
           heading: "Start with behaviour, not a part number",
           paragraphs: [
+            "This foundation exercise uses an ARM input to practise a two-input AND rule. It is not the full DrawerSense wiring plan. In the later project, still-open and time-elapsed form the reminder condition, while mute controls sound separately.",
             "Let A = 1 when the unit is armed. Let D = 1 when the delayed, cleaned door-open condition is true. Let Y = 1 when the alert driver should activate.",
             "The requirement is Y = A AND D. A truth table proves that the alert remains off when only one condition is true.",
           ],
@@ -828,26 +1063,41 @@ const openGuardMiniCourse: Course = {
       summary:
         "Combine the Week 1 ideas into a reviewed system definition before the later timing, breadboard and PCB stages begin.",
       objectives: [
-        "Defend the reed pull-up, ARM pull-down and AND relationship.",
+        "Defend the reed pull-up, ARM pull-down and AND relationship in the Week 1 foundation exercise.",
         "Identify faults in a deliberately flawed input and logic design.",
+        "Explain the node, charge, RC and signal-filter sketches needed for the published Week 2 power lessons.",
         "Prepare the evidence pack for teacher review and Week 2 release.",
       ],
       sections: [
         {
           heading: "Use the live session for diagnosis, not a second lecture",
           paragraphs: [
-            "The teacher reviews the requirement, system diagram, safety check, sensor state table, pull-resistor choices and Boolean truth table. Learners who need correction return to the exact micro-lesson rather than repeating everything.",
+            "The teacher reviews the requirement, system diagram, safety check, sensor state table, pull-resistor choices and Boolean truth table, alongside the short prerequisite sketches below. Learners who need correction return to the exact explanation rather than repeating everything.",
+            "The ARM example checks your understanding of input defaults and AND logic. Keep it separate from the later DrawerSense requirement: a continuous opening reaches a wait target, closing resets it, and mute affects sound only.",
             "Completing the online check confirms preparation only. A teacher or authorised reviewer still owns the real Week 1 approval.",
           ],
           bullets: [
-            "Rapid retrieval: complete loop, V/I/R units, pull-up default and AND rule.",
-            "Find faults: floating input, wrong gate, missing LED resistor and ambiguous variables.",
+            "Rapid retrieval: trace a complete loop and both parallel endpoints, name the V/I/R units, then explain a pull-up default and one AND row.",
+            "Find faults: floating input, wrong gate, missing LED resistor, ambiguous variables and a voltmeter placed in the wrong route.",
             "Give a 30-second need-to-input-to-logic-to-output explanation.",
+          ],
+        },
+        {
+          heading: "Bring the attempts, not only the final answers",
+          paragraphs: [
+            "Keep the original attempt and a clearly marked correction where needed. The tutor asks you to explain what the diagram or number means. A correct multiple-choice response does not prove a physical connection or the reasoning on a separate page.",
+          ],
+          bullets: [
+            "1.2–1.3: open and closed loops, node-labelled series and parallel drawings, current arrows and voltmeter probe points.",
+            "1.4: LED resistor working with units; capacitor plate sketch; the separate Q = CV and minimum-capacitance practice calculations.",
+            "1.5–1.6: reed state table; pull-up and pull-down defaults; isolated discharge loop, curve and practice time constant; labelled low-pass and high-pass input/output/return sketches.",
+            "1.7–1.8: complete truth tables, explicit signal meanings and a short explanation of clock, counter and transistor roles.",
+            "State what is still a prediction and what has actually been observed. Hardware release remains a human decision.",
           ],
         },
       ],
       practicalTask:
-        "Prepare a 60-90 word design defence explaining why OpenGuard uses a pull-up on the reed input, a pull-down on ARM and an AND relationship for the alert.",
+        "Bring the labelled drawings and calculations listed above, including corrections. Prepare a 60–90 word explanation of the Week 1 foundation example: why its reed input uses a pull-up, its ARM input uses a pull-down and its alert uses an AND relationship. Explain the capacitor and RC practice separately when the tutor asks; passing the online check does not replace this review.",
       video: {
         resourceKey: "lesson-1-9-live-checkpoint-briefing-video",
         posterSrc:
@@ -861,7 +1111,7 @@ const openGuardMiniCourse: Course = {
         width: 1055,
         height: 614,
         caption:
-          "The Week 1 logic target is alert HIGH only when ARMED and the cleaned delayed-open signal are both HIGH.",
+          "In this foundation logic exercise, alert is HIGH only when ARMED and the cleaned delayed-open signal are both HIGH. The full DrawerSense architecture is developed in Week 2.",
       },
       quiz: {
         kind: "choice",

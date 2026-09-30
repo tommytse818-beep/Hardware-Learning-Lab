@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import { HomeExperience } from "@/components/home/home-experience";
 
 export const metadata: Metadata = {
-  title: "Build real electronics",
+  title: "Practical Engineering. Made Real.",
   description:
-    "A three-week secondary-school electronics programme that turns a real user need into a measured, tested and reviewed OpenGuard Mini product.",
+    "DrawerSense Mini is a proposed three-week school engineering programme that moves from electronic concepts to breadboard testing and reviewed PCB design.",
 };
 
 export default function HomePage() {

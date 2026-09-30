@@ -44,3 +44,15 @@ export async function consumeRateLimit(
 
   return data;
 }
+
+/** Account quotas do not penalise an entire school sharing one internet address. */
+export async function consumeAccountRateLimit(userId: string, scope: string, limit: number, windowSeconds: number) {
+  const salt = process.env.RATE_LIMIT_SALT?.trim();
+  if (!salt || salt.length < 24) throw new Error("Rate-limit configuration unavailable.");
+  const keyHash = createHash("sha256").update(`${scope}|${userId}|${salt}`).digest("hex");
+  const { data, error } = await createAdminClient().rpc("consume_rate_limit_v1", {
+    p_key_hash: keyHash, p_scope: scope, p_limit: limit, p_window_seconds: windowSeconds,
+  }).abortSignal(AbortSignal.timeout(10_000));
+  if (error || typeof data !== "boolean") throw new Error("Rate-limit storage unavailable.");
+  return data;
+}

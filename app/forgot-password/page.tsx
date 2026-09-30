@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AuthShell } from "@/components/auth/auth-shell";
+import { PasswordResetSubmitButton } from "@/components/auth/password-reset-submit-button";
 import { StatusBanner } from "@/components/status-banner";
 import { requestPasswordReset } from "@/lib/auth-actions";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -34,9 +35,7 @@ export default async function ForgotPasswordPage({ searchParams }: ForgotPasswor
           <label htmlFor="email" className="text-sm font-semibold text-slate-800">Account email</label>
           <input id="email" name="email" type="email" autoComplete="email" required disabled={!configured} className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3.5 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100" />
         </div>
-        <button type="submit" disabled={!configured} className="w-full rounded-2xl bg-slate-950 px-5 py-3.5 font-semibold text-white transition hover:bg-slate-800 disabled:bg-slate-300">
-          Email recovery link
-        </button>
+        <PasswordResetSubmitButton disabled={!configured} />
       </form>
       <Link href="/login" className="mt-6 inline-flex text-sm font-semibold text-emerald-700 hover:text-emerald-900">← Return to login</Link>
     </AuthShell>

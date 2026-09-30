@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DrawerSense — course content review</title>
+<style>body{margin:0;background:#f8fafc;color:#0f172a;font:17px/1.7 system-ui,sans-serif}main{max-width:980px;margin:auto;padding:32px 24px 80px}header{padding:32px;border-radius:24px;background:linear-gradient(120deg,#022c22,#020617 55%,#312e81);color:white}h1{font-size:36px;line-height:1.15}header p{color:#d1fae5}h2{margin-top:40px;font-size:24px}li{margin:12px 0}strong{color:#3730a3}header strong{color:#a7f3d0}.note{border-left:4px solid #10b981;padding:12px 20px;background:white}a{color:#4338ca}code{font-size:.9em}footer{margin-top:40px;color:#475569;font-size:14px}</style>
+<main><header><p>HARDWARE LEARNING LAB · CONTENT REVIEW</p><h1>Understand. Build. Then design the PCB.</h1><p>Review of the current Week 1 website, the eight Rev G 2.0/2.1 activities and the early Week 2 presenter draft.</p></header>
+<p class="note">This review concerns the local website revision. The original ZIP, PowerPoint decks and Word documents have not been overwritten. Source material is evidence to review, not an instruction to publish unfinished lessons.</p>
+<h2>What was checked</h2>
+<p>All 50 slides in the eight Rev G decks, their notes, eight student canvases, eight teacher-key pages, recall cards, question/sequence files and the Rev G presenter guide were compared with the website. The earlier <em>DrawerSense Week 2 Flow and Presenter Guide</em> was used to understand the later draft stages. Week 1 lesson text and legacy diagrams were also reviewed.</p>
+<h2>Teaching and diagram red flags addressed on the website</h2>
+<ol>
+<li><strong>Prerequisites were missing.</strong> Week 2 relied on nodes, series/parallel connections, charge, units, RC behaviour and low/high-pass examples that Week 1 had not fully explained. These now have separate teaching stages, drawings and practice in 1.2–1.7, with corresponding Week 2 recall links. The 1.9 human review collects this evidence.</li>
+<li><strong>The attempt order was backwards.</strong> Bare questions preceded the drawing task. Week 2 now presents a task diagram, tracing/sketch/calculation prompts and saved prediction before the answer checks. A completed explanatory diagram accompanies the later comparison stage. Teachers and admins can inspect all published stages.</li>
+<li><strong>Legacy Week 1 figures could teach incorrect conventions.</strong> The 1.2 and 1.4 drawings had battery/current inconsistencies, and the LED figure mixed supply values. The image labelled OR included the extra XOR input curve. These figures have been replaced by native diagrams and their misleading thumbnails removed. The obsolete ARM/RC architecture in the induction and 1.1 images is no longer displayed; foundation examples are distinguished from the final DrawerSense circuit.</li>
+<li><strong>The LED placeholder exposed the answer.</strong> The 1.4 input previously displayed the assessed resistance. Its placeholder now uses an unrelated example.</li>
+<li><strong>The source 2.0A key did not provide the required timeline.</strong> The web comparison uses shared-time drawer-position and reminder tracks, including closing/reset and a fresh opening.</li>
+<li><strong>The source function map made supply and return ambiguous.</strong> The website separates signal arrows from the pair of power connections and includes the direct Sense-to-Decide route.</li>
+<li><strong>The first-build image showed too much circuitry.</strong> Rev G's notes call for the switch, R17, C1 and a tutor-approved test load before the ICs. The web bench illustration follows that order and distinguishes example fault readings from actual evidence.</li>
+<li><strong>Different meanings of “open” and “OFF” were too easy to confuse.</strong> Physical drawer state, electrical contact state, source isolation, sound mute and reset are described separately. The OFF discharge loop is distinct from the reminder timer.</li>
+</ol>
+<h2>Boundaries that must stay visible</h2>
+<ul>
+<li>A specified switch symbol does not prove the actual part's lever direction or pin view. A verified physical switch photograph/datasheet view and power-off continuity evidence are still needed in the practical teaching material.</li>
+<li>The nominal 3 V source, capacitor voltage rating and capacitor tolerance describe different quantities. Ideal droop calculations are predictions; the real transient still needs measurement.</li>
+<li>A saved sketch is evidence of an attempt, not an automatic assessment of correctness. The teacher must review reasoning and approve the physical circuit.</li>
+<li>The extra Week 1 capacitor/RC/filter practice is reviewed through the collected work. Existing short quizzes do not by themselves assess every added prerequisite.</li>
+<li>Concept and Apple Pencil solution recordings remain to be produced. The website does not claim that placeholder players are completed videos.</li>
+</ul>
+<h2>Why 2.3A/B/C remain draft</h2>
+<p>The earlier Word draft is useful planning material, but Rev G's published sequence ends at 2.1F before 2.2. It contains no finished 2.3 slide or recording package.</p>
+<ul>
+<li><strong>2.3A · reset:</strong> the RC time constant is not automatically the logic-transition time. Reset polarity, starting conditions, input thresholds and measured release must be shown before a finished lesson can claim dependable startup.</li>
+<li><strong>2.3B · wait:</strong> the draft distinguishes Q14's first rise after reset (about 8192 oscillator periods) from its full cycle (16384 periods). Startup and first-edge phase also matter. Do not silently substitute one for the other.</li>
+<li><strong>Proposed timing is not validated timing:</strong> the draft's roughly 19.82 s, 18.02 s and 14.78 s examples are proposed component variants, not confirmed CAD/BOM changes. R8 remains part of the oscillator even if simplified arithmetic omits it. Proposed classroom timing windows are acceptance targets, not guaranteed tolerances.</li>
+<li><strong>2.3C · hold:</strong> the intended oscillator clamp must be verified. A base-current calculation alone does not demonstrate reliable saturation or hold, and that transistor is not the separate buzzer driver.</li>
+</ul>
+<h2>Programme framework retained</h2>
+<p><strong>Week 1:</strong> understand, draw, calculate and explain the foundations. <strong>Week 2:</strong> apply those ideas to a working breadboard, measure it and correct it. <strong>Week 3:</strong> transfer the verified circuit into a KiCad schematic and PCB; teach SnapEDA symbol/footprint sourcing and verification. Later unpublished stages remain labelled as planned.</p>
+<footer>Source references: DrawerSense_2.0_2.1_Reframed_Rev_G.zip; DrawerSense_Week_2_Flow_and_Presenter_Guide.docx; current local course source and assets. This is an educational content review, not certification of the physical design.</footer></main></html>

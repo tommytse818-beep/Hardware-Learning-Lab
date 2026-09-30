@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 
 import { OpenGuardSystemAnimation } from "@/components/projects/open-guard-system-animation";
 import type { CourseAccessResult } from "@/lib/course-access";
+import { programmeStages, publicProduct } from "@/lib/public-marketing";
 
 type LessonSummary = {
   slug: string;
@@ -18,7 +19,6 @@ type LessonSummary = {
 
 type OpenGuardProjectExperienceProps = {
   access: CourseAccessResult;
-  signedIn: boolean;
   courseSlug: string;
   lessons: LessonSummary[];
 };
@@ -34,32 +34,15 @@ const foundationConcepts = [
   "Boolean requirements and truth tables",
 ];
 
-const deliverySteps = [
-  {
-    number: "0",
-    title: "Induct",
-    text: "A 1.5-2 hour live or school-approved recorded induction explains the programme, safety, evidence and practical schedule.",
-  },
-  {
-    number: "1",
-    title: "Learn",
-    text: "Short pre-recorded lessons 1.1-1.8 each teach one idea, pause for a question and reveal the method only after a correct attempt.",
-  },
-  {
-    number: "1.9",
-    title: "Defend",
-    text: "A live design checkpoint checks the complete Week 1 reasoning before timing, breadboard and KiCad work continue.",
-  },
-];
+const deliverySteps = programmeStages;
 
 export function OpenGuardProjectExperience({
   access,
-  signedIn,
   courseSlug,
   lessons,
 }: OpenGuardProjectExperienceProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const sectionOneLessons = lessons.filter((lesson) => lesson.section !== "0");
+  const sectionOneLessons = lessons.filter((lesson) => lesson.section.startsWith("1."));
 
   useEffect(() => {
     const root = rootRef.current;
@@ -68,6 +51,7 @@ export function OpenGuardProjectExperience({
     }
 
     const element = root;
+    element.classList.add("is-motion-ready");
     const items = Array.from(
       root.querySelectorAll<HTMLElement>(".project-detail-v1-reveal"),
     );
@@ -96,13 +80,13 @@ export function OpenGuardProjectExperience({
 
     element.addEventListener("pointermove", pointerMove);
     return () => {
+      element.classList.remove("is-motion-ready");
       element.removeEventListener("pointermove", pointerMove);
       observer.disconnect();
     };
   }, []);
 
   const courseHref = `/courses/${courseSlug}`;
-  const loginHref = `/login?next=${encodeURIComponent(courseHref)}`;
 
   return (
     <div ref={rootRef} className="project-detail-v1 overflow-hidden bg-slate-950 text-white">
@@ -125,17 +109,17 @@ export function OpenGuardProjectExperience({
                 Smart living
               </span>
               <span className="rounded-full border border-emerald-300/50 bg-emerald-400/15 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-emerald-100">
-                Working
+                First project in development
               </span>
               <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-slate-300">
-                First workshop
+                Proposed programme
               </span>
             </div>
             <h1 className="mt-6 text-5xl font-semibold tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl">
-              OpenGuard Mini
+              {publicProduct.name}
             </h1>
             <p className="mt-4 text-2xl font-medium tracking-[-0.025em] text-emerald-200 sm:text-3xl">
-              A removable door, locker or drawer alert.
+              {publicProduct.tagline}
             </p>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-300">
               Learners begin with a useful everyday need, then uncover the
@@ -150,29 +134,13 @@ export function OpenGuardProjectExperience({
                 Watch the public preview
                 <ArrowIcon />
               </a>
-              {access.allowed ? (
-                <Link
-                  href={courseHref}
-                  className="inline-flex items-center gap-2 rounded-full bg-emerald-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:scale-[1.025] hover:bg-emerald-200"
-                >
-                  Open the learning pathway
-                  <ArrowIcon />
-                </Link>
-              ) : signedIn ? (
-                <Link
-                  href="/schools"
-                  className="inline-flex items-center rounded-full border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-                >
-                  Ask your school for access
-                </Link>
-              ) : (
-                <Link
-                  href={loginHref}
-                  className="inline-flex items-center rounded-full border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-                >
-                  Sign in for course access
-                </Link>
-              )}
+              <Link
+                href={courseHref}
+                className="inline-flex items-center gap-2 rounded-full bg-emerald-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:scale-[1.025] hover:bg-emerald-200"
+              >
+                Open the learning pathway
+                <ArrowIcon />
+              </Link>
             </div>
           </div>
 
@@ -186,8 +154,8 @@ export function OpenGuardProjectExperience({
                     4-second concept system preview
                   </p>
                   <p className="mt-2 text-sm leading-6 text-slate-300">
-                    Door opens → sensor changes → timing and logic decide →
-                    LED and buzzer respond.
+                    Open → wait → remind → close and reset. This short visual
+                    sequence compresses the proposed real delay.
                   </p>
                 </div>
                 <span className="rounded-full border border-amber-300/40 bg-amber-300/10 px-3 py-1.5 text-xs font-semibold text-amber-100">
@@ -216,10 +184,10 @@ export function OpenGuardProjectExperience({
             </p>
             <div className="mt-7 space-y-3">
               {[
-                "Attach only with approved removable mounting and permission.",
-                "Use it as an opening alert or reminder, not a physical lock.",
-                "The foundation project is battery-powered extra-low voltage.",
-                "The final circuit, PCB and batch still require adult validation.",
+                "The magnet stays fixed; the PCB and secured battery holder move with the drawer.",
+                "The reed contact senses a continuing open or closed state, not movement alone.",
+                "REMIND is primary; LIGHT and ALERT are optional modes.",
+                "No motor, app or microcontroller programme is required for the foundation product.",
               ].map((item) => (
                 <div key={item} className="flex gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-slate-200">
                   <span className="mt-1 text-emerald-300">●</span>
@@ -238,10 +206,10 @@ export function OpenGuardProjectExperience({
         <div className="project-detail-v1-reveal mx-auto grid w-full max-w-7xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[1fr_1fr] lg:px-8">
           <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/70 p-2">
             <Image
-              src="/images/projects/open-guard-mini/open-guard-product-concept.webp"
-              alt="OpenGuard Mini removable door, locker or drawer alert concept"
-              width={1995}
-              height={1175}
+              src="/images/marketing/drawer-installation.svg"
+              alt="DrawerSense Mini installation concept with a fixed magnet and moving drawer-mounted board and battery holder"
+              width={1453}
+              height={656}
               className="h-auto w-full rounded-[1.7rem] object-contain bg-white"
             />
             <span className="absolute bottom-5 left-5 rounded-full border border-white/20 bg-slate-950/75 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur">
@@ -280,7 +248,7 @@ export function OpenGuardProjectExperience({
             School delivery model
           </p>
           <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
-            Induct. Learn. Build. Explain.
+            One project. Three engineering stages.
           </h2>
           <p className="mt-5 text-lg leading-8 text-slate-300">
             The online content supports the practical workshop; it does not
@@ -296,6 +264,9 @@ export function OpenGuardProjectExperience({
             </div>
           ))}
         </div>
+        <div className="project-detail-v1-reveal mt-8 rounded-[1.7rem] border border-emerald-300/20 bg-emerald-300/[0.07] p-6 text-sm leading-7 text-slate-200">
+          <strong className="text-white">From the breadboard to KiCad:</strong> Week 2 develops and tests the circuit. In Week 3, learners capture the full schematic, learn to use SnapEDA symbols and footprints, verify pin numbers and package dimensions against datasheets, and develop their own PCB layout. Manufacturing that personal layout is a separate, optional next step.
+        </div>
       </section>
 
       <section className="border-y border-white/10 bg-slate-900/70">
@@ -310,9 +281,9 @@ export function OpenGuardProjectExperience({
               </h2>
             </div>
             <p className="max-w-xl text-sm leading-7 text-slate-300">
-              Each pre-recorded lesson teaches one idea, pauses for a question
-              and reveals the method only after the learner reaches the correct
-              answer. Section 1.9 remains a human-led checkpoint.
+              The written checkpoints work now. Each planned recording will
+              teach one idea without revealing the method before the learner
+              reaches the correct answer. Section 1.9 remains human-led.
             </p>
           </div>
 
@@ -349,20 +320,10 @@ export function OpenGuardProjectExperience({
               {access.message}
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
-              {access.allowed ? (
-                <Link href={courseHref} className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:scale-[1.025] hover:bg-emerald-100">
-                  Enter Section 0
-                  <ArrowIcon />
-                </Link>
-              ) : signedIn ? (
-                <Link href="/schools" className="inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-100">
-                  Ask your teacher or school
-                </Link>
-              ) : (
-                <Link href={loginHref} className="inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-100">
-                  Sign in
-                </Link>
-              )}
+              <Link href={courseHref} className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:scale-[1.025] hover:bg-emerald-100">
+                Open the learning pathway
+                <ArrowIcon />
+              </Link>
               <Link href="/schools" className="inline-flex rounded-full border border-white/25 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
                 School partnership information
               </Link>
@@ -371,7 +332,7 @@ export function OpenGuardProjectExperience({
           <div className="relative min-h-[20rem]">
             <Image
               src="/images/projects/open-guard-mini/open-guard-system-map.webp"
-              alt="OpenGuard Mini system map"
+              alt="Legacy course system map for the internal OpenGuard Mini learning pathway"
               fill
               sizes="(min-width: 1024px) 40vw, 100vw"
               className="object-contain bg-white p-6"

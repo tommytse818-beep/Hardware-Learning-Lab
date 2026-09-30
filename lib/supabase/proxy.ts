@@ -5,13 +5,14 @@ import {
   getSupabaseConfig,
   isSupabaseConfigured,
 } from "@/lib/env";
-import { isPublicRoute } from "@/lib/supabase/public-routes";
+import { isPublicRoute } from "./public-routes";
 
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const publicRoute = isPublicRoute(pathname);
 
   if (!isSupabaseConfigured()) {
-    if (!isPublicRoute(pathname)) {
+    if (!publicRoute) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/login";
       loginUrl.search = "";
@@ -19,6 +20,14 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
+    return NextResponse.next({ request });
+  }
+
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some(({ name }) => name.startsWith("sb-") && name.includes("-auth-token"));
+
+  if (publicRoute && !hasAuthCookie) {
     return NextResponse.next({ request });
   }
 
@@ -52,7 +61,7 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const claims = data?.claims;
 
-  if (!claims && !isPublicRoute(pathname)) {
+  if (!claims && !publicRoute) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.search = "";

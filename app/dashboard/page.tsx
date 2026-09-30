@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { StatusBanner } from "@/components/status-banner";
 import { getCourseAccess } from "@/lib/course-access";
+import { getPublishedCourseLessons } from "@/lib/course-outline";
 import { getCourse } from "@/lib/courses";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCourseProgress } from "@/lib/progress";
@@ -27,7 +28,7 @@ export default async function DashboardPage({
   const { error, message } = await searchParams;
   const viewer = await getViewer();
 
-  if (!viewer) {
+  if (!viewer?.id || !viewer.verified || viewer.demo) {
     redirect("/login");
   }
 
@@ -53,13 +54,17 @@ export default async function DashboardPage({
   const progress = access.allowed
     ? await getCourseProgress(viewer.id, course.slug)
     : { records: [], databaseReady: false };
-  const completedCount = course.lessons.filter((lesson) =>
-    progress.records.some(
-      (record) => record.lesson_slug === lesson.slug && record.completed,
+  const publishedLessons = getPublishedCourseLessons(course);
+  const completed = new Set(progress.databaseReady ? progress.records.filter((record) =>
+    record.completed === true && (
+      !publishedLessons.find((lesson) => lesson.slug === record.lesson_slug)?.humanReviewRequired || record.review_state === "approved"
     ),
-  ).length;
+  ).map((record) => record.lesson_slug) : []);
+  // Later saved flags do not advance progress past an unfinished prerequisite.
+  const firstIncomplete = publishedLessons.findIndex((lesson) => !completed.has(lesson.slug));
+  const completedCount = firstIncomplete === -1 ? publishedLessons.length : firstIncomplete;
   const percentage = Math.round(
-    (completedCount / course.lessons.length) * 100,
+    (completedCount / publishedLessons.length) * 100,
   );
   const supabaseConnected = isSupabaseConfigured();
 
@@ -76,7 +81,7 @@ export default async function DashboardPage({
             Welcome, {viewer.displayName}.
           </h1>
           <p className="mt-3 max-w-2xl text-slate-600">
-            Continue the OpenGuard Mini foundation pathway and build evidence one checkpoint at a time.
+            Continue the DrawerSense Mini foundation pathway and build evidence one checkpoint at a time.
           </p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
@@ -95,7 +100,7 @@ export default async function DashboardPage({
 
       {access.allowed && !progress.databaseReady && (
         <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-950">
-          Your verified account has course access. Progress sync is temporarily unavailable, but you can still review the course lessons.
+          Your saved progress could not be confirmed. Open the course panel to retry; later lessons stay locked until your earlier checkpoints can be verified.
         </div>
       )}
 
@@ -122,12 +127,12 @@ export default async function DashboardPage({
                 Course progress
               </span>
               <span className="text-slate-500">
-                {completedCount}/{course.lessons.length} checkpoints
+                {progress.databaseReady ? `${completedCount}/${publishedLessons.length} checkpoints` : access.allowed ? "Temporarily unavailable" : "Course access required"}
               </span>
             </div>
             <div
               className="mt-3 h-3 overflow-hidden rounded-full bg-slate-100"
-              aria-label={`${percentage}% complete`}
+              aria-label={progress.databaseReady ? `${percentage}% complete` : "Progress unavailable"}
             >
               <div
                 className="h-full rounded-full bg-emerald-500 transition-all"
@@ -139,10 +144,10 @@ export default async function DashboardPage({
               {access.allowed ? (
                 <>
                   <Link
-                    href={`/courses/${course.slug}/lessons/${course.lessons[0].slug}`}
+                    href={`/courses/${course.slug}`}
                     className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
                   >
-                    {completedCount > 0 ? "Continue course" : "Start Section 0"}
+                    {completedCount > 0 ? "Continue course" : "Open course"}
                   </Link>
                   <Link
                     href={`/courses/${course.slug}`}
@@ -180,10 +185,12 @@ export default async function DashboardPage({
               ],
               [
                 "Cloud lesson progress",
-                progress.databaseReady ? "Connected" : "Setup needed",
+                progress.databaseReady ? "Connected" : access.allowed ? "Temporarily unavailable" : "Course access required",
               ],
-              ["Section 0 + Week 1", "Working"],
-              ["Week 2 and Week 3", "Planned next"],
+              ["Section 0 + Week 1", "Published"],
+              ["Week 2 · Sections 2.0 and 2.1", "8 activities published"],
+              ["Week 2 · Sections 2.2–2.6", "Planned"],
+              ["Week 3 · KiCad", "Planned"],
             ].map(([label, value]) => (
               <div
                 key={label}

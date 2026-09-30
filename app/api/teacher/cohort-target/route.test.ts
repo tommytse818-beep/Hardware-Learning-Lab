@@ -3,11 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   requireApiViewer: vi.fn(),
   getLesson: vi.fn(),
+  getCourse: vi.fn(),
   createAdminClient: vi.fn(),
 }));
 
 vi.mock("@/lib/api-authorization", () => ({ requireApiViewer: mocks.requireApiViewer }));
-vi.mock("@/lib/courses", () => ({ getLesson: mocks.getLesson }));
+vi.mock("server-only", () => ({}));
+vi.mock("@/lib/courses", () => ({ getLesson: mocks.getLesson, getCourse: mocks.getCourse }));
+vi.mock("@/lib/course-outline", () => import("../../../../lib/course-outline"));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: mocks.createAdminClient }));
 
 const cohortId = "22222222-2222-2222-2222-222222222222";
@@ -44,6 +47,7 @@ describe("POST /api/teacher/cohort-target", () => {
     vi.clearAllMocks();
     mocks.requireApiViewer.mockResolvedValue({ viewer: { id: "teacher-1" } });
     mocks.getLesson.mockImplementation((courseSlug: string, lessonSlug: string) => courseSlug === "open-guard-mini" && [lesson.slug, "input-process-output"].includes(lessonSlug) ? lesson : undefined);
+    mocks.getCourse.mockImplementation((slug: string) => ({ slug, lessons: [lesson] }));
   });
 
   it("returns 403 when the teacher is unassigned", async () => {
@@ -92,5 +96,31 @@ describe("POST /api/teacher/cohort-target", () => {
 
     expect((await POST(request({ cohortId, targetLessonSlug: "input-process-output" }))).status).toBe(200);
     expect(mock.calls[0]).toEqual(expect.objectContaining({ operation: "upsert", value: expect.objectContaining({ target_lesson_slug: lesson.slug }) }));
+  });
+
+  it("accepts a published Week 2 checkpoint in DrawerSense", async () => {
+    const mock = adminMock({
+      cohort_memberships: [{ data: { id: "membership-1" }, error: null }],
+      cohorts: [{ data: { course_slug: "open-guard-mini", active: true }, error: null }],
+      cohort_targets: [{ data: { target_lesson_slug: "drawer-2-1b" }, error: null }],
+    });
+    mocks.createAdminClient.mockReturnValue(mock.client);
+    const { POST } = await import("./route");
+    expect((await POST(request({ cohortId, targetLessonSlug: "drawer-2-1b" }))).status).toBe(200);
+    expect(mock.calls[0]).toEqual(expect.objectContaining({ value: expect.objectContaining({ target_lesson_slug: "drawer-2-1b" }) }));
+  });
+
+  it.each([
+    ["open-guard-mini", "drawer-2-9z"],
+    ["another-course", "drawer-2-1b"],
+  ])("rejects unpublished or cross-course targets: %s / %s", async (courseSlug, targetLessonSlug) => {
+    const mock = adminMock({
+      cohort_memberships: [{ data: { id: "membership-1" }, error: null }],
+      cohorts: [{ data: { course_slug: courseSlug, active: true }, error: null }],
+    });
+    mocks.createAdminClient.mockReturnValue(mock.client);
+    const { POST } = await import("./route");
+    expect((await POST(request({ cohortId, targetLessonSlug }))).status).toBe(400);
+    expect(mock.calls).toEqual([]);
   });
 });

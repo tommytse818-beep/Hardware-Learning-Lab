@@ -6,9 +6,9 @@ import { getCourse } from "@/lib/courses";
 import { getViewer } from "@/lib/viewer";
 
 export const metadata: Metadata = {
-  title: "OpenGuard Mini",
+  title: "DrawerSense Mini",
   description:
-    "Explore OpenGuard Mini, Hardware Learning Lab's first Smart Living school workshop: a removable low-voltage door, locker or drawer opening alert and electronics design pathway.",
+    "Explore DrawerSense Mini, a proposed drawer-left-open reminder and three-stage school engineering programme from electronic concepts to PCB design.",
 };
 
 export default async function OpenGuardMiniProjectPage() {
@@ -32,7 +32,6 @@ export default async function OpenGuardMiniProjectPage() {
   return (
     <OpenGuardProjectExperience
       access={access}
-      signedIn={Boolean(viewer && !viewer.demo)}
       courseSlug={course.slug}
       lessons={lessonSummaries}
     />

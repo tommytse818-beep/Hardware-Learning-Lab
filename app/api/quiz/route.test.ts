@@ -1,25 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  getCourseAccessForUser: vi.fn(),
+  getCourseAccess: vi.fn(),
   getCourse: vi.fn(),
   getLesson: vi.fn(),
   isSupabaseConfigured: vi.fn(),
   parseEngineeringNumber: vi.fn(),
-  getRequiredQuestionIds: vi.fn(),
+  getCourseProgress: vi.fn(),
   createAdminClient: vi.fn(),
-  createClient: vi.fn(),
+  getViewer: vi.fn(),
 }));
 
-vi.mock("@/lib/course-access", () => ({ getCourseAccessForUser: mocks.getCourseAccessForUser }));
+vi.mock("@/lib/course-access", () => ({ getCourseAccess: mocks.getCourseAccess }));
 vi.mock("@/lib/courses", () => ({ getCourse: mocks.getCourse, getLesson: mocks.getLesson }));
 vi.mock("@/lib/env", () => ({ isSupabaseConfigured: mocks.isSupabaseConfigured }));
 vi.mock("@/lib/engineering", () => ({ parseEngineeringNumber: mocks.parseEngineeringNumber }));
-vi.mock("@/lib/lesson-readiness", () => ({ getRequiredQuestionIds: mocks.getRequiredQuestionIds }));
+vi.mock("@/lib/lesson-readiness", () => import("../../../lib/lesson-readiness"));
+vi.mock("@/lib/progress", () => ({ getCourseProgress: mocks.getCourseProgress }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: mocks.createAdminClient }));
-vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
+vi.mock("@/lib/viewer", () => ({ getViewer: mocks.getViewer }));
 
-const course = { slug: "open-guard-mini" };
 const lesson = {
   slug: "user-need-engineering-requirement",
   quiz: {
@@ -65,8 +65,10 @@ const lesson = {
     },
   ],
 };
+const course = { slug: "open-guard-mini", lessons: [{ slug: "induction" }, { slug: "middle" }, lesson] };
+const viewer = { id: "student-1", role: "student", verified: true, demo: false, mustChangePassword: false };
 
-function request(questionId: string) {
+function request(questionId?: string, overrides: Record<string, unknown> = {}) {
   return new Request("http://localhost/api/quiz", {
     method: "POST",
     body: JSON.stringify({
@@ -74,6 +76,7 @@ function request(questionId: string) {
       lessonSlug: lesson.slug,
       questionId,
       selectedIndex: 1,
+      ...overrides,
     }),
   });
 }
@@ -88,13 +91,12 @@ describe("POST /api/quiz", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.isSupabaseConfigured.mockReturnValue(true);
-    mocks.createClient.mockResolvedValue({
-      auth: { getUser: vi.fn(async () => ({ data: { user: { id: "student-1" } } })) },
-    });
-    mocks.getCourseAccessForUser.mockResolvedValue({ allowed: true, message: "ok" });
+    mocks.getViewer.mockResolvedValue(viewer);
+    mocks.getCourseAccess.mockResolvedValue({ allowed: true, message: "ok" });
+    mocks.getCourseProgress.mockResolvedValue({ databaseReady: true, records: [{ lesson_slug: "induction", completed: true }, { lesson_slug: "middle", completed: true }] });
     mocks.getCourse.mockReturnValue(course);
     mocks.getLesson.mockReturnValue(lesson);
-    mocks.getRequiredQuestionIds.mockReturnValue(["q1", "q2", "q3"]);
+    mockRpc({ attempt_number: 1, points_awarded: 100, completed: true, online_ready: true, quiz_score: 100, solved_question_ids: ["q1"], review_state: "online_ready" });
   });
 
   it("keeps a multi-check lesson incomplete after one correct question", async () => {
@@ -165,5 +167,107 @@ describe("POST /api/quiz", () => {
       onlineReady: true,
       reviewState: "awaiting_review",
     });
+  });
+
+  it.each(["q1", "lesson-checkpoint", undefined])("resolves a single quiz by its own or legacy ID: %s", async (questionId) => {
+    mocks.getLesson.mockReturnValue({ ...lesson, microChecks: undefined });
+    const { POST } = await import("./route");
+    const response = await POST(request(questionId));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ correct: true, saved: true });
+    const rpc = mocks.createAdminClient.mock.results[0].value.rpc;
+    expect(rpc).toHaveBeenCalledWith("record_quiz_attempt_v2", expect.objectContaining({ p_question_id: "q1", p_required_question_ids: ["q1"] }));
+  });
+
+  it("handles a single numerical checkpoint through the same resolver", async () => {
+    mocks.getLesson.mockReturnValue({ ...lesson, microChecks: undefined, quiz: { ...lesson.quiz, id: "resistance", kind: "numeric", answer: 550, tolerance: 1 } });
+    mocks.parseEngineeringNumber.mockReturnValue(550);
+    const { POST } = await import("./route");
+    const response = await POST(request("resistance", { numericValue: "0.55 kΩ" }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ correct: true });
+  });
+
+  it("rejects a valid question when an earlier prerequisite is unfinished", async () => {
+    mocks.getCourseProgress.mockResolvedValue({ databaseReady: true, records: [{ lesson_slug: "middle", completed: true }, { lesson_slug: lesson.slug, completed: true }] });
+    const { POST } = await import("./route");
+    const response = await POST(request("q1"));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ blockedBy: "induction" });
+    expect(mocks.createAdminClient).not.toHaveBeenCalled();
+  });
+
+  it("cannot be bypassed with a client-supplied teacher role or preview flag", async () => {
+    mocks.getCourseProgress.mockResolvedValue({ databaseReady: true, records: [] });
+    const { POST } = await import("./route");
+    expect((await POST(request("q1", { role: "teacher", canPreviewAll: true }))).status).toBe(409);
+    expect(mocks.createAdminClient).not.toHaveBeenCalled();
+  });
+
+  it.each(["teacher", "admin"])("allows a verified entitled %s to review any published lesson", async (role) => {
+    mocks.getViewer.mockResolvedValue({ ...viewer, role });
+    mocks.getCourseProgress.mockResolvedValue({ databaseReady: true, records: [] });
+    const { POST } = await import("./route");
+    const response = await POST(request("q1"));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ preview: true, saved: false, completed: false, pointsAwarded: 0 });
+    expect(mocks.createAdminClient).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { ...viewer, verified: false, role: "teacher" },
+    { ...viewer, mustChangePassword: true, role: "admin" },
+  ])("denies staff previews without verified account setup", async (identity) => {
+    mocks.getViewer.mockResolvedValue(identity);
+    const { POST } = await import("./route");
+    expect((await POST(request("q1"))).status).toBe(403);
+    expect(mocks.createAdminClient).not.toHaveBeenCalled();
+  });
+
+  it("requires a signed-in user", async () => {
+    mocks.getViewer.mockResolvedValue(null);
+    const { POST } = await import("./route");
+    expect((await POST(request("q1"))).status).toBe(401);
+  });
+
+  it("requires course entitlement", async () => {
+    mocks.getCourseAccess.mockResolvedValue({ allowed: false, message: "No active course seat." });
+    const { POST } = await import("./route");
+    expect((await POST(request("q1"))).status).toBe(403);
+    expect(mocks.getCourseProgress).not.toHaveBeenCalled();
+  });
+
+  it("keeps the checkpoint locked when progress cannot be read", async () => {
+    mocks.getCourseProgress.mockResolvedValue({ databaseReady: false, records: [] });
+    const { POST } = await import("./route");
+    expect((await POST(request("q1"))).status).toBe(503);
+    expect(mocks.createAdminClient).not.toHaveBeenCalled();
+  });
+
+  it("returns a recoverable error rather than throwing a database or auth failure", async () => {
+    mocks.getViewer.mockRejectedValue(new Error("Network failure"));
+    const { POST } = await import("./route");
+    const result = await POST(request("q1"));
+    expect(result.status).toBe(503);
+    expect(await result.json()).not.toHaveProperty("method");
+  });
+
+  it.each([null, [], "invalid"])("rejects malformed request bodies", async (body) => {
+    const { POST } = await import("./route");
+    expect((await POST(new Request("http://localhost/api/quiz", { method: "POST", body: JSON.stringify(body) }))).status).toBe(400);
+  });
+
+  it("rejects unknown question IDs without recording an attempt", async () => {
+    const { POST } = await import("./route");
+    expect((await POST(request("not-a-question"))).status).toBe(404);
+    expect(mocks.createAdminClient).not.toHaveBeenCalled();
+  });
+
+  it("does not reveal worked answers if storage fails", async () => {
+    mocks.createAdminClient.mockReturnValue({ rpc: vi.fn(async () => ({ data: null, error: { code: "unavailable" } })) });
+    const { POST } = await import("./route");
+    const result = await POST(request("q1"));
+    expect(result.status).toBe(503);
+    expect(await result.json()).not.toHaveProperty("method");
   });
 });

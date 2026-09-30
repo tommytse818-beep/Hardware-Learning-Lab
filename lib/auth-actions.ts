@@ -9,6 +9,7 @@ import {
 } from "@/lib/env";
 import { safeInternalPath } from "@/lib/navigation";
 import { validateNewPassword } from "@/lib/password-policy";
+import { getPasswordResetFeedback } from "@/lib/password-reset-feedback";
 import {
   hasActivePasswordRecovery,
   PASSWORD_RECOVERY_COOKIE,
@@ -140,19 +141,11 @@ export async function requestPasswordReset(formData: FormData) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo,
   });
-
-  if (error) {
-    redirectWithMessage(
-      "/forgot-password",
-      "error",
-      "The reset request could not be sent. Try again shortly.",
-    );
-  }
-
+  const feedback = getPasswordResetFeedback(error);
   redirectWithMessage(
     "/forgot-password",
-    "message",
-    "If an account exists for that address, a password-reset email has been sent.",
+    feedback.type,
+    feedback.message,
   );
 }
 
