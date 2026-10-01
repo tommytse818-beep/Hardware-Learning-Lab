@@ -8,6 +8,15 @@ describe("foundation diagrams", () => {
     expect(WeekOneFoundationDiagram({ sectionHeading: "Unrelated section" })).toBeNull();
   });
 
+  it("keeps a diagram when its displayed heading changes", () => {
+    const html = renderToStaticMarkup(createElement(WeekOneFoundationDiagram, { diagramId: "parallel-circuit", sectionHeading: "A newly edited heading" }));
+    expect(html).toContain("Identify both endpoints of each branch");
+  });
+
+  it("fails loudly for an unknown authored diagram ID", () => {
+    expect(() => WeekOneFoundationDiagram({ diagramId: "missing-diagram" })).toThrow("Unknown Week 1 diagram ID");
+  });
+
   it.each([
     ["Series: one route through both elements", "no third branch"],
     ["Parallel: the same two endpoint nodes", "top node A and bottom node B"],

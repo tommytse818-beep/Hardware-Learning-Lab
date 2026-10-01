@@ -3,11 +3,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   getViewer: vi.fn(),
   getCourseAccess: vi.fn(),
+  getDrawerSenseAccess: vi.fn(),
+  getDrawerSenseMediaResource: vi.fn(),
+  getDrawerSenseServerProgress: vi.fn(),
   createAdminClient: vi.fn(),
 }));
 
 vi.mock("@/lib/viewer", () => ({ getViewer: mocks.getViewer }));
 vi.mock("@/lib/course-access", () => ({ getCourseAccess: mocks.getCourseAccess }));
+vi.mock("@/lib/drawersense-access", () => ({ getDrawerSenseAccess: mocks.getDrawerSenseAccess }));
+vi.mock("@/lib/drawersense-media", () => ({ getDrawerSenseMediaResource: mocks.getDrawerSenseMediaResource }));
+vi.mock("@/lib/drawersense-server-progress", () => ({ getDrawerSenseServerProgress: mocks.getDrawerSenseServerProgress }));
+vi.mock("@/lib/drawersense-curriculum", () => ({ drawerSenseLessons: [{ id: "2.0A", questions: [{ id: "q1" }] }, { id: "2.0B", questions: [{ id: "q2" }] }] }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: mocks.createAdminClient }));
 
 type QueryBuilder = {
@@ -48,6 +55,9 @@ describe("GET /api/courses/[courseSlug]/resources/[resourceKey]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getCourseAccess.mockResolvedValue({ allowed: true, message: "ok" });
+    mocks.getDrawerSenseMediaResource.mockReturnValue(null);
+    mocks.getDrawerSenseAccess.mockResolvedValue({ allowed: true, canReview: false, storageScope: "student-1" });
+    mocks.getDrawerSenseServerProgress.mockResolvedValue({ databaseReady: true, weekOneReady: true, progress: {} });
   });
 
   it("returns 401 for a signed-out visitor", async () => {
@@ -81,5 +91,34 @@ describe("GET /api/courses/[courseSlug]/resources/[resourceKey]", () => {
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("https://storage.example/signed-video");
     expect(mock.createSignedUrl).toHaveBeenCalledWith("open-guard/video.mp4", 60 * 60);
+  });
+
+  it("denies a Week 2 solution resource before the saved attempt and checks", async () => {
+    mocks.getViewer.mockResolvedValue({ id: "student-1", verified: true, role: "student" });
+    mocks.getDrawerSenseMediaResource.mockReturnValue({ lessonId: "2.0A", kind: "solution", format: "video" });
+    const { GET } = await import("./route");
+    const response = await GET(new Request("http://localhost"), context());
+    expect(response.status).toBe(403);
+    expect(mocks.createAdminClient).not.toHaveBeenCalled();
+  });
+
+  it("allows a Week 2 solution resource after the same saved-work gate", async () => {
+    const mock = adminMock(
+      { data: { bucket_id: "course-private", object_path: "solution.mp4", title: "Solution" }, error: null },
+      { data: { signedUrl: "https://storage.example/signed-solution" }, error: null },
+    );
+    mocks.getViewer.mockResolvedValue({ id: "student-1", verified: true, role: "student" });
+    mocks.getDrawerSenseMediaResource.mockReturnValue({ lessonId: "2.0A", kind: "solution", format: "video" });
+    mocks.getDrawerSenseServerProgress.mockResolvedValue({ databaseReady: true, weekOneReady: true, progress: { "2.0A": { saved: true, correct: ["q1"] } } });
+    mocks.createAdminClient.mockReturnValue(mock.client);
+    const { GET } = await import("./route");
+    expect((await GET(new Request("http://localhost"), context())).status).toBe(307);
+  });
+
+  it("denies concept media for a future activity", async () => {
+    mocks.getViewer.mockResolvedValue({ id: "student-1", verified: true, role: "student" });
+    mocks.getDrawerSenseMediaResource.mockReturnValue({ lessonId: "2.0B", kind: "concept", format: "video" });
+    const { GET } = await import("./route");
+    expect((await GET(new Request("http://localhost"), context())).status).toBe(403);
   });
 });

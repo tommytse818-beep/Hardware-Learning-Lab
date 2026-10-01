@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
-import { DrawerSenseCanvas, DrawerSenseDiagram, getDrawerSenseCanvasMarkup } from "@/components/projects/drawersense-diagram";
+import { DrawerSenseCanvas, getDrawerSenseCanvasMarkup } from "@/components/projects/drawersense-prediction";
+import { DrawerSenseTaskDiagram } from "@/components/projects/drawersense-task-diagram";
 import { DrawerSenseVideo } from "@/components/projects/drawersense-video";
 import { drawerSenseLessons, getLessonRecall, type Question, type QuestionResponse, type LessonId } from "@/lib/drawersense-curriculum";
 import { emptyLessonWork, hasWork, sanitizeProgress, type LessonWork, type PathwayProgress, type Point } from "@/lib/drawersense-progress";
@@ -12,9 +13,12 @@ import styles from "./drawersense-pathway.module.css";
 
 type Stage = "learn" | "practice" | "solution" | "transfer";
 type Feedback = { correct: boolean; hint?: string };
-type Props = { canReview: boolean; storageScope: string; initialProgress: PathwayProgress; initialLesson: LessonId };
+type WorkedDiagram = { title: string; columns: string[]; rows: string[][]; note: string };
+type PublishedRecording = { videoSrc: string; captionsSrc?: string; transcriptSrc?: string };
+type PublishedMedia = Partial<Record<LessonId, Partial<Record<"concept" | "solution", PublishedRecording>>>>;
+type Props = { canReview: boolean; storageScope: string; initialProgress: PathwayProgress; initialLesson: LessonId; media: PublishedMedia };
 
-export function DrawerSensePathway({ canReview, storageScope, initialProgress, initialLesson }: Props) {
+export function DrawerSensePathway({ canReview, storageScope, initialProgress, initialLesson, media }: Props) {
   const [active, setActive] = useState(() => Math.max(0, drawerSenseLessons.findIndex((item) => item.id === initialLesson)));
   const [stage, setStage] = useState<Stage>("learn");
   const [progress, setProgress] = useState<PathwayProgress>(initialProgress);
@@ -22,6 +26,7 @@ export function DrawerSensePathway({ canReview, storageScope, initialProgress, i
   const [loaded, setLoaded] = useState(false);
   const [feedback, setFeedback] = useState<Record<string, Feedback>>({});
   const [solution, setSolution] = useState<string[]>([]);
+  const [workedDiagram, setWorkedDiagram] = useState<WorkedDiagram | null>(null);
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState("");
   const [conceptFinished, setConceptFinished] = useState(false);
@@ -70,7 +75,7 @@ export function DrawerSensePathway({ canReview, storageScope, initialProgress, i
 
   function go(index: number) {
     if (inFlight.current || index < 0 || index >= drawerSenseLessons.length || (!canReview && index > unlocked)) return;
-    setActive(index); setStage("learn"); setFeedback({}); setSolution([]); setNotice(""); setConceptFinished(false);
+    setActive(index); setStage("learn"); setFeedback({}); setSolution([]); setWorkedDiagram(null); setNotice(""); setConceptFinished(false);
     requestAnimationFrame(() => { heading.current?.focus(); heading.current?.scrollIntoView({block:"start", behavior:"instant"}); });
   }
 
@@ -124,7 +129,7 @@ export function DrawerSensePathway({ canReview, storageScope, initialProgress, i
   async function openSolution() {
     const result = await submit("solution");
     if (!result) return;
-    setSolution(result.solution); changeStage("solution");
+    setSolution(result.solution); setWorkedDiagram(result.diagram ?? null); changeStage("solution");
   }
 
   async function markReviewed() {
@@ -172,18 +177,19 @@ export function DrawerSensePathway({ canReview, storageScope, initialProgress, i
             {notice && <p className={styles.notice} role="alert">{notice}</p>}
             {!loaded ? <p>Opening your workspace…</p> : <>
               {stage==="learn" && <>
-                <DrawerSenseVideo lessonId={lesson.id} kind="concept" canAttach={canReview} onCompleted={()=>{setConceptFinished(true);changeStage("practice");}}/>
+                <DrawerSenseVideo lessonId={lesson.id} kind="concept" canAttach={canReview} published={media[lesson.id]?.concept} onCompleted={()=>{setConceptFinished(true);changeStage("practice");}}/>
                 <RecallLinks lessonId={lesson.id}/>
-                <DrawerSenseDiagram lessonId={lesson.id} variant="prediction"/>
+                <ConceptSequence key={lesson.id} paragraphs={lesson.concept} onComplete={()=>{setConceptFinished(true);changeStage("practice");}}/>
+                <AnalogousRehearsal lessonId={lesson.id}/>
+                <DrawerSenseTaskDiagram lessonId={lesson.id}/>
                 {lesson.givens && <GivenValues values={lesson.givens}/>}
                 {lesson.formula && <p className={styles.formula}>{lesson.formula}</p>}
                 <div className={styles.stop}><span>PAUSE & PREDICT</span><p>First trace, sketch or calculate. Save your prediction to open the two checks; the worked solution follows your completed attempt.</p></div>
-                <ConceptSequence key={lesson.id} paragraphs={lesson.concept} onComplete={()=>{setConceptFinished(true);changeStage("practice");}}/>
               </>}
               {stage==="practice" && <>
                 <p className={styles.lead}>Think on the page before choosing an answer.</p><p>Use the task diagram and prompts to make a prediction. You can draw, write, or combine both. The checks come after you save your working.</p>
                 <RecallLinks lessonId={lesson.id}/>
-                <DrawerSenseDiagram lessonId={lesson.id} variant="prediction"/>
+                <DrawerSenseTaskDiagram lessonId={lesson.id}/>
                 <details className={styles.recall}><summary>Revisit the explanation and equation</summary>{lesson.concept.map((p)=><p key={p}>{p}</p>)}{lesson.formula && <p className={styles.formula}>{lesson.formula}</p>}</details>
                 {lesson.givens && <GivenValues values={lesson.givens}/>}
                 <section className={styles.working}>
@@ -199,12 +205,13 @@ export function DrawerSensePathway({ canReview, storageScope, initialProgress, i
                 </section>
                 {checksReady ? <section aria-label="Check your prediction"><p className={styles.eyebrow}>THEN · CHECK YOUR UNDERSTANDING</p><h4 ref={checkHeading} tabIndex={-1}>Compare your prediction with two checks.</h4><p>Choose an explanation for a concept question. For a calculation, enter your number and select its unit. Keep your reasoning above, including any corrections.</p>{lesson.questions.map((question,index)=><QuestionField key={question.id} question={question} number={index+1} value={work.answers[question.id]} feedback={feedback[question.id] || (work.correct.includes(question.id)?{correct:true}:undefined)} pending={pending} onChange={(value)=>answer(question,value)} onCheck={()=>check(question)}/>)}</section> : <div className={styles.stop}><span>CHECKS OPEN AFTER YOUR PREDICTION</span><p>Save your sketch or written working above. You do not need a perfect answer to make a first attempt.</p></div>}
                 <div className={styles.unlock}><p>{canReview?"Teaching preview · worked solution available":solutionReady?"Your attempt is ready to compare.":`${work.correct.length} of 2 checks correct · ${work.saved?"working saved":"save your working"}`}</p><button className={styles.primary} disabled={!solutionReady || pending} onClick={()=>openSolution()}>Open the worked solution →</button></div>
-                <details className={styles.recall}><summary>Stuck? Get help without losing your work</summary><p>Revisit the diagram and use the hint after an attempt. Keep your reasoning, download it, and ask your tutor to review the difficult step. You can return and retry without a penalty.</p></details>
+                <RecoveryGuide lessonId={lesson.id} hasIncorrectAttempt={Object.values(feedback).some((item)=>!item.correct)}/>
               </>}
               {stage==="solution" && <>
-                <DrawerSenseVideo lessonId={lesson.id} kind="solution" canAttach={canReview} onCompleted={()=>setNotice("The solution recording has ended. Compare it with your own working before trying the transfer check.")}/>
-                <DrawerSenseDiagram lessonId={lesson.id} variant="explanation"/>
-                <p className={styles.eyebrow}>WORKED SOLUTION · WRITTEN COMPANION</p><h4>Compare with your own reasoning.</h4><p>The separate Pencil recording is not available yet. Use these steps to review your attempt.</p><ol className={styles.solution}>{solution.map((step,index)=><li key={index}>{step}</li>)}</ol><p className={styles.small}>A matching numerical answer does not establish that a drawing or real build is correct. Keep your original working for tutor review.</p><label className={styles.reviewCheck}><input type="checkbox" checked={work.reviewed} disabled={pending || work.reviewed} onChange={()=>void markReviewed()}/> I have compared the method with my working and identified any corrections.</label><div className={styles.actions}><button className={styles.secondary} onClick={()=>changeStage("practice")}>Review my attempt</button><button className={styles.primary} disabled={pending || (!canReview && !work.reviewed)} onClick={()=>changeStage("transfer")}>Try a new situation →</button></div>
+                <DrawerSenseVideo lessonId={lesson.id} kind="solution" canAttach={canReview} published={media[lesson.id]?.solution} onCompleted={()=>setNotice("The solution recording has ended. Compare it with your own working before trying the transfer check.")}/>
+                <DrawerSenseTaskDiagram lessonId={lesson.id}/>
+                {workedDiagram && <WorkedDiagramTable diagram={workedDiagram}/>}
+                <p className={styles.eyebrow}>WORKED SOLUTION · WRITTEN COMPANION</p><h4>Compare with your own reasoning.</h4><p>{media[lesson.id]?.solution ? "Use the published recording and these written steps together to review your attempt." : "The solution recording is in preparation. Use these complete written steps to review your attempt."}</p><ol className={styles.solution}>{solution.map((step,index)=><li key={index}>{step}</li>)}</ol><p className={styles.small}>A matching numerical answer does not establish that a drawing or real build is correct. Keep your original working for tutor review.</p><label className={styles.reviewCheck}><input type="checkbox" checked={work.reviewed} disabled={pending || work.reviewed} onChange={()=>void markReviewed()}/> I have compared the method with my working and identified any corrections.</label><div className={styles.actions}><button className={styles.secondary} onClick={()=>changeStage("practice")}>Review my attempt</button><button className={styles.primary} disabled={pending || (!canReview && !work.reviewed)} onClick={()=>changeStage("transfer")}>Try a new situation →</button></div>
               </>}
               {stage==="transfer" && <>
                 <p className={styles.eyebrow}>TRANSFER CHECK</p><h4>Can you use the idea again?</h4><p>Read the changed conditions carefully. This new question checks understanding before the next activity opens.</p><QuestionField question={lesson.transfer} value={work.transfer} feedback={feedback[lesson.transfer.id] || ((work.complete || work.onlineReady)?{correct:true}:undefined)} pending={pending} onChange={(value)=>answer(lesson.transfer,value,true)} onCheck={()=>check(lesson.transfer,true)}/><button className={styles.secondary} disabled={pending} onClick={()=>openSolution()}>Revisit the worked solution</button>{!canReview && (work.complete || (lesson.id === "2.1F" && (work.onlineReady || feedback[lesson.transfer.id]?.correct))) && <div className={styles.completion}><h4>{active===7?(work.complete?"Bench checkpoint approved.":"Online checks complete. Next: tutor inspection."):"You’re ready for the next idea."}</h4>{active<7?<><p>Your checked work is saved to your account when you return.</p><button className={styles.primary} disabled={pending} onClick={()=>go(active+1)}>Continue to {drawerSenseLessons[active+1].id} →</button></>:<><p>Before Section 2.2, show your tutor the actual build, corrected circuit and breadboard photograph. They must inspect the wiring and measurements in person.</p><ul><li>Source setting and tutor-chosen current limit</li><li>Near and far rail voltages with units</li><li>Both continuity-verified switch states</li><li>OFF behaviour and the observation method</li></ul><strong>{work.complete ? "Tutor approval recorded · next lessons are in preparation" : "Awaiting physical sign-off · Section 2.2 remains closed"}</strong><p className={styles.small}>Your submitted working and online checks are saved to your account for review. Show your tutor the real circuit and measurement evidence; only a human review can approve this bench checkpoint.</p><button className={styles.secondary} onClick={download}>Download work for my tutor</button></>}</div>}
@@ -219,6 +226,14 @@ export function DrawerSensePathway({ canReview, storageScope, initialProgress, i
 
 function GivenValues({values}:{values:{label:string;value:string}[]}) {
   return <div className={styles.givens}><p className={styles.eyebrow}>GIVEN VALUES & ASSUMPTIONS</p><dl>{values.map((item)=><div key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></div>;
+}
+
+function WorkedDiagramTable({diagram}:{diagram:WorkedDiagram}) {
+  return <section className={styles.recallCard} aria-label={diagram.title}>
+    <p className={styles.eyebrow}>AUTHORISED WORKED DIAGRAM DATA</p><h4>{diagram.title}</h4>
+    <div className="overflow-x-auto"><table className="min-w-full border-collapse text-left text-sm"><thead><tr>{diagram.columns.map((column)=><th key={column} className="border-b border-slate-300 p-2">{column}</th>)}</tr></thead><tbody>{diagram.rows.map((row,index)=><tr key={index}>{row.map((cell,cellIndex)=><td key={cellIndex} className="border-b border-slate-200 p-2">{cell}</td>)}</tr>)}</tbody></table></div>
+    <p className={styles.small}>{diagram.note}</p>
+  </section>;
 }
 
 function ConceptSequence({paragraphs,onComplete}:{paragraphs:string[];onComplete:()=>void}) {
@@ -246,6 +261,31 @@ function RecallLinks({lessonId}:{lessonId:LessonId}) {
       <p className={styles.small}>{card.coverageNote}</p>
       {card.href && <a href={card.href} target="_blank" rel="noopener noreferrer">Related Week 1 lesson ↗</a>}
     </section>)}
+  </details>;
+}
+
+function AnalogousRehearsal({lessonId}:{lessonId:LessonId}) {
+  const card = getLessonRecall(lessonId)[0];
+  if (!card) return null;
+  return <section className={styles.recallCard} aria-label="Different example before your prediction">
+    <p className={styles.eyebrow}>DIFFERENT EXAMPLE · NOT THE ASSESSED ANSWER</p>
+    <h4>{card.title}</h4>
+    {card.body.map((paragraph)=><p key={paragraph}>{paragraph}</p>)}
+    {card.formula && <p className={styles.formula}>{card.formula}</p>}
+    <p className={styles.small}>Explain this example in your own words, then use the next diagram and givens for your separate assessed prediction.</p>
+  </section>;
+}
+
+function RecoveryGuide({lessonId,hasIncorrectAttempt}:{lessonId:LessonId;hasIncorrectAttempt:boolean}) {
+  const card = getLessonRecall(lessonId)[0];
+  return <details className={styles.recall} open={hasIncorrectAttempt}>
+    <summary>{hasIncorrectAttempt ? "Next steps after this attempt" : "Stuck? Get help without losing your work"}</summary>
+    <ol>
+      <li>Read the hint under the question and identify the named quantity, connection or state to inspect.</li>
+      <li>Return to the different example{card ? ` “${card.title}”` : " above"} and write its first equation or trace one complete path.</li>
+      <li>Try the same first step with the assessed givens, keeping your original work visible so you can mark the correction.</li>
+    </ol>
+    <p>This help does not complete the activity or reveal its worked solution. You can retry without a penalty; ask your tutor to review the exact step if you are still stuck.</p>
   </details>;
 }
 

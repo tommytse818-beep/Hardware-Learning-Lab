@@ -8,6 +8,7 @@ import {
   LessonQuiz,
 } from "@/components/lesson-quiz";
 import { LessonVideo } from "@/components/lesson-video";
+import { LessonFormativeCheck } from "@/components/lesson-formative-check";
 import { WeekOneFoundationDiagram } from "@/components/course/week-one-foundation-diagram";
 import { VerifiedTutor } from "@/components/verified-tutor";
 import { getCourseAccess } from "@/lib/course-access";
@@ -20,6 +21,7 @@ import {
 } from "@/lib/courses";
 import { getLessonAvailability, getRecommendedLessonSlug } from "@/lib/lesson-readiness";
 import { getCourseProgress } from "@/lib/progress";
+import { getFormativeCheckView } from "@/lib/formative-checks";
 import { getViewer } from "@/lib/viewer";
 
 type LessonPageProps = {
@@ -137,6 +139,45 @@ export default async function LessonPage({ params, searchParams }: LessonPagePro
   const nextLabel = next
     ? `Continue to ${next.section}`
     : "Return to course overview";
+
+  const checkpointPanel = canPreviewAll ? (
+    <TeachingGuide questions={microChecks.length > 0 ? microChecks : [lesson.quiz]} />
+  ) : microChecks.length > 0 ? (
+    <LessonMicroCheckGroup
+      courseSlug={course.slug}
+      lessonSlug={lesson.slug}
+      checks={microChecks.map((microCheck) => ({
+        id: microCheck.id,
+        question: microCheck.question,
+        options: microCheck.options,
+        hint: microCheck.hint,
+        incorrectFeedback: microCheck.incorrectFeedback,
+        method: solvedQuestionIds.has(microCheck.id) ? microCheck.method : [],
+        explanation: solvedQuestionIds.has(microCheck.id) ? microCheck.explanation : "",
+      }))}
+      nextHref={nextHref}
+      nextLabel={nextLabel}
+      cloudConnected={progress.databaseReady}
+      initialSolvedQuestions={currentProgress?.solved_questions ?? []}
+    />
+  ) : (
+    <LessonQuiz
+      courseSlug={course.slug}
+      lessonSlug={lesson.slug}
+      quiz={quizView}
+      questionId={lesson.quiz.id}
+      initialCompleted={currentProgress?.completed ?? false}
+      initialScore={currentProgress?.quiz_score ?? null}
+      initialMethod={currentProgress?.completed ? lesson.quiz.method : undefined}
+      initialExplanation={currentProgress?.completed ? lesson.quiz.explanation : undefined}
+      cloudConnected={progress.databaseReady}
+      nextHref={nextHref}
+      nextLabel={nextLabel}
+      humanReviewRequired={lesson.humanReviewRequired}
+      reviewState={currentProgress?.review_state}
+      reviewFeedback={currentProgress?.review_feedback}
+    />
+  );
 
   return (
     <div className="lesson-v1 mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-6 lg:px-8">
@@ -324,27 +365,52 @@ export default async function LessonPage({ params, searchParams }: LessonPagePro
             </p>
             <div className="mt-6 space-y-8">
               {lesson.sections.map((section) => (
-                <section key={section.heading}>
-                  <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
-                    {section.heading}
-                  </h2>
-                  <div className="mt-3 space-y-3 text-base leading-8 text-slate-700">
-                    {section.paragraphs.map((paragraph) => (
-                      <p key={paragraph}>{paragraph}</p>
-                    ))}
-                  </div>
-                  {section.bullets && (
-                    <ul className="mt-4 space-y-2 rounded-2xl bg-slate-50 p-5 text-sm leading-6 text-slate-700">
-                      {section.bullets.map((bullet) => (
-                        <li key={bullet} className="flex gap-3">
-                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
-                          <span>{bullet}</span>
-                        </li>
+                <div key={section.stepId ?? section.heading}>
+                  <section>
+                    <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+                      {section.heading}
+                    </h2>
+                    <div className="mt-3 space-y-3 text-base leading-8 text-slate-700">
+                      {section.paragraphs.map((paragraph) => (
+                        <p key={paragraph}>{paragraph}</p>
                       ))}
-                    </ul>
+                    </div>
+                    {section.bullets && (
+                      <ul className="mt-4 space-y-2 rounded-2xl bg-slate-50 p-5 text-sm leading-6 text-slate-700">
+                        {section.bullets.map((bullet) => (
+                          <li key={bullet} className="flex gap-3">
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
+                            <span>{bullet}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <WeekOneFoundationDiagram diagramId={section.diagramId} sectionHeading={section.heading} />
+                    {section.formativeCheckIds?.map((checkId) => (
+                      <LessonFormativeCheck
+                        key={checkId}
+                        courseSlug={course.slug}
+                        lessonSlug={lesson.slug}
+                        check={getFormativeCheckView(checkId, lesson.slug)}
+                      />
+                    ))}
+                  </section>
+                  {lesson.checkpointAfterStepId === section.stepId && (
+                    <div className="mt-8 space-y-6">
+                      {lesson.checkpointTask && (
+                        <section className="rounded-3xl border border-cyan-200 bg-cyan-50 p-6 shadow-sm sm:p-8">
+                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-800">
+                            Learner action / evidence
+                          </p>
+                          <p className="mt-3 text-base leading-8 text-cyan-950">
+                            {lesson.checkpointTask}
+                          </p>
+                        </section>
+                      )}
+                      {checkpointPanel}
+                    </div>
                   )}
-                  <WeekOneFoundationDiagram sectionHeading={section.heading} />
-                </section>
+                </div>
               ))}
             </div>
           </section>
@@ -358,48 +424,7 @@ export default async function LessonPage({ params, searchParams }: LessonPagePro
             </p>
           </section>
 
-          {canPreviewAll ? (
-            <TeachingGuide questions={microChecks.length > 0 ? microChecks : [lesson.quiz]} />
-          ) : microChecks.length > 0 ? (
-            <LessonMicroCheckGroup
-              courseSlug={course.slug}
-              lessonSlug={lesson.slug}
-              checks={microChecks.map((microCheck) => ({
-                id: microCheck.id,
-                question: microCheck.question,
-                options: microCheck.options,
-                hint: microCheck.hint,
-                incorrectFeedback: microCheck.incorrectFeedback,
-                method: solvedQuestionIds.has(microCheck.id) ? microCheck.method : [],
-                explanation: solvedQuestionIds.has(microCheck.id) ? microCheck.explanation : "",
-              }))}
-              nextHref={nextHref}
-              nextLabel={nextLabel}
-              cloudConnected={progress.databaseReady}
-              initialSolvedQuestions={currentProgress?.solved_questions ?? []}
-            />
-          ) : (
-            <LessonQuiz
-              courseSlug={course.slug}
-              lessonSlug={lesson.slug}
-              quiz={quizView}
-              questionId={lesson.quiz.id}
-              initialCompleted={currentProgress?.completed ?? false}
-              initialScore={currentProgress?.quiz_score ?? null}
-              initialMethod={
-                currentProgress?.completed ? lesson.quiz.method : undefined
-              }
-              initialExplanation={
-                currentProgress?.completed ? lesson.quiz.explanation : undefined
-              }
-              cloudConnected={progress.databaseReady}
-              nextHref={nextHref}
-              nextLabel={nextLabel}
-              humanReviewRequired={lesson.humanReviewRequired}
-              reviewState={currentProgress?.review_state}
-              reviewFeedback={currentProgress?.review_feedback}
-            />
-          )}
+          {!lesson.checkpointAfterStepId && checkpointPanel}
 
           <nav className="grid gap-3 sm:grid-cols-2" aria-label="Lesson navigation">
             {previous ? (

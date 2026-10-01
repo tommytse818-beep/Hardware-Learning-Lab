@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./drawersense-video.module.css";
 
-type Props = { lessonId: string; kind: "concept" | "solution"; canAttach: boolean; onCompleted: () => void };
+type PublishedRecording = { videoSrc: string; captionsSrc?: string; transcriptSrc?: string };
+type Props = { lessonId: string; kind: "concept" | "solution"; canAttach: boolean; published?: PublishedRecording; onCompleted: () => void };
 type Recording = { video: File; captions?: File };
 type Preview = { video: string; captions?: string; name: string };
 
@@ -37,6 +38,19 @@ function PlannedRecording({ lessonId, kind }: Pick<Props, "lessonId" | "kind">) 
 }
 
 export function DrawerSenseVideo(props: Props) {
+  if (props.published) return <>
+    <section className={styles.card} aria-label={`${props.lessonId} ${props.kind} published recording`}>
+      <video className={styles.video} src={props.published.videoSrc} controls playsInline preload="metadata" onEnded={props.onCompleted}>
+        {props.published.captionsSrc && <track kind="captions" src={props.published.captionsSrc} srcLang="en" label="English captions" default />}
+      </video>
+      <div className={styles.tools}>
+        <p className={styles.notice}>Published course recording</p>
+        <p className={styles.help}>Playback supports the written lesson and does not mark this activity complete.</p>
+        {props.published.transcriptSrc && <a className={styles.button} href={props.published.transcriptSrc}>Open transcript</a>}
+      </div>
+    </section>
+    {props.canAttach && <details className={styles.card}><summary className={styles.notice}>Staff local preview · browser only, not published</summary><LocalRecording {...props} published={undefined} /></details>}
+  </>;
   if (!props.canAttach) return <section className={styles.card} aria-label={`${props.lessonId} ${props.kind} recording`}>
     <PlannedRecording lessonId={props.lessonId} kind={props.kind} />
   </section>;

@@ -1,4 +1,7 @@
 export type LessonSection = {
+  stepId?: string;
+  diagramId?: string;
+  formativeCheckIds?: string[];
   heading: string;
   paragraphs: string[];
   bullets?: string[];
@@ -64,6 +67,8 @@ export type Lesson = {
   summary: string;
   objectives: string[];
   sections: LessonSection[];
+  checkpointAfterStepId?: string;
+  checkpointTask?: string;
   practicalTask: string;
   video: LessonVideo;
   diagram?: LessonDiagram;
@@ -341,6 +346,7 @@ const openGuardMiniCourse: Course = {
       ],
       sections: [
         {
+          diagramId: "complete-loop",
           heading: "Current needs a return path",
           paragraphs: [
             "A component does not work simply because one lead touches a battery. Current requires a complete path from the source, through the load and back to the source.",
@@ -454,6 +460,8 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          diagramId: "series-circuit",
+          formativeCheckIds: ["hll-f-13-series"],
           heading: "Series: one route through both elements",
           paragraphs: [
             "Draw two resistors one after the other in one complete loop. Their shared connection has no other branch, so the same current passes through both. The supply voltage is shared across the resistors; it is not necessarily shared equally.",
@@ -461,6 +469,8 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          diagramId: "parallel-circuit",
+          formativeCheckIds: ["hll-f-13-parallel"],
           heading: "Parallel: the same two endpoint nodes",
           paragraphs: [
             "Now draw an upper supply node and a lower return node. Connect each resistor between those same two nodes. Both branches have the same voltage across them, although their currents can differ.",
@@ -468,10 +478,20 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          formativeCheckIds: ["hll-f-13-current-sum"],
           heading: "Current entering a junction must leave it",
           paragraphs: [
             "Put one current arrow into the supply junction and one down each branch. In this model, source current equals the sum of the branch currents: Iₛ = I₁ + I₂.",
             "Separate rehearsal: 0.5 mA + 1.5 mA = 2 mA. This arithmetic example is not measured product consumption. A voltmeter goes across two nodes; a current measurement requires a checked series connection and tutor guidance.",
+          ],
+        },
+        {
+          stepId: "1-3-neither-topology",
+          formativeCheckIds: ["hll-f-13-neither"],
+          heading: "Some pairs are neither series nor parallel",
+          paragraphs: [
+            "Sharing one node does not automatically make two components series, because another branch may leave that node. Sharing only one endpoint also does not make them parallel; parallel components share both endpoint nodes.",
+            "Trace every endpoint before choosing a label. A network can contain component pairs that meet neither simple definition.",
           ],
         },
         {
@@ -551,6 +571,8 @@ const openGuardMiniCourse: Course = {
       ],
       sections: [
         {
+          stepId: "1-4-units",
+          formativeCheckIds: ["hll-f-14-prefix"],
           heading: "Start with the quantity and its unit",
           paragraphs: [
             "Write what you know, what you need to find and the unit for each quantity. Voltage uses volts (V), current amperes (A), resistance ohms (Ω), capacitance farads (F) and time seconds (s). A number alone is not a complete electrical answer.",
@@ -563,6 +585,7 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          stepId: "1-4-ohms-law",
           heading: "Rearrange Ohm's law for the question",
           paragraphs: [
             "For a resistor, V = IR. Divide both sides by R to get I = V/R, or by I to get R = V/I. The equation is the same relationship used to find a different unknown.",
@@ -570,6 +593,8 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          stepId: "1-4-led-voltage",
+          diagramId: "led-loop",
           heading: "The resistor receives the remaining voltage",
           paragraphs: [
             "An LED does not safely choose its own current. The resistor voltage is the supply voltage minus the LED forward voltage, so the design equation is R = (VS - VF) / I.",
@@ -577,6 +602,7 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          stepId: "1-4-led-attempt",
           heading: "Pause: draw the LED loop",
           paragraphs: [
             "Before moving to capacitors, draw the source, LED, resistor and return. Label the supply voltage, LED voltage and target current from the later LED question. Write your equation and attempt the calculation on paper before checking it online.",
@@ -584,6 +610,9 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          stepId: "1-4-capacitor-charge",
+          diagramId: "separated-charge",
+          formativeCheckIds: ["hll-f-14-charge"],
           heading: "A capacitor stores separated charge",
           paragraphs: [
             "Sketch two conducting plates separated by an insulator. Connecting a capacitor in a circuit can leave equal and opposite charge on the plates. It stores finite electrical energy; it is not an unlimited source.",
@@ -592,6 +621,7 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          stepId: "1-4-charge-current",
           heading: "Connect a current pulse to a charge change",
           paragraphs: [
             "Current is charge flow per unit time. For a constant current over an interval, the transferred charge is ΔQ = IΔt. The symbol Δ means 'change in'. A capacitor's charge change is also ΔQ = CΔV.",
@@ -599,12 +629,15 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          stepId: "1-4-tolerance",
+          formativeCheckIds: ["hll-f-14-minimum-capacitance"],
           heading: "A printed value is a nominal value",
           paragraphs: [
             "A ±20% capacitance tolerance allows variation around the label. The minimum is 80% of nominal: multiply by 0.80. Separate rehearsal: 220 µF × 0.80 = 176 µF. A quiz's numerical rounding allowance is not the component's physical tolerance.",
           ],
         },
         {
+          stepId: "1-4-capacitor-attempt",
           heading: "Pause: sketch and calculate charge",
           paragraphs: [
             "Keep this capacitor page for the tutor. It is supporting practice, not another automatically marked quiz. Use different values from the demonstrations and explain the result in words.",
@@ -616,8 +649,11 @@ const openGuardMiniCourse: Course = {
           ],
         },
       ],
+      checkpointAfterStepId: "1-4-led-attempt",
+      checkpointTask:
+        "Draw the LED loop and write the given values with units, resistor voltage, equation and substitution. Attempt the raw resistance calculation before checking it online.",
       practicalTask:
-        "Before answering, draw the LED loop and write the given values with units, resistor voltage, equation and substitution. Keep a second practice page showing capacitor plates and Q = CV for 22 µF at 2.0 V. After feedback, record any correction and explain what each number means.",
+        "After the LED feedback, keep a second practice page showing capacitor plates and Q = CV for 22 µF at 2.0 V. Record any correction and explain what each number means.",
       video: {
         resourceKey: "lesson-1-4-led-resistor-video",
         posterSrc:
@@ -768,6 +804,7 @@ const openGuardMiniCourse: Course = {
       ],
       sections: [
         {
+          stepId: "1-6-floating-input",
           heading: "An open switch needs a default",
           paragraphs: [
             "A floating input is not deliberately connected HIGH or LOW and may respond to noise, leakage or touch. A pull resistor creates a weak default that a switch can override strongly.",
@@ -775,6 +812,7 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          stepId: "1-6-pull-down",
           heading: "A pull-down gives the opposite default",
           paragraphs: [
             "Connect a resistor from the signal node to ground and a switch from that node to VCC. With the switch open, the resistor holds the input LOW. With the switch closed, the input becomes HIGH and the resistor limits the current to ground.",
@@ -782,12 +820,14 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          stepId: "1-6-resistor-tradeoff",
           heading: "Choose the resistor for its job",
           paragraphs: [
             "A smaller pull resistor draws more current when the switch overrides it. A larger one draws less, but leakage and interference can more easily disturb the default voltage. Choose from the input's actual limits and the environment; there is no universal value that proves every design.",
           ],
         },
         {
+          stepId: "1-6-input-attempt",
           heading: "Pause: trace both switch defaults",
           paragraphs: [
             "Draw a pull-up and a pull-down before the online input check. For each, label VCC, ground and the signal node. Write the open-switch state first, then trace the complete resistor current path when the switch closes.",
@@ -795,6 +835,7 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          stepId: "1-6-rc-charge",
           heading: "A capacitor voltage changes over time",
           paragraphs: [
             "Recall that changing capacitor voltage requires transferring charge. A resistor limits how quickly charge moves. In a simple resistor-capacitor circuit, the product τ = RC is the time constant: use ohms and farads to obtain seconds. The Greek letter τ is pronounced tau.",
@@ -802,6 +843,8 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          stepId: "1-6-rc-discharge",
+          diagramId: "rc-discharge",
           heading: "Isolated RC discharge: a separate power-off example",
           paragraphs: [
             "Now disconnect the source and leave a charged capacitor connected only across a resistor. Charge flows through that resistor and the capacitor voltage falls. After one time constant, about 37% of its starting voltage remains; after five, less than 1% remains in this ideal model.",
@@ -809,6 +852,8 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          stepId: "1-6-rc-attempt",
+          formativeCheckIds: ["hll-f-16-tau"],
           heading: "Pause: sketch a discharge curve",
           paragraphs: [
             "Draw the source disconnected and show the remaining resistor-capacitor loop. Beside it, sketch capacitor voltage against time, falling steeply at first and then more slowly. Mark the start, one time constant and five time constants.",
@@ -816,6 +861,9 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          stepId: "1-6-low-pass",
+          diagramId: "low-pass",
+          formativeCheckIds: ["hll-f-16-lowpass-dc"],
           heading: "Low-pass: take the output across the capacitor",
           paragraphs: [
             "Draw a signal input, a series resistor, then an output node. Connect a capacitor from that output node to the shared return. Measure output between the node and return, so it is across the capacitor.",
@@ -827,6 +875,9 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          stepId: "1-6-high-pass",
+          diagramId: "high-pass",
+          formativeCheckIds: ["hll-f-16-highpass-dc"],
           heading: "High-pass: take the output across the resistor",
           paragraphs: [
             "Draw a signal input, a series capacitor, then an output node. Connect a resistor from that node to the shared return. The output is now across the resistor. Keep this as a new drawing, rather than silently changing the previous one.",
@@ -838,8 +889,11 @@ const openGuardMiniCourse: Course = {
           ],
         },
       ],
+      checkpointAfterStepId: "1-6-input-attempt",
+      checkpointTask:
+        "Draw a pull-up and pull-down with both switch states. Label VCC, ground and the signal node, then attempt the existing input checkpoint before beginning the separate RC practice.",
       practicalTask:
-        "Before the check, draw pull-up and pull-down examples with both switch states. Keep separate practice sketches for isolated RC discharge and the low-pass and high-pass connections. Label every input, output and return, calculate the practice time constant and save the pages for the tutor; the online pull-up answer alone does not assess these drawings.",
+        "After the input feedback, keep separate practice sketches for isolated RC discharge and the low-pass and high-pass connections. Label every input, output and return, calculate the practice time constant and save the pages for the tutor; the online pull-up answer alone does not assess these drawings.",
       video: {
         resourceKey: "lesson-1-6-pull-resistors-video",
         posterSrc:
@@ -902,6 +956,8 @@ const openGuardMiniCourse: Course = {
       ],
       sections: [
         {
+          diagramId: "logic-symbols",
+          formativeCheckIds: ["hll-f-17-and", "hll-f-17-not"],
           heading: "Choose from the requirement, not the symbol shape",
           paragraphs: [
             "AND is HIGH only when all required conditions are HIGH. OR is HIGH when at least one condition is HIGH, including the row where both are HIGH. NOT produces the opposite of its one input.",
@@ -916,6 +972,7 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          formativeCheckIds: ["hll-f-17-counter"],
           heading: "A clock makes events; a counter counts them",
           paragraphs: [
             "An oscillator repeatedly changes its output, giving a sequence of clock events. A counter remembers how many relevant events have occurred and reset returns it to a defined starting state. A static open-door signal alone does not tell us how long the door has been open.",
@@ -923,6 +980,7 @@ const openGuardMiniCourse: Course = {
           ],
         },
         {
+          formativeCheckIds: ["hll-f-17-transistor"],
           heading: "A transistor controls a current path",
           paragraphs: [
             "A transistor can let a logic signal control another current path. In a simple BJT switch, base current controls conduction through the collector-emitter path. In a MOSFET, gate-to-source voltage controls its channel; charging the gate still requires charge during switching.",
@@ -997,6 +1055,7 @@ const openGuardMiniCourse: Course = {
       ],
       sections: [
         {
+          diagramId: "boolean-practice",
           heading: "Start with behaviour, not a part number",
           paragraphs: [
             "This foundation exercise uses an ARM input to practise a two-input AND rule. It is not the full DrawerSense wiring plan. In the later project, still-open and time-elapsed form the reminder condition, while mute controls sound separately.",

@@ -1,7 +1,7 @@
 import { createElement, isValidElement, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ getCourse: vi.fn(), getViewer: vi.fn(), getCourseAccess: vi.fn(), getDrawerSenseAccess: vi.fn(), getDrawerSenseServerProgress: vi.fn(), pathway: vi.fn(() => null) }));
+const mocks = vi.hoisted(() => ({ getCourse: vi.fn(), getViewer: vi.fn(), getCourseAccess: vi.fn(), getDrawerSenseAccess: vi.fn(), getDrawerSenseServerProgress: vi.fn(), getActiveCourseResourceKeys: vi.fn(), pathway: vi.fn(() => null) }));
 vi.mock("next/navigation", () => ({ redirect: (url: string) => { throw new Error(`REDIRECT:${url}`); }, notFound: () => { throw new Error("NOT_FOUND"); } }));
 vi.mock("next/link", () => ({ default: ({ children, ...props }: { children: ReactNode }) => createElement("a", props, children) }));
 vi.mock("@/lib/courses", () => ({ getCourse: mocks.getCourse }));
@@ -9,6 +9,11 @@ vi.mock("@/lib/viewer", () => ({ getViewer: mocks.getViewer }));
 vi.mock("@/lib/course-access", () => ({ getCourseAccess: mocks.getCourseAccess }));
 vi.mock("@/lib/drawersense-access", () => ({ getDrawerSenseAccess: mocks.getDrawerSenseAccess }));
 vi.mock("@/lib/drawersense-server-progress", () => ({ getDrawerSenseServerProgress: mocks.getDrawerSenseServerProgress }));
+vi.mock("@/lib/course-resources", () => ({ getActiveCourseResourceKeys: mocks.getActiveCourseResourceKeys }));
+vi.mock("@/lib/drawersense-media", () => ({
+  drawerSenseMediaResources: [],
+  getDrawerSenseMediaKeys: (lessonId: string, kind: string) => ({ video: `${lessonId}-${kind}-video`, captions: `${lessonId}-${kind}-captions`, transcript: `${lessonId}-${kind}-transcript` }),
+}));
 vi.mock("@/lib/drawersense-curriculum", () => ({ drawerSenseLessons: [{ id: "2.0A" }, { id: "2.0B" }, { id: "2.1A" }] }));
 vi.mock("@/components/projects/drawersense-pathway", () => ({ DrawerSensePathway: mocks.pathway }));
 
@@ -28,6 +33,7 @@ describe("authenticated Week 2 page boundary", () => {
     mocks.getCourseAccess.mockResolvedValue({ allowed: true });
     mocks.getDrawerSenseAccess.mockImplementation(async (identity, entitlement) => ({ allowed: entitlement.allowed, canReview: identity.role === "teacher" || identity.role === "admin" }));
     mocks.getDrawerSenseServerProgress.mockResolvedValue({ databaseReady: true, weekOneReady: true, progress: {} });
+    mocks.getActiveCourseResourceKeys.mockResolvedValue(new Set());
   });
 
   it.each([null, { ...viewer, demo: true }, { ...viewer, verified: false }])("requires verified authentication even on localhost", async (identity) => {
@@ -60,6 +66,17 @@ describe("authenticated Week 2 page boundary", () => {
     mocks.getDrawerSenseServerProgress.mockResolvedValue({ databaseReady: true, weekOneReady: true, progress: { "2.0A": { complete: true } } });
     const { default: WeekTwoPage } = await import("./page");
     expect(pathwayProps(await WeekTwoPage(props()))).toMatchObject({ initialLesson: "2.0B", canReview: false, storageScope: "student-1" });
+  });
+
+  it("passes only active published media to the client workspace", async () => {
+    mocks.getActiveCourseResourceKeys.mockResolvedValue(new Set(["2.0A-concept-video", "2.0A-concept-captions"]));
+    const { default: WeekTwoPage } = await import("./page");
+    const media = pathwayProps(await WeekTwoPage(props()))?.media as Record<string, Record<string, unknown>>;
+    expect(media["2.0A"].concept).toMatchObject({
+      videoSrc: "/api/courses/open-guard-mini/resources/2.0A-concept-video",
+      captionsSrc: "/api/courses/open-guard-mini/resources/2.0A-concept-captions",
+    });
+    expect(media["2.0A"].solution).toBeUndefined();
   });
 
   it.each(["teacher", "admin"])("opens any published lesson for a verified entitled %s", async (role) => {

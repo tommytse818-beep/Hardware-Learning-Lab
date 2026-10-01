@@ -181,55 +181,79 @@ function SignalFilter({ highPass }: { highPass: boolean }) {
 }
 
 const figures = {
-  "Current needs a return path": {
+  "complete-loop": {
     title: "Trace a complete, current-limited loop", height: 420, drawing: <CompleteLoop />,
     description: "A source has its positive terminal at the top and negative terminal at the bottom. The external loop runs from positive through a closed switch and resistor load, then back to negative. Conventional current arrows follow that direction.",
     caption: "The resistor load stays in the loop. If the contact opens, the continuous path stops; voltage may still exist across the gap. Use only the tutor-approved extra-low-voltage source.",
   },
-  "The resistor receives the remaining voltage": {
+  "led-loop": {
     title: "Read the LED loop before using numbers", height: 430, drawing: <LedLoop />,
     description: "The source positive terminal connects through a series resistor to the LED anode. The LED cathode bar connects to the source negative return. Light arrows point outwards. Source voltage is the sum of resistor voltage and LED forward voltage.",
     caption: "This symbolic teaching circuit uses V_S, V_R and V_F rather than the assessed values. Identify the LED anode and cathode from its actual datasheet before building; light arrows point out of an LED symbol.",
   },
-  "Choose from the requirement, not the symbol shape": {
+  "logic-symbols": {
     title: "Recognise the three basic logic symbols", height: 420, drawing: <LogicSymbols />,
     description: "AND has a flat input edge and rounded output edge. OR has one curved input boundary and a pointed output. NOT is a triangle with a small inversion circle at its output. The two-input gates have two separate input wires; NOT has one.",
     caption: "Use these symbols to draw your own tables. The extra input-side curve used by XOR is deliberately absent from the OR symbol here; the NOT output circle means inversion.",
   },
-  "Series: one route through both elements": {
+  "series-circuit": {
     title: "Follow one complete current path", height: 430, drawing: <Series />,
     description: "An ideal source connects to resistor R1, node B, resistor R2 and the return conductor. Node B has no third branch, so both resistors carry the same current.",
     caption: "Trace A → R₁ → B → R₂ → C and back through the source. Component positions on the page do not define series: the unbranched connection does.",
   },
-  "Parallel: the same two endpoint nodes": {
+  "parallel-circuit": {
     title: "Identify both endpoints of each branch", height: 430, drawing: <Parallel />,
     description: "R1 and R2 each connect between top node A and bottom node B. The source maintains the voltage between those nodes. Source current splits into I1 and I2, then rejoins on the return conductor.",
     caption: "Every point on the upper conductor is node A; every point on the lower conductor is node B. Each branch has the same voltage between A and B.",
   },
-  "A capacitor stores separated charge": {
+  "separated-charge": {
     title: "See what the capacitor stores", height: 430, drawing: <SeparatedCharge />,
     description: "Two conducting plates have equal and opposite charge, plus Q and minus Q. An insulator separates them. Each plate connects to its own external terminal; there is no conducting path through the ideal insulator.",
     caption: "Charge is separated on the plates, with finite energy stored in the electric field. V is the voltage between the terminals; a printed voltage rating is a limit, not a generated supply.",
   },
-  "Isolated RC discharge: a separate power-off example": {
+  "rc-discharge": {
     title: "Watch stored voltage fall through a resistor", height: 450, drawing: <Discharge />,
     description: "A charged capacitor and resistor form a closed discharge loop with the source disconnected. The voltage starts at V0 and decays exponentially toward zero. At one time constant tau equals R times C, approximately 37 percent of the initial voltage remains.",
     caption: "This ideal example has only C and its discharge resistor R. After one time constant, voltage is about 37% of its starting value, not zero. It does not define the product’s reminder time.",
   },
-  "Low-pass: take the output across the capacitor": {
+  "low-pass": {
     title: "Place the output across C", height: 460, drawing: <SignalFilter highPass={false} />,
     description: "Low-pass topology: input goes through a series resistor to the output node. A capacitor joins the output node to ground. Input and output are both measured relative to the same ground, so output voltage is the voltage across the capacitor.",
     caption: "For an ideal unloaded RC low-pass circuit, slow input changes pass more readily and rapid changes are reduced. OUT is the R–C junction; V_out is measured across C to GND.",
   },
-  "High-pass: take the output across the resistor": {
+  "high-pass": {
     title: "Place the output across R", height: 460, drawing: <SignalFilter highPass />,
     description: "High-pass topology: input goes through a series capacitor to the output node. A resistor joins the output node to ground. Input and output use the same ground, so output voltage is the voltage across the resistor.",
     caption: "For an ideal unloaded RC high-pass circuit, slow changes are reduced and faster changes pass more readily. OUT is the C–R junction; V_out is measured across R to GND.",
   },
 };
 
-export function WeekOneFoundationDiagram({ sectionHeading }: { sectionHeading: string }) {
-  if (sectionHeading === "Start with behaviour, not a part number") {
+export type WeekOneDiagramId = keyof typeof figures | "boolean-practice";
+
+const legacyDiagramIds: Record<string, WeekOneDiagramId> = {
+  "Current needs a return path": "complete-loop",
+  "The resistor receives the remaining voltage": "led-loop",
+  "Choose from the requirement, not the symbol shape": "logic-symbols",
+  "Series: one route through both elements": "series-circuit",
+  "Parallel: the same two endpoint nodes": "parallel-circuit",
+  "A capacitor stores separated charge": "separated-charge",
+  "Isolated RC discharge: a separate power-off example": "rc-discharge",
+  "Low-pass: take the output across the capacitor": "low-pass",
+  "High-pass: take the output across the resistor": "high-pass",
+  "Start with behaviour, not a part number": "boolean-practice",
+};
+
+function isWeekOneDiagramId(value: string): value is WeekOneDiagramId {
+  return value === "boolean-practice" || value in figures;
+}
+
+export function WeekOneFoundationDiagram({ diagramId, sectionHeading }: { diagramId?: string; sectionHeading?: string }) {
+  let resolvedId: WeekOneDiagramId | undefined = sectionHeading ? legacyDiagramIds[sectionHeading] : undefined;
+  if (diagramId && !isWeekOneDiagramId(diagramId)) {
+    throw new Error(`Unknown Week 1 diagram ID: ${diagramId}`);
+  }
+  if (diagramId) resolvedId = diagramId as WeekOneDiagramId;
+  if (resolvedId === "boolean-practice") {
     return <figure className={styles.figure}>
       <div className={styles.heading}><span>YOUR PAPER TASK</span><strong>Complete every input combination</strong></div>
       <table className={styles.practiceTable}>
@@ -240,7 +264,7 @@ export function WeekOneFoundationDiagram({ sectionHeading }: { sectionHeading: s
       <figcaption className={styles.caption}>Copy this foundation practice table, fill Y and explain each row before the checkpoint. The ARM exercise is separate from the full DrawerSense design.</figcaption>
     </figure>;
   }
-  const figure = figures[sectionHeading as keyof typeof figures];
+  const figure = resolvedId ? figures[resolvedId] : undefined;
   if (!figure) return null;
   return <figure className={styles.figure}>
     <div className={styles.heading}><span>READ THE CIRCUIT</span><strong>{figure.title}</strong></div>

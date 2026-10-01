@@ -2,10 +2,11 @@ import { createElement, isValidElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ getViewer: vi.fn(), getCourseAccess: vi.fn(), getCourseProgress: vi.fn(), getCourse: vi.fn(), getLesson: vi.fn(), quiz: vi.fn(() => null), microChecks: vi.fn(() => null), video: vi.fn(() => null) }));
+const mocks = vi.hoisted(() => ({ getViewer: vi.fn(), getCourseAccess: vi.fn(), getCourseProgress: vi.fn(), getCourse: vi.fn(), getLesson: vi.fn(), quiz: vi.fn(({ questionId }: { questionId: string }) => createElement("div", null, `CHECKPOINT:${questionId}`)), microChecks: vi.fn(() => null), formative: vi.fn(() => null), video: vi.fn(() => null) }));
 vi.mock("next/navigation", () => ({ redirect: (url: string) => { throw new Error(`REDIRECT:${url}`); }, notFound: () => { throw new Error("NOT_FOUND"); } }));
 vi.mock("next/link", () => ({ default: ({ children, ...props }: { children: ReactNode }) => createElement("a", props, children) }));
 vi.mock("@/components/lesson-quiz", () => ({ LessonQuiz: mocks.quiz, LessonMicroCheckGroup: mocks.microChecks }));
+vi.mock("@/components/lesson-formative-check", () => ({ LessonFormativeCheck: mocks.formative }));
 vi.mock("@/components/lesson-video", () => ({ LessonVideo: mocks.video }));
 vi.mock("@/components/verified-tutor", () => ({ VerifiedTutor: () => null }));
 vi.mock("@/components/course/week-one-foundation-diagram", () => import("../../../../../components/course/week-one-foundation-diagram"));
@@ -13,6 +14,7 @@ vi.mock("@/lib/course-resources", () => ({ hasActiveCourseResource: () => false 
 vi.mock("@/lib/viewer", () => ({ getViewer: mocks.getViewer }));
 vi.mock("@/lib/course-access", () => ({ getCourseAccess: mocks.getCourseAccess }));
 vi.mock("@/lib/progress", () => ({ getCourseProgress: mocks.getCourseProgress }));
+vi.mock("@/lib/formative-checks", () => ({ getFormativeCheckView: (id: string) => ({ id, kind: "choice", prompt: "Practice", options: ["A", "B"] }) }));
 vi.mock("@/lib/courses", () => ({ getCourse: mocks.getCourse, getLesson: mocks.getLesson, getAdjacentLessons: () => ({ previous: null, next: { slug: "next-lesson", section: "1.2" } }) }));
 vi.mock("@/lib/lesson-readiness", () => import("../../../../../lib/lesson-readiness"));
 
@@ -120,5 +122,40 @@ describe("legacy lesson staff teaching access", () => {
     expect(html).toContain("Identify both endpoints of each branch");
     expect(html).toContain("R1 and R2 each connect between top node A and bottom node B");
     expect(html).not.toContain("SECRET_WORKED_METHOD");
+  });
+
+  it("places the 1.4 LED attempt and existing checkpoint before capacitor teaching", async () => {
+    mocks.getLesson.mockReturnValue({
+      ...lesson,
+      section: "1.4",
+      sections: [
+        { stepId: "1-4-led-attempt", heading: "LED attempt", paragraphs: ["LED_TEACHING"] },
+        { stepId: "1-4-capacitor-charge", heading: "Capacitor charge", paragraphs: ["CAPACITOR_TEACHING"] },
+      ],
+      checkpointAfterStepId: "1-4-led-attempt",
+      checkpointTask: "STUDENT_LED_ATTEMPT",
+      quiz: numeric,
+    });
+    const html = renderToStaticMarkup(await page());
+    expect(html.indexOf("LED_TEACHING")).toBeLessThan(html.indexOf("STUDENT_LED_ATTEMPT"));
+    expect(html.indexOf("STUDENT_LED_ATTEMPT")).toBeLessThan(html.indexOf("CHECKPOINT:numeric-1"));
+    expect(html.indexOf("CHECKPOINT:numeric-1")).toBeLessThan(html.indexOf("CAPACITOR_TEACHING"));
+  });
+
+  it("places the 1.6 pull-input checkpoint before RC teaching", async () => {
+    mocks.getLesson.mockReturnValue({
+      ...lesson,
+      section: "1.6",
+      sections: [
+        { stepId: "1-6-input-attempt", heading: "Input attempt", paragraphs: ["INPUT_TEACHING"] },
+        { stepId: "1-6-rc-charge", heading: "RC teaching", paragraphs: ["RC_TEACHING"] },
+      ],
+      checkpointAfterStepId: "1-6-input-attempt",
+      checkpointTask: "STUDENT_INPUT_ATTEMPT",
+    });
+    const html = renderToStaticMarkup(await page());
+    expect(html.indexOf("INPUT_TEACHING")).toBeLessThan(html.indexOf("STUDENT_INPUT_ATTEMPT"));
+    expect(html.indexOf("STUDENT_INPUT_ATTEMPT")).toBeLessThan(html.indexOf("CHECKPOINT:choice-1"));
+    expect(html.indexOf("CHECKPOINT:choice-1")).toBeLessThan(html.indexOf("RC_TEACHING"));
   });
 });

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDrawerSenseAccess } from "@/lib/drawersense-access";
 import { drawerSenseLessons, getDrawerSenseLesson } from "@/lib/drawersense-curriculum";
-import { gradeQuestion, getWorkedSolution } from "@/lib/drawersense-answer-key";
+import { gradeQuestion, getWorkedDiagram, getWorkedSolution } from "@/lib/drawersense-answer-key";
 import { hasWork, sanitizeProgress } from "@/lib/drawersense-progress";
 import {
   DRAWERSENSE_REVIEW_STEP,
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   const state = await getDrawerSenseServerProgress(access.storageScope);
   // Every staff action is inspection only: no student or staff progress is changed.
   if (access.canReview) {
-    if (body.action === "solution") return response({ solution: getWorkedSolution(lesson.id), preview: true, ...state });
+    if (body.action === "solution") return response({ solution: getWorkedSolution(lesson.id), diagram: getWorkedDiagram(lesson.id), preview: true, ...state });
     if (body.action === "review") return response({ reviewed: true, preview: true, ...state });
     const question = body.action === "transfer" ? lesson.transfer : lesson.questions.find((item) => item.id === body.questionId);
     if (!question) return response({ error: "Unknown question." }, 400);
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
       delete work.override;
       delete work.overrideReason;
       await recordDrawerSenseStep(access.storageScope, lesson.id, DRAWERSENSE_WORK_STEP, work, true);
-      return refreshed({ solution: getWorkedSolution(lesson.id) });
+      return refreshed({ solution: getWorkedSolution(lesson.id), diagram: getWorkedDiagram(lesson.id) });
     }
     if (!saved.saved || !hasWork(saved)) return response({ error: "Save your working and open the worked solution before continuing." }, 409);
 

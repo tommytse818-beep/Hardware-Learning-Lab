@@ -19,13 +19,13 @@ export type CourseLearningPanelProps = {
 };
 
 const plannedWeekTwo = [
-  { id: "2.2", title: "Sense", description: "Turn the drawer position into a clear electrical signal." },
-  { id: "2.3A", title: "Reset", description: "Define when counting starts and when it clears." },
-  { id: "2.3B", title: "Wait", description: "Connect clock cycles, counting and the reminder target." },
-  { id: "2.3C", title: "Hold", description: "Keep the reminder active until the drawer closes." },
-  { id: "2.4", title: "Decide & mute", description: "Check the conditions for the light and sound separately." },
-  { id: "2.5", title: "Alert", description: "Understand the drivers, LED current and buzzer connections." },
-  { id: "2.6", title: "Integrate", description: "Test the complete behaviour and record corrections." },
+  { id: "2.2", title: "Sense", description: "Turn the drawer position into a clear electrical signal.", staffDetail: "Teach physical/contact/voltage/logic mapping, thresholds and bounce without inventing a sensor gap.", evidenceGate: "Measured two-state table and labelled nodes." },
+  { id: "2.3A", title: "Reset", description: "Define when counting starts and when it clears.", staffDetail: "Specify reset polarity and closing/reopening behavior before selecting the circuit.", evidenceGate: "Reset prediction followed by repeated observed trials." },
+  { id: "2.3B", title: "Wait", description: "Connect clock cycles, counting and the reminder target.", staffDetail: "Teach frequency, period, counted edge and first transition; keep tolerance separate from the nominal target.", evidenceGate: "Calculation, timing sketch and measured trials." },
+  { id: "2.3C", title: "Hold", description: "Keep the reminder active until the drawer closes.", staffDetail: "Define the hold and clear conditions without assuming an unreviewed latch or startup state.", evidenceGate: "State sequence covering reminder, close and fresh reopening." },
+  { id: "2.4", title: "Decide & mute", description: "Check the conditions for the light and sound separately.", staffDetail: "Use still-open AND elapsed; apply mute to sound only after the owner chooses its physical interaction.", evidenceGate: "Full light/sound truth table and edge-case review." },
+  { id: "2.5", title: "Alert", description: "Understand the drivers, LED current and buzzer connections.", staffDetail: "Select driver values only from the approved output device data and complete load path.", evidenceGate: "Reviewed sizing plus measured output behavior." },
+  { id: "2.6", title: "Integrate", description: "Test the complete behaviour and record corrections.", staffDetail: "Add one tested block at a time and diagnose safe unpowered faults before system trials.", evidenceGate: "Requirement-to-test traceability with actual results." },
 ];
 
 const plannedWeekThree = [
@@ -168,7 +168,7 @@ export function CourseLearningPanel({
           <div className={styles.futureGroup}>
             <div className={styles.groupHeading}><h3>The next blocks</h3><span>Planned · not published</span></div>
             <p className={styles.groupDescription}>This is the proposed continuation of the same circuit. These lessons are still being developed.</p>
-            <ol className={styles.plannedList}>{plannedWeekTwo.map((item) => <li key={item.id}><span className={styles.plannedId}>{item.id}</span><div><h4>{item.title}</h4><p>{item.description}</p></div><span className={styles.plannedBadge}>{!canPreviewAll && <StatusIcon kind="locked"/>}Planned</span></li>)}</ol>
+            <ol className={styles.plannedList}>{plannedWeekTwo.map((item) => <li key={item.id}><span className={styles.plannedId}>{item.id}</span><div><h4>{item.title}</h4><p>{item.description}</p>{canPreviewAll && <><p><strong>Staff outline:</strong> {item.staffDetail}</p><p><strong>Evidence gate:</strong> {item.evidenceGate}</p></>}</div><span className={styles.plannedBadge}>{!canPreviewAll && <StatusIcon kind="locked"/>}Planned</span></li>)}</ol>
           </div>
         </section>
 

@@ -6,6 +6,13 @@ type Answer =
   | { kind: "choice"; index: number }
   | { kind: "numeric"; siValue: number; tolerance: number; conclusionIndex?: number };
 
+export type WorkedDiagram = {
+  title: string;
+  columns: string[];
+  rows: string[][];
+  note: string;
+};
+
 // Keep keys and solutions out of client bundles and static public resources.
 const answerKey: Record<LessonId, Record<string, Answer>> = {
   "2.0A": {
@@ -104,6 +111,17 @@ const workedSolutions: Record<LessonId, string[]> = {
   ],
 };
 
+const workedDiagrams: Record<LessonId, WorkedDiagram> = {
+  "2.0A": { title: "Light and sound behavior", columns: ["Condition", "Still open", "Elapsed", "Muted", "Light", "Buzzer"], rows: [["Closed / reset", "0", "0", "Either", "Off", "Off"], ["Open, waiting", "1", "0", "Either", "Off", "Off"], ["Open, elapsed", "1", "1", "0", "On", "On"], ["Open, elapsed, muted", "1", "1", "1", "On", "Off"]], note: "Closing stops both outputs and starts a fresh wait. Startup and mute-latching behavior remain pending design decisions." },
+  "2.0B": { title: "Function connections", columns: ["From", "To", "Meaning"], rows: [["Sense", "Wait/reset", "Opening starts or resets timing"], ["Sense", "Decide/mute", "Drawer must still be open"], ["Wait/reset", "Decide/mute", "Elapsed condition"], ["Decide/mute", "Alert", "Separate light and sound command"]], note: "Information paths do not replace each block's supply and return." },
+  "2.1A": { title: "Selected switch paths", columns: ["State", "Selected contacts", "Route"], rows: [["ON", "2 to 1", "Source positive to VCC"], ["OFF", "2 to 3", "VCC through R17 to GND; source disconnected"]], note: "Verify the actual part and viewing direction with power removed." },
+  "2.1B": { title: "Parallel-rail results", columns: ["Quantity", "Result", "Reason"], rows: [["Load 1 voltage", "3.0 V", "VCC to GND"], ["Load 2 voltage", "3.0 V", "VCC to GND"], ["Source current", "5 mA", "2 mA + 3 mA"]], note: "The branch currents are exercise givens, not product measurements." },
+  "2.1C": { title: "Capacitor placement", columns: ["Part", "Connection", "Job"], rows: [["C1", "+ to VCC; - to GND", "Bulk support"], ["C2-C4", "Across each IC supply and return", "Short local bypass path"]], note: "6.3 V is C1's rating, not a generated voltage." },
+  "2.1D": { title: "Droop-model results", columns: ["Step", "Result"], rows: [["Ideal minimum C", "66.7 µF"], ["100 µF at -20%", "80 µF"], ["Predicted droop at 80 µF", "0.25 V"], ["Compare with 0.30 V limit", "Passes this ideal exercise"]], note: "A real transient still requires measurement." },
+  "2.1E": { title: "Isolated OFF-discharge results", columns: ["Quantity", "Result"], rows: [["Initial current", "3 mA"], ["Time constant", "0.10 s"], ["Voltage after one τ", "About 1.10 V"], ["Voltage after five τ", "About 0.020 V"]], note: "This is not the approximately 20 s reminder delay." },
+  "2.1F": { title: "Fault investigation", columns: ["Observation", "Interpretation", "Next safe step"], rows: [["Near rail 3.0 V; far rail 0 V", "Possible split or missing link", "Power off; verify continuity and wiring"]], note: "Record actual readings separately; this row is an example fault." },
+};
+
 export function gradeQuestion(
   lessonId: LessonId,
   questionId: string,
@@ -154,4 +172,9 @@ export function gradeQuestion(
 /** Call only after the route verifies the initial checks and saved work. */
 export function getWorkedSolution(lessonId: LessonId): string[] {
   return getDrawerSenseLesson(lessonId) ? [...workedSolutions[lessonId]] : [];
+}
+
+export function getWorkedDiagram(lessonId: LessonId): WorkedDiagram | null {
+  const diagram = getDrawerSenseLesson(lessonId) ? workedDiagrams[lessonId] : null;
+  return diagram ? { ...diagram, columns: [...diagram.columns], rows: diagram.rows.map((row) => [...row]) } : null;
 }
