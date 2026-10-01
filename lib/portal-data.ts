@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getCourse } from "@/lib/courses";
+import { getPublishedCourseLessons, type PublishedCourseLesson } from "./course-outline";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type PortalMetric = {
@@ -23,6 +24,16 @@ export type AdminSchoolSummary = {
   id: string;
   name: string;
   status: string;
+};
+
+export type AdminEnquirySummary = {
+  id: string;
+  schoolName: string;
+  contactName: string;
+  email: string;
+  message: string;
+  notificationStatus: "pending" | "sent" | "failed";
+  createdAt: string;
 };
 
 export type TeacherLearner = {
@@ -51,6 +62,8 @@ export type TeacherCohort = {
   course: string;
   targetLessonSlug: string | null;
   learners: TeacherLearner[];
+  publishedLessons: PublishedCourseLesson[];
+  totalPublished: number;
 };
 
 function requireNoError(error: { message: string } | null, context: string) {
@@ -78,7 +91,12 @@ export async function getAdminPortalData() {
       .select("cohort_id, role"),
     admin
       .from("school_enquiries")
-      .select("id", { count: "exact", head: true }),
+      .select(
+        "id, school_name, contact_name, email, message, notification_status, created_at",
+        { count: "exact" },
+      )
+      .order("created_at", { ascending: false })
+      .limit(20),
   ]);
 
   requireNoError(schoolsResult.error, "Schools query failed");
@@ -89,6 +107,17 @@ export async function getAdminPortalData() {
   const schools = (schoolsResult.data ?? []) as AdminSchoolSummary[];
   const schoolNames = new Map(schools.map((school) => [school.id, school.name]));
   const memberships = membershipsResult.data ?? [];
+  const enquiries: AdminEnquirySummary[] = (enquiriesResult.data ?? []).map(
+    (enquiry) => ({
+      id: String(enquiry.id),
+      schoolName: enquiry.school_name,
+      contactName: enquiry.contact_name,
+      email: enquiry.email,
+      message: enquiry.message,
+      notificationStatus: enquiry.notification_status,
+      createdAt: enquiry.created_at,
+    }),
+  );
 
   const cohorts: AdminCohortSummary[] = (cohortsResult.data ?? []).map(
     (cohort) => ({
@@ -124,6 +153,7 @@ export async function getAdminPortalData() {
     ] satisfies PortalMetric[],
     schools,
     cohorts,
+    enquiries,
   };
 }
 
@@ -216,6 +246,8 @@ export async function getTeacherPortalData(teacherId: string) {
 
   const cohorts: TeacherCohort[] = (cohortsResult.data ?? []).map((cohort) => {
     const target = targets.get(cohort.id) ?? null;
+    const publishedLessons = getPublishedCourseLessons(getCourse(cohort.course_slug));
+    const publishedBySlug = new Map(publishedLessons.map((lesson) => [lesson.slug, lesson]));
     const learners = studentMemberships
       .filter((membership) => membership.cohort_id === cohort.id)
       .map((membership) => {
@@ -223,13 +255,12 @@ export async function getTeacherPortalData(teacherId: string) {
         const progress = (progressResult.data ?? []).filter(
           (row) =>
             row.user_id === membership.user_id &&
-            row.course_slug === cohort.course_slug,
+            row.course_slug === cohort.course_slug && publishedBySlug.has(row.lesson_slug),
         );
-        const course = getCourse(cohort.course_slug);
-        const humanReviewLessons = new Map(
-          (course?.lessons ?? [])
+        const humanReviewLessons = new Map<string, { title: string }>(
+          publishedLessons
             .filter((lesson) => lesson.humanReviewRequired)
-            .map((lesson) => [lesson.slug, lesson]),
+            .map((lesson) => [lesson.slug, { title: `${lesson.section} · ${lesson.title}` }]),
         );
         const pendingReviews = progress
           .filter(
@@ -247,16 +278,16 @@ export async function getTeacherPortalData(teacherId: string) {
             reviewState: row.review_state ?? "not_started",
             feedback: row.review_feedback ?? null,
           }));
-        const completed = progress.filter((row) => row.completed).length;
+        const completedSlugs = new Set(progress.filter((row) => row.completed === true && (
+          !publishedBySlug.get(row.lesson_slug)?.humanReviewRequired || row.review_state === "approved"
+        )).map((row) => row.lesson_slug));
+        const completed = completedSlugs.size;
         const points = progress.reduce(
           (sum, row) => sum + (row.quiz_score ?? 0),
           0,
         );
-        const reachedTarget =
-          !target ||
-          progress.some(
-            (row) => row.lesson_slug === target && row.completed,
-          );
+        const targetIndex = publishedLessons.findIndex((lesson) => lesson.slug === target);
+        const reachedTarget = !target || (targetIndex >= 0 && publishedLessons.slice(0, targetIndex + 1).every((lesson) => completedSlugs.has(lesson.slug)));
 
         return {
           id: membership.user_id,
@@ -283,6 +314,8 @@ export async function getTeacherPortalData(teacherId: string) {
       course: cohort.course_slug,
       targetLessonSlug: target,
       learners,
+      publishedLessons,
+      totalPublished: publishedLessons.length,
     };
   });
 

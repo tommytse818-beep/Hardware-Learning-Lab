@@ -1,0 +1,24 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+const mocks = vi.hoisted(() => ({ auth: vi.fn(), quota: vi.fn(), config: vi.fn(), context: vi.fn(), reply: vi.fn() }));
+vi.mock("@/lib/api-authorization", () => ({ requireApiViewer: mocks.auth }));
+vi.mock("@/lib/rate-limit", () => ({ consumeAccountRateLimit: mocks.quota }));
+vi.mock("@/lib/hll-tutor/config", () => ({ tutorConfig: mocks.config }));
+vi.mock("@/lib/hll-tutor/context", () => ({ authorizeTutorContext: mocks.context }));
+vi.mock("@/lib/hll-tutor/provider", () => ({ generateTutorReply: mocks.reply }));
+vi.mock("@/lib/hll-tutor/validation", () => import("../../../lib/hll-tutor/validation"));
+vi.mock("@/lib/hll-tutor-contract", () => import("../../../lib/hll-tutor-contract"));
+import { GET, POST } from "./route";
+import { TutorError } from "../../../lib/hll-tutor/validation";
+const request = (origin = "http://localhost") => new Request("http://localhost/api/hll-tutor", { method: "POST", headers: { origin, "Content-Type": "application/json" }, body: JSON.stringify({ requestId: "test", lesson: { courseSlug: "open-guard-mini", lessonId: "2.1B" }, message: "Help me understand." }) });
+describe("authenticated tutor endpoint", () => {
+  beforeEach(() => { vi.resetAllMocks(); mocks.auth.mockResolvedValue({ viewer: { id: "student-1", role: "student" } }); mocks.quota.mockResolvedValue(true); mocks.config.mockReturnValue({ images: true, students: true }); mocks.context.mockResolvedValue({ helpMode: "hint-only" }); mocks.reply.mockResolvedValue({ text: "Try tracing the circuit." }); });
+  it("rejects anonymous requests before model use", async () => { mocks.auth.mockResolvedValue({ response: Response.json({ error: "Sign in" }, { status: 401 }) }); expect((await POST(request())).status).toBe(401); expect(mocks.reply).not.toHaveBeenCalled(); });
+  it("rejects cross-origin requests before auth or inference", async () => { expect((await POST(request("https://other.example"))).status).toBe(403); expect(mocks.auth).not.toHaveBeenCalled(); });
+  it("preserves server access denials without querying the model", async () => { mocks.context.mockRejectedValue(new TutorError("Locked lesson", 403)); expect((await POST(request())).status).toBe(403); expect(mocks.reply).not.toHaveBeenCalled(); });
+  it("keeps unreviewed models away from students", async () => { mocks.config.mockReturnValue({ students: false }); expect((await POST(request())).status).toBe(503); expect(mocks.reply).not.toHaveBeenCalled(); expect(await (await GET()).json()).toMatchObject({ configured: false }); });
+  it("allows staff to pilot without enabling student release", async () => { mocks.auth.mockResolvedValue({ viewer: { id: "teacher-1", role: "teacher" } }); mocks.config.mockReturnValue({ students: false }); expect((await POST(request())).status).toBe(200); });
+  it("enforces account quotas before inference", async () => { mocks.quota.mockResolvedValue(false); expect((await POST(request())).status).toBe(429); expect(mocks.reply).not.toHaveBeenCalled(); });
+  it("fails closed when quota storage is unavailable", async () => { mocks.quota.mockRejectedValue(new Error("private db details")); const result = await POST(request()); expect(result.status).toBe(503); expect(await result.text()).not.toContain("private db"); expect(mocks.reply).not.toHaveBeenCalled(); });
+  it("sends only server-derived access mode to the provider", async () => { const result = await POST(request()); expect(result.status).toBe(200); expect(mocks.reply.mock.calls[0][1]).toEqual({ helpMode: "hint-only" }); expect(result.headers.get("cache-control")).toBe("no-store"); });
+  it("reports configuration without exposing the server key or address", async () => { mocks.config.mockReturnValue({ students: true, images: false, key: "private", url: "private-address" }); expect(await (await GET()).json()).toEqual({ configured: true, images: false, pilot: false }); });
+});

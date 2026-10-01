@@ -11,25 +11,24 @@
   height: auto;
 }
 
-.door {
-  transform-origin: 195px 270px;
-  animation: door-state 4.8s ease-in-out infinite;
+.drawer {
+  animation: drawer-state 5.2s cubic-bezier(0.22, 1, 0.36, 1) 1 forwards;
 }
 
 .pulse {
   stroke-dasharray: 32 530;
   stroke-dashoffset: 0;
-  animation: signal-pulse 4.8s linear infinite;
+  animation: signal-pulse 5.2s linear 1 forwards;
 }
 
 .stage {
   opacity: 0.48;
-  animation: stage-active 4.8s ease-in-out infinite;
+  animation: stage-active 5.2s ease-in-out 1 forwards;
 }
 
 .alert {
   transform-origin: 865px 278px;
-  animation: alert-active 4.8s ease-in-out infinite;
+  animation: alert-active 5.2s ease-in-out 1 forwards;
 }
 
 .control {
@@ -52,14 +51,10 @@
   outline-offset: 3px;
 }
 
-.paused * {
-  animation-play-state: paused !important;
-}
-
-@keyframes door-state {
-  0%, 15% { transform: rotateY(0deg); }
-  25%, 78% { transform: rotateY(-8deg); }
-  90%, 100% { transform: rotateY(0deg); }
+@keyframes drawer-state {
+  0%, 14% { transform: translateX(0); }
+  28%, 78% { transform: translateX(48px); }
+  92%, 100% { transform: translateX(0); }
 }
 
 @keyframes signal-pulse {
@@ -80,12 +75,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .door,
+  .drawer,
   .pulse,
   .stage,
   .alert {
     animation: none !important;
     transform: none !important;
     opacity: 1;
+  }
+
+  .drawer {
+    transform: translateX(32px) !important;
   }
 }

@@ -45,6 +45,8 @@ export function AuthShell({
               alt=""
               width={1200}
               height={1000}
+              preload
+              sizes="(min-width: 1024px) 40vw, 100vw"
               className="h-auto w-full opacity-90"
             />
           </div>

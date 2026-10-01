@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import type {
   AdminCohortSummary,
+  AdminEnquirySummary,
   AdminSchoolSummary,
   PortalMetric,
 } from "@/lib/portal-data";
@@ -13,7 +14,28 @@ type AdminProvisioningConsoleProps = {
   metrics: PortalMetric[];
   schools: AdminSchoolSummary[];
   cohorts: AdminCohortSummary[];
+  enquiries: AdminEnquirySummary[];
 };
+
+const enquiryStatusStyles = {
+  sent: "bg-emerald-100 text-emerald-800",
+  pending: "bg-slate-200 text-slate-700",
+  failed: "bg-amber-100 text-amber-900",
+};
+
+const enquiryStatusLabels = {
+  sent: "Notification sent",
+  pending: "Notification pending",
+  failed: "Saved · email alert failed",
+};
+
+function formatEnquiryDate(value: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Europe/London",
+  }).format(new Date(value));
+}
 
 async function submitJson(path: string, body: Record<string, unknown>) {
   const response = await fetch(path, {
@@ -37,6 +59,7 @@ export function AdminProvisioningConsole({
   metrics,
   schools,
   cohorts,
+  enquiries,
 }: AdminProvisioningConsoleProps) {
   const router = useRouter();
   const [notice, setNotice] = useState<string>("");
@@ -80,7 +103,7 @@ export function AdminProvisioningConsole({
 
   return (
     <div className="mt-8 space-y-8">
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
         {metrics.map((metric) => (
           <article key={metric.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">{metric.label}</p>
@@ -106,7 +129,7 @@ export function AdminProvisioningConsole({
         </section>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3">
         <form
           className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
           onSubmit={(event) => {
@@ -124,9 +147,9 @@ export function AdminProvisioningConsole({
           <p className="text-xs font-bold uppercase tracking-[0.15em] text-emerald-700">Step 1</p>
           <h2 className="mt-2 text-xl font-semibold text-slate-950">Create school</h2>
           <div className="mt-5 space-y-4">
-            <input name="name" required placeholder="School name" className="w-full rounded-xl border border-slate-300 px-4 py-3" />
-            <input name="contactName" required placeholder="Contact name" className="w-full rounded-xl border border-slate-300 px-4 py-3" />
-            <input name="contactEmail" type="email" required placeholder="Contact email" className="w-full rounded-xl border border-slate-300 px-4 py-3" />
+            <label className="block text-sm font-semibold text-slate-700">School name<input name="name" required placeholder="e.g. North Point College" className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal text-slate-950" /></label>
+            <label className="block text-sm font-semibold text-slate-700">Contact name<input name="contactName" required placeholder="Programme contact" className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal text-slate-950" /></label>
+            <label className="block text-sm font-semibold text-slate-700">Contact email<input name="contactEmail" type="email" required placeholder="name@school.edu.hk" className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal text-slate-950" /></label>
           </div>
           <button disabled={busy !== ""} className="mt-5 w-full rounded-xl bg-slate-950 px-4 py-3 font-semibold text-white disabled:bg-slate-300">
             {busy === "school" ? "Saving…" : "Create school"}
@@ -151,13 +174,13 @@ export function AdminProvisioningConsole({
           <p className="text-xs font-bold uppercase tracking-[0.15em] text-indigo-700">Step 2</p>
           <h2 className="mt-2 text-xl font-semibold text-slate-950">Create cohort</h2>
           <div className="mt-5 space-y-4">
-            <select name="schoolId" required className="w-full rounded-xl border border-slate-300 px-4 py-3">
+            <label className="block text-sm font-semibold text-slate-700">School<select name="schoolId" required className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal text-slate-950">
               <option value="">Choose school</option>
               {schools.map((school) => <option key={school.id} value={school.id}>{school.name}</option>)}
-            </select>
-            <input name="name" required placeholder="Cohort name" className="w-full rounded-xl border border-slate-300 px-4 py-3" />
-            <input name="courseSlug" defaultValue="open-guard-mini" required className="w-full rounded-xl border border-slate-300 px-4 py-3" />
-            <input name="studentSeatLimit" type="number" min={1} max={200} defaultValue={12} required className="w-full rounded-xl border border-slate-300 px-4 py-3" />
+            </select></label>
+            <label className="block text-sm font-semibold text-slate-700">Cohort name<input name="name" required placeholder="e.g. Autumn STEM Club" className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal text-slate-950" /></label>
+            <label className="block text-sm font-semibold text-slate-700">Course<select name="courseSlug" defaultValue="open-guard-mini" required className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal text-slate-950"><option value="open-guard-mini">DrawerSense Mini</option></select></label>
+            <label className="block text-sm font-semibold text-slate-700">Student seat limit<input name="studentSeatLimit" type="number" min={1} max={200} defaultValue={12} required className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal text-slate-950" /></label>
           </div>
           <button disabled={busy !== "" || schools.length === 0} className="mt-5 w-full rounded-xl bg-slate-950 px-4 py-3 font-semibold text-white disabled:bg-slate-300">
             {busy === "cohort" ? "Saving…" : "Create cohort"}
@@ -182,22 +205,81 @@ export function AdminProvisioningConsole({
           <p className="text-xs font-bold uppercase tracking-[0.15em] text-violet-700">Step 3</p>
           <h2 className="mt-2 text-xl font-semibold text-slate-950">Provision account</h2>
           <div className="mt-5 space-y-4">
-            <select name="cohortId" required className="w-full rounded-xl border border-slate-300 px-4 py-3">
+            <label className="block text-sm font-semibold text-slate-700">Cohort<select name="cohortId" required className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal text-slate-950">
               <option value="">Choose cohort</option>
               {cohorts.map((cohort) => <option key={cohort.id} value={cohort.id}>{cohort.schoolName} · {cohort.name}</option>)}
-            </select>
-            <select name="role" required className="w-full rounded-xl border border-slate-300 px-4 py-3">
+            </select></label>
+            <label className="block text-sm font-semibold text-slate-700">Account role<select name="role" required className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal text-slate-950">
               <option value="student">Student</option>
               <option value="teacher">Teacher</option>
-            </select>
-            <input name="displayName" required placeholder="Display name" className="w-full rounded-xl border border-slate-300 px-4 py-3" />
-            <input name="email" type="email" required placeholder="Individual email" className="w-full rounded-xl border border-slate-300 px-4 py-3" />
+            </select></label>
+            <label className="block text-sm font-semibold text-slate-700">Display name<input name="displayName" required placeholder="Learner or teacher name" className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal text-slate-950" /></label>
+            <label className="block text-sm font-semibold text-slate-700">Individual email<input name="email" type="email" required placeholder="One unique email per person" className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal text-slate-950" /></label>
           </div>
           <button disabled={busy !== "" || cohorts.length === 0} className="mt-5 w-full rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white disabled:bg-slate-300">
             {busy === "user" ? "Creating…" : "Create individual account"}
           </button>
         </form>
       </div>
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-amber-700">
+              Enquiry inbox
+            </p>
+            <h2 className="mt-2 text-xl font-semibold text-slate-950">
+              Recent school enquiries
+            </h2>
+          </div>
+          <p className="text-sm text-slate-500">Newest 20</p>
+        </div>
+        {enquiries.length === 0 ? (
+          <p className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
+            No school enquiries have been submitted yet.
+          </p>
+        ) : (
+          <div className="mt-5 grid gap-4 lg:grid-cols-2">
+            {enquiries.map((enquiry) => (
+              <article
+                key={enquiry.id}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold text-slate-950">
+                      {enquiry.schoolName}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {enquiry.contactName} ·{" "}
+                      <a
+                        href={`mailto:${enquiry.email}`}
+                        className="font-semibold text-emerald-700 hover:text-emerald-900"
+                      >
+                        {enquiry.email}
+                      </a>
+                    </p>
+                  </div>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${enquiryStatusStyles[enquiry.notificationStatus]}`}
+                  >
+                    {enquiryStatusLabels[enquiry.notificationStatus]}
+                  </span>
+                </div>
+                <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                  {enquiry.message}
+                </p>
+                <time
+                  dateTime={enquiry.createdAt}
+                  className="mt-4 block border-t border-slate-200 pt-3 text-xs text-slate-500"
+                >
+                  Received {formatEnquiryDate(enquiry.createdAt)} UK time
+                </time>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-950">Cohort overview</h2>

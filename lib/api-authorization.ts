@@ -11,7 +11,7 @@ export async function requireApiViewer(
 ): Promise<ApiViewerResult> {
   const viewer = await getViewer();
 
-  if (!viewer?.id) {
+  if (!viewer?.id || !viewer.verified || viewer.demo) {
     return {
       response: NextResponse.json(
         { error: "Authentication is required." },

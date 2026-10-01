@@ -58,7 +58,6 @@ export function ZoomableDiagram({ diagram }: ZoomableDiagramProps) {
           sizes="(min-width: 1024px) 760px, 100vw"
           className="lesson-v1-diagram-image h-auto max-w-full object-contain"
           style={{ transformOrigin: `${origin.x}% ${origin.y}%` }}
-          priority={false}
         />
       </div>
 

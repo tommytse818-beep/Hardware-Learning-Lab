@@ -27,12 +27,8 @@ export function LessonVideo({ title, video }: LessonVideoProps) {
           Your browser does not support the lesson video.
         </video>
         <figcaption className="border-t border-white/10 px-5 py-4 text-sm leading-6 text-slate-300">
-          {video.caption}
+          Protected course recording for {title}. Access requires an active course assignment.
         </figcaption>
-        <details className="border-t border-white/10 px-5 py-3 text-sm text-slate-300">
-          <summary className="cursor-pointer font-semibold text-white">Read transcript</summary>
-          <p className="mt-3 leading-6">{video.caption}</p>
-        </details>
       </figure>
     );
   }
@@ -52,23 +48,19 @@ export function LessonVideo({ title, video }: LessonVideoProps) {
             ▶
           </span>
           <p className="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">
-            Recording slot reserved
+            Recording not yet available
           </p>
           <p className="mt-2 text-xl font-semibold text-white">
             {title}
           </p>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-300">
-            {video.caption}
+            The pilot recording is still being prepared. Continue with the complete lesson explanation, diagram and checkpoint below.
           </p>
         </div>
       </div>
       <figcaption className="border-t border-slate-200 px-5 py-4 text-sm leading-6 text-slate-600">
-        The lesson text, question and navigation work now. No broken video request is made until a real source file is configured.
+        The written lesson and checks are available now; this page will show the protected recording after it is uploaded.
       </figcaption>
-      <details className="border-t border-slate-200 px-5 py-3 text-sm text-slate-600">
-        <summary className="cursor-pointer font-semibold text-slate-900">Read transcript</summary>
-        <p className="mt-3 leading-6">{video.caption}</p>
-      </details>
     </figure>
   );
 }

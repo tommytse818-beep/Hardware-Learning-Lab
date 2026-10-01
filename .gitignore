@@ -28,3 +28,7 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Local source-document extraction, private email handoffs and evaluation output.
+# Share only deliberately reviewed deliverables from docs/ and evaluation/.
+/outputs/

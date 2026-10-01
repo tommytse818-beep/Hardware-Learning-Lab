@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { AvatarBadge } from "@/components/avatar-badge";
 import type { PortalMetric, TeacherCohort } from "@/lib/portal-data";
@@ -26,12 +27,14 @@ function reviewLabel(state: string) {
 
 export function TeacherDashboard({ metrics, cohorts }: TeacherDashboardProps) {
   const [notice, setNotice] = useState("");
+  const router = useRouter();
 
   async function run(task: () => Promise<void>) {
     setNotice("");
     try {
       await task();
       setNotice("Saved successfully.");
+      router.refresh();
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Operation failed.");
     }
@@ -74,7 +77,11 @@ export function TeacherDashboard({ metrics, cohorts }: TeacherDashboardProps) {
                   );
                 }}
               >
-                <input name="targetLessonSlug" defaultValue={cohort.targetLessonSlug ?? ""} required placeholder="Target lesson slug" className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm" />
+                <label className="sr-only" htmlFor={`target-${cohort.id}`}>Published checkpoint target for {cohort.name}</label>
+                <select id={`target-${cohort.id}`} name="targetLessonSlug" defaultValue={cohort.targetLessonSlug ?? ""} required className="max-w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm sm:max-w-xs">
+                  <option value="" disabled>Choose a checkpoint</option>
+                  {cohort.publishedLessons.map((lesson) => <option key={lesson.slug} value={lesson.slug}>{lesson.section} · {lesson.title}</option>)}
+                </select>
                 <button className="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white">Save target</button>
               </form>
             </div>
@@ -88,7 +95,7 @@ export function TeacherDashboard({ metrics, cohorts }: TeacherDashboardProps) {
                     <AvatarBadge name={learner.name} avatarKey={learner.avatar} size="md" />
                     <div>
                       <p className="font-semibold text-slate-950">{learner.name}</p>
-                      <p className="text-sm text-slate-500">{learner.alias} · {learner.completed} complete · {learner.points} points</p>
+                      <p className="text-sm text-slate-500">{learner.alias} · {learner.completed} of {cohort.totalPublished} complete · {learner.points} points</p>
                       {learner.pendingReviews.length > 0 && (
                         <div className="mt-3 space-y-2">
                           {learner.pendingReviews.map((review) => (
@@ -97,7 +104,7 @@ export function TeacherDashboard({ metrics, cohorts }: TeacherDashboardProps) {
                               className="rounded-xl border border-violet-200 bg-white p-3 text-sm"
                               onSubmit={(event) => {
                                 event.preventDefault();
-                                const form = new FormData(event.currentTarget);
+                                const form = new FormData(event.currentTarget, (event.nativeEvent as SubmitEvent).submitter);
                                 void run(() =>
                                   post("/api/teacher/lesson-review", {
                                     studentId: learner.id,

@@ -8,7 +8,9 @@ export default defineConfig([
   globalIgnores([
     ".next/**",
     "out/**",
+    "outputs/**",
     "build/**",
+    "hll-copilot-refresh/**",
     "next-env.d.ts"
   ]),
 ]);

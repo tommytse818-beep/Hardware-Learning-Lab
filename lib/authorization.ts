@@ -6,7 +6,7 @@ import { getViewer, type ViewerRole } from "@/lib/viewer";
 export async function requireViewerRole(roles: ViewerRole[]) {
   const viewer = await getViewer();
 
-  if (!viewer) {
+  if (!viewer?.id || !viewer.verified || viewer.demo) {
     redirect("/login");
   }
 

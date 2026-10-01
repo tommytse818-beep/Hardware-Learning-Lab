@@ -94,4 +94,21 @@ describe("lesson availability", () => {
   it("returns the first lesson that a student can open", () => {
     expect(getRecommendedLessonSlug(course, new Set(["one"]))).toBe("two");
   });
+
+  it("keeps every later lesson locked when an earlier prerequisite is missing", () => {
+    expect(getLessonAvailability(course, new Set(["two", "three"]))).toEqual([
+      { lessonSlug: "one", available: true, completed: false },
+      { lessonSlug: "two", available: false, completed: true, blockedBy: "one" },
+      { lessonSlug: "three", available: false, completed: true, blockedBy: "one" },
+    ]);
+    expect(getRecommendedLessonSlug(course, new Set(["two", "three"]))).toBe("one");
+  });
+
+  it("keeps the earliest unfinished predecessor as the reason for all locks", () => {
+    expect(getLessonAvailability(course, new Set())).toEqual([
+      { lessonSlug: "one", available: true, completed: false },
+      { lessonSlug: "two", available: false, completed: false, blockedBy: "one" },
+      { lessonSlug: "three", available: false, completed: false, blockedBy: "one" },
+    ]);
+  });
 });

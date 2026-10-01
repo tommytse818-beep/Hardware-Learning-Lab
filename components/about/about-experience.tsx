@@ -55,24 +55,56 @@ const team = [
     name: "Tommy Tse",
     role: "Founder & Programme Lead",
     description:
-      "Leads programme strategy, course design, live delivery, electronics development and the learning platform.",
-    image: "/images/about/tommy-tse-founder.webp",
+      "Leads the business, course design and live teaching. Owns the electronics development and technical standards, and has built the initial learning platform.",
+    image: "/images/about/team/tommy-tse.jpg",
+    photoFrame: { width: 100, height: 216.8, left: 0, top: -51.5 },
     initials: "TT",
     linkedin: "https://www.linkedin.com/in/tommy-tse-99a906286/",
   },
   {
     name: "Kitty Wong",
-    role: "Business & Learner Experience",
+    role: "Marketing & Customer Service Lead",
     description:
-      "Supports school relationships, customer service, marketing, advertising and learner-facing operations.",
+      "Leads promotion, marketing and customer service. Handles school enquiries and helps schools and learners get the support they need.",
+    image: "/images/about/team/kitty-wong.jpg",
+    photoFrame: { width: 177.18, height: 188.24, left: -38.82, top: -50.59 },
     initials: "KW",
   },
   {
     name: "Edison Chan",
-    role: "Web Development Support",
+    role: "Web Integration Lead & AI Bot Developer",
     description:
-      "Supports platform implementation, web development, technical maintenance and future digital features.",
+      "Develops the AI bot and web interface. Coordinates bot integration with Zheng Hang Shi and interface development with Jack.",
+    image: "/images/about/team/edison-chan.png",
+    photoFrame: { width: 105, height: 227.56, left: -2.22, top: -67.78 },
     initials: "EC",
+  },
+  {
+    name: "Zheng Hang Shi",
+    role: "AI Bot Integration Lead",
+    description:
+      "Develops and tests the learning assistant with Edison, using approved course material to help students work through the next step.",
+    image: "/images/about/team/shi-zheng-hang.jpg",
+    photoFrame: { width: 86.04, height: 110.63, left: 6.98, top: -2.08 },
+    initials: "ZHS",
+  },
+  {
+    name: "Jack Ho",
+    role: "Web UI Developer",
+    description:
+      "Builds and improves the learning platform interface, focusing on clear navigation, responsive pages and accessible learner experiences.",
+    image: "/images/about/team/jack-ho.png",
+    photoFrame: { width: 100, height: 117.41, left: 0, top: 0 },
+    initials: "JH",
+  },
+  {
+    name: "Yi Lin Shi",
+    role: "Course Design Assistant",
+    description:
+      "Works with Tommy on lesson plans, learning resources and practical activities for the journey through basic electronics, breadboards and PCB design.",
+    image: "/images/about/team/shi-lin-han.png",
+    photoFrame: { width: 89.15, height: 193.21, left: 5.42, top: -41.04 },
+    initials: "YLS",
   },
 ];
 
@@ -271,6 +303,8 @@ export function AboutExperience() {
     const root = rootRef.current;
     if (!root) return;
 
+    root.classList.add("is-motion-ready");
+
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const finePointer = window.matchMedia("(pointer: fine)").matches;
     const revealItems = Array.from(root.querySelectorAll<HTMLElement>("[data-about-reveal]"));
@@ -335,6 +369,7 @@ export function AboutExperience() {
 
     return () => {
       observer?.disconnect();
+      root.classList.remove("is-motion-ready");
       root.removeEventListener("pointermove", updatePointer);
       root.removeEventListener("pointerleave", resetPointer);
       window.removeEventListener("scroll", updateScroll);
@@ -351,7 +386,7 @@ export function AboutExperience() {
             src="/images/about/stem-workshop-hero.webp"
             alt=""
             fill
-            priority
+            preload
             className="about-v2-hero-image object-cover object-center opacity-70"
             sizes="100vw"
           />
@@ -548,7 +583,7 @@ export function AboutExperience() {
               Tommy founded Hardware Learning Lab to make the parts of engineering that can feel intimidating more visible, practical and approachable. His work brings together electronics, sensor systems, PCB design, debugging, teaching and digital product development.
             </p>
             <p className="mt-5 leading-8 text-slate-600">
-              He completed a BEng in Electrical and Electronic Engineering at the University of Exeter and is an incoming MSc Sensor Systems Engineering student at Imperial College London. Within the organisation, he leads course design, live delivery, technical development and the web platform.
+              He completed a BEng in Electrical and Electronic Engineering at the University of Exeter and is an incoming MSc Sensor Systems Engineering student at Imperial College London. He has led the initial course, electronics and platform development, and now coordinates the team across teaching, AI, web development and customer support.
             </p>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -577,19 +612,19 @@ export function AboutExperience() {
         </div>
       </section>
 
-      <section className="bg-white py-24 sm:py-32">
+      <section id="team" className="scroll-mt-20 bg-white py-24 sm:py-32">
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
           <div data-about-reveal className="about-v2-reveal max-w-4xl">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">The organisation</p>
             <h2 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-slate-950 sm:text-6xl">
-              A small team with complementary responsibilities.
+              One team. A complete experience.
             </h2>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-              Hardware Learning Lab is being built across engineering, education, customer experience and web development—not around one person doing everything forever.
+              Together, we connect the lesson, the bench and the platform. Each person has a clear responsibility across programme delivery, course design, AI support, the web experience, marketing and customer service.
             </p>
           </div>
 
-          <div className="mt-14 grid gap-5 lg:grid-cols-3">
+          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {team.map((member, index) => (
               <article
                 key={member.name}
@@ -598,8 +633,18 @@ export function AboutExperience() {
                 style={{ transitionDelay: `${index * 70}ms` }}
               >
                 {member.image ? (
-                  <div className="relative aspect-square overflow-hidden rounded-[1.8rem] bg-slate-200">
-                    <Image src={member.image} alt={`${member.name}, ${member.role}`} fill className="object-cover transition duration-700 group-hover:scale-[1.03]" sizes="(min-width: 1024px) 30vw, 90vw" />
+                  <div className="relative aspect-square overflow-hidden rounded-[1.8rem] bg-white">
+                    <div
+                      className="absolute"
+                      style={{
+                        width: `${member.photoFrame.width}%`,
+                        height: `${member.photoFrame.height}%`,
+                        left: `${member.photoFrame.left}%`,
+                        top: `${member.photoFrame.top}%`,
+                      }}
+                    >
+                      <Image src={member.image} alt={`${member.name}, ${member.role}`} fill className="object-contain" sizes="(min-width: 1024px) 45vw, (min-width: 640px) 65vw, 140vw" />
+                    </div>
                   </div>
                 ) : (
                   <TeamPlaceholder initials={member.initials} />
@@ -668,6 +713,21 @@ export function AboutExperience() {
             <p className="mt-3 max-w-5xl text-2xl font-medium leading-9 text-white sm:text-3xl sm:leading-10">
               A school-ready STEM ecosystem where clear online learning, strong teaching, physical kits, careful AI support and real engineering evidence work together.
             </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[#f5f5f7] py-24 sm:py-32">
+        <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-center lg:px-8">
+          <div data-about-reveal className="about-v2-reveal">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Hong Kong launch focus</p>
+            <h2 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-slate-950 sm:text-6xl">513 secondary day schools.</h2>
+            <p className="mt-5 text-lg leading-8 text-slate-600">A territory-wide 2025/26 market context, not a customer count, demand claim or list of secured pilots.</p>
+            <p className="mt-5 text-sm leading-6 text-slate-500">Source: Hong Kong Education Bureau secondary education figures, 2025/26. Map adapted from Simplemaps, CC BY 4.0; simplified outline.</p>
+          </div>
+          <div data-about-reveal className="about-v2-reveal rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
+            <Image src="/images/marketing/hong-kong-outline.svg" alt="Simplified outline map of Hong Kong used as market context" width={1549} height={775} className="h-auto w-full" />
+            <p className="mt-4 text-sm leading-6 text-slate-500">Illustrative outline only. No markers represent actual schools, customers or leads.</p>
           </div>
         </div>
       </section>

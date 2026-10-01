@@ -11,9 +11,10 @@ import {
 } from "react";
 
 import { OpenGuardSystemAnimation } from "@/components/projects/open-guard-system-animation";
+import { publicProduct } from "@/lib/public-marketing";
 import { sectorCatalog } from "@/lib/sectors";
 
-type Status = "Working" | "Upcoming" | "Planned";
+type Status = "First project in development" | "Future direction";
 
 type Theme = {
   id: string;
@@ -39,15 +40,15 @@ const themes: Theme[] = [
     id: "smart-living",
     number: "01",
     title: sectorCatalog[0].title,
-    status: "Working",
+    status: "First project in development",
     image: sectorCatalog[0].image,
     imageAlt: sectorCatalog[0].alt,
     summary: sectorCatalog[0].summary,
     project: {
-      title: "OpenGuard Mini",
-      eyebrow: "First school workshop",
+      title: publicProduct.name,
+      eyebrow: publicProduct.status,
       description:
-        "A removable door, locker or drawer opening alert and privacy reminder. It is a real low-voltage product, not a mechanical lock or certified security system.",
+        "A drawer-left-open reminder that turns one familiar problem into a complete engineering lesson. Concept hardware still requires physical qualification.",
       learning: [
         "Input, process and output",
         "Circuit safety and measurement",
@@ -63,7 +64,7 @@ const themes: Theme[] = [
     id: "sustainability-climate",
     number: "02",
     title: sectorCatalog[1].title,
-    status: "Planned",
+    status: "Future direction",
     image: sectorCatalog[1].image,
     imageAlt: sectorCatalog[1].alt,
     summary: sectorCatalog[1].summary,
@@ -86,7 +87,7 @@ const themes: Theme[] = [
     id: "health-movement",
     number: "03",
     title: sectorCatalog[2].title,
-    status: "Upcoming",
+    status: "Future direction",
     image: sectorCatalog[2].image,
     imageAlt: sectorCatalog[2].alt,
     summary: sectorCatalog[2].summary,
@@ -109,7 +110,7 @@ const themes: Theme[] = [
     id: "space-communications",
     number: "04",
     title: sectorCatalog[3].title,
-    status: "Planned",
+    status: "Future direction",
     image: sectorCatalog[3].image,
     imageAlt: sectorCatalog[3].alt,
     summary: sectorCatalog[3].summary,
@@ -131,11 +132,9 @@ const themes: Theme[] = [
 ];
 
 const statusClasses: Record<Status, string> = {
-  Working:
+  "First project in development":
     "border-emerald-300/60 bg-emerald-400/15 text-emerald-100 shadow-[0_0_28px_rgba(52,211,153,0.18)]",
-  Upcoming:
-    "border-amber-300/60 bg-amber-300/15 text-amber-100 shadow-[0_0_28px_rgba(251,191,36,0.14)]",
-  Planned:
+  "Future direction":
     "border-rose-300/50 bg-rose-400/[0.12] text-rose-100 shadow-[0_0_28px_rgba(251,113,133,0.12)]",
 };
 
@@ -192,6 +191,7 @@ export function ProjectsExperience() {
     }
 
     const element = root;
+    element.classList.add("is-motion-ready");
     const revealItems = Array.from(
       root.querySelectorAll<HTMLElement>(".projects-v1-reveal"),
     );
@@ -224,6 +224,7 @@ export function ProjectsExperience() {
 
     element.addEventListener("pointermove", handlePointer);
     return () => {
+      element.classList.remove("is-motion-ready");
       element.removeEventListener("pointermove", handlePointer);
       observer.disconnect();
     };
@@ -281,15 +282,15 @@ export function ProjectsExperience() {
                     Smart living • First project
                   </p>
                   <h2 className="mt-2 text-2xl font-semibold text-white">
-                    OpenGuard Mini
+                    {publicProduct.name}
                   </h2>
                   <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
-                    Door state becomes a defined signal, then a timed logic
-                    decision and a visible and audible response.
+                    Open, wait, remind, then close to clear the output and reset
+                    the next timing cycle.
                   </p>
                 </div>
-                <span className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${statusClasses.Working}`}>
-                  Working
+                <span className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${statusClasses["First project in development"]}`}>
+                  First project in development
                 </span>
               </div>
             </div>
@@ -306,9 +307,8 @@ export function ProjectsExperience() {
             Choose the world you want to help shape.
           </h2>
           <p className="mt-5 text-lg leading-8 text-slate-300">
-            Smart living is the active development track. The other sectors are
-            shown honestly as upcoming or planned directions rather than
-            finished courses.
+            Smart living contains the first project in development. The other
+            sectors are future directions rather than released courses.
           </p>
         </div>
 
@@ -452,7 +452,7 @@ export function ProjectsExperience() {
             href="/projects/open-guard-mini"
             className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:scale-[1.02] hover:bg-emerald-100"
           >
-            See OpenGuard Mini
+            See {publicProduct.name}
             <ArrowIcon />
           </Link>
         </div>
